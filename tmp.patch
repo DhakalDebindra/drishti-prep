@@ -1,0 +1,17 @@
+*** Begin Patch
+*** Update File: src/app/api/question-sets/route.ts
+@@
+-    if (questionInsertError) {
+-      console.error( Failed to insert questions, questionInsertError);
+-      await supabase.from(question_sets).delete().eq(id, insertedSet.id);
+-      return errorResponse(Failed to save questions for the set);
+-    }
++    if (questionInsertError) {
++      console.error(Failed to insert questions, questionInsertError);
++      await supabase.from(question_sets).delete().eq(id, insertedSet.id);
++      return errorResponse(
++        questionInsertError.message ?? Failed to save questions for the set,
++        400
++      );
++    }
+*** End Patch

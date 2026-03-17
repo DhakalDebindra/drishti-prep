@@ -27,15 +27,38 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // protected routes logic can go here based on user
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+
+  // Prevent logged-in users from seeing the login page
+  if (isAuthRoute && user) {
+    return NextResponse.redirect(new URL('/admin/question-sets/create', request.url))
+  }
+
+  // Protect admin routes
+  if (isAdminRoute) {
+    if (!user) {
+      const redirectUrl = new URL('/login', request.url)
+      redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // // Check if user is actually an admin
+    // const { data: profile } = await supabase
+    //   .from('profiles')
+    //   .select('is_admin')
+    //   .eq('id', user.id)
+    //   .single()
+
+    // if (!profile?.is_admin) {
+    //   // Could redirect to a /dashboard or a 403 unauthorized page. For now, redirect to root
+    //   return NextResponse.redirect(new URL('/', request.url))
+    // }
+  }
 
   return supabaseResponse
 }

@@ -1,0 +1,89 @@
+﻿import { NextResponse } from 'next/server';
+import { createClient } from "../../../lib/supabase/server";
+import * as z from "zod";
+
+const questionPayload = z.object({
+  order_number: z.coerce.number().int().min(1),
+  content: z.string().min(1, "Question content is required"),
+  option_a: z.string().min(1, "Option A is required"),
+  option_b: z.string().min(1, "Option B is required"),
+  option_c: z.string().min(1, "Option C is required"),
+  option_d: z.string().min(1, "Option D is required"),
+  correct_option: z.enum(["A", "B", "C", "D"]),
+  general_explanation: z.string().optional(),
+});
+
+const questionSetPayload = z.object({
+  topic_id: z.string().min(1, "Topic ID is required"),
+  title: z.string().min(1, "Title is required"),
+  difficulty_level: z.coerce.number().int().min(1).max(3),
+  is_verified: z.boolean(),
+  questions: z.array(questionPayload).min(1, "At least one question is required"),
+});
+
+const errorResponse = (message: string, status = 500) =>
+  NextResponse.json({ error: message }, { status });
+
+export async function POST(req: Request) {
+  try {
+    const requestBody = await req.json();
+    const parseResult = questionSetPayload.safeParse(requestBody);
+
+    if (!parseResult.success) {
+      const issue = parseResult.error.issues[0];
+      return errorResponse(issue.message, 400);
+    }
+
+    const supabase = await createClient();
+    const { topic_id, title, difficulty_level, is_verified, questions } =
+      parseResult.data;
+
+    const { data: insertedSet, error: setInsertError } = await supabase
+      .from("question_sets")
+      .insert({
+        topic_id,
+        title,
+        difficulty_level,
+        is_verified,
+      })
+      .select("id")
+      .single();
+
+    if (setInsertError || !insertedSet?.id) {
+      console.error("Failed to insert question set", setInsertError);
+      return errorResponse("Failed to create question set");
+    }
+
+    const questionRecords = questions.map((question) => ({
+      set_id: insertedSet.id,
+      order_number: question.order_number,
+      content: question.content,
+      option_a: question.option_a,
+      option_b: question.option_b,
+      option_c: question.option_c,
+      option_d: question.option_d,
+      correct_option: question.correct_option,
+      explanation: question.general_explanation ?? null,
+    }));
+
+    const { error: questionInsertError } = await supabase
+      .from("questions")
+      .insert(questionRecords);
+
+    if (questionInsertError) {
+      console.error("Failed to insert questions", questionInsertError);
+      await supabase.from("question_sets").delete().eq("id", insertedSet.id);
+      return errorResponse(
+        questionInsertError.message ?? "Failed to save questions for the set",
+        400
+      );
+    }
+
+    return NextResponse.json({ id: insertedSet.id }, { status: 201 });
+  } catch (error: unknown) {
+    console.error("Error creating question set:", error);
+    const message =
+      error instanceof Error ? error.message : "Unable to create question set";
+    return errorResponse(message);
+  }
+}
