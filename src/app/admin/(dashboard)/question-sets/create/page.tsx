@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -390,7 +390,7 @@ export default function CreateQuestionSetPage() {
     }
   };
 
-  const onSubmit = async (values: QuestionSetFormValues) => {
+  const onSubmit: SubmitHandler<QuestionSetFormValues> = async (values) => {
     setSubjectCreationError(null);
     setTopicCreationError(null);
     setSubmissionMessage(null);

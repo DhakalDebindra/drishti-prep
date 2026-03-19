@@ -102,9 +102,11 @@ Close by affirming how this style aligns with the detailed GK feedback Emulated 
   } catch (error: unknown) {
     console.error("Error generating feedback:", error);
     if (error instanceof OpenAIError) {
+      const code = (error as OpenAIError & { code?: string }).code;
+      const status = (error as OpenAIError & { status?: number }).status ?? 500;
       return NextResponse.json(
-        { error: error.message, code: error.code },
-        { status: error.status ?? 500 }
+        { error: error.message, code },
+        { status }
       );
     }
 

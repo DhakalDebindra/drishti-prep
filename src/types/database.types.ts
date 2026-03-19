@@ -16,22 +16,31 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          best_streak: number
           created_at: string
+          current_streak: number
           full_name: string | null
           id: string
           is_admin: boolean | null
+          xp_points: number
         }
         Insert: {
+          best_streak?: number
           created_at?: string
+          current_streak?: number
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          xp_points?: number
         }
         Update: {
+          best_streak?: number
           created_at?: string
+          current_streak?: number
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          xp_points?: number
         }
         Relationships: []
       }
@@ -43,6 +52,7 @@ export type Database = {
           is_verified: boolean
           title: string
           topic_id: string
+          version: number
         }
         Insert: {
           created_at?: string
@@ -51,6 +61,7 @@ export type Database = {
           is_verified?: boolean
           title: string
           topic_id: string
+          version?: number
         }
         Update: {
           created_at?: string
@@ -59,6 +70,7 @@ export type Database = {
           is_verified?: boolean
           title?: string
           topic_id?: string
+          version?: number
         }
         Relationships: [
           {
@@ -116,6 +128,143 @@ export type Database = {
             columns: ["set_id"]
             isOneToOne: false
             referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempts: {
+        Row: {
+          id: string
+          user_id: string
+          set_id: string
+          set_version: number
+          status: string
+          question_count: number
+          score_raw: number | null
+          score_pct: number | null
+          started_at: string
+          submitted_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          set_id: string
+          set_version?: number
+          status?: string
+          question_count?: number
+          score_raw?: number | null
+          score_pct?: number | null
+          started_at?: string
+          submitted_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          set_id?: string
+          set_version?: number
+          status?: string
+          question_count?: number
+          score_raw?: number | null
+          score_pct?: number | null
+          started_at?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempt_answers: {
+        Row: {
+          id: string
+          attempt_id: string
+          question_id: string
+          selected_option: string
+          is_correct: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          attempt_id: string
+          question_id: string
+          selected_option: string
+          is_correct: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          attempt_id?: string
+          question_id?: string
+          selected_option?: string
+          is_correct?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempt_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempt_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_feedback: {
+        Row: {
+          attempt_id: string
+          strengths: string | null
+          weak_zones: Json | null
+          explanations: Json | null
+          model: string | null
+          latency_ms: number | null
+          cost_cents: number | null
+          created_at: string
+        }
+        Insert: {
+          attempt_id: string
+          strengths?: string | null
+          weak_zones?: Json | null
+          explanations?: Json | null
+          model?: string | null
+          latency_ms?: number | null
+          cost_cents?: number | null
+          created_at?: string
+        }
+        Update: {
+          attempt_id?: string
+          strengths?: string | null
+          weak_zones?: Json | null
+          explanations?: Json | null
+          model?: string | null
+          latency_ms?: number | null
+          cost_cents?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: true
+            referencedRelation: "attempts"
             referencedColumns: ["id"]
           },
         ]
