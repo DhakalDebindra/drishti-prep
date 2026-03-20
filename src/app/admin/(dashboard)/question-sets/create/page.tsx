@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { puter } from "@heyputer/puter.js";
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -66,6 +67,65 @@ const createDefaultFormValues = (): QuestionSetFormValues => ({
 });
 
 const defaultFormValues = createDefaultFormValues();
+
+const PUTER_MODEL = process.env.NEXT_PUBLIC_PUTER_MODEL ?? "deepseek/deepseek-chat";
+const PUTER_TIMEOUT_MS = 25_000;
+const FALLBACK_TIMEOUT_MS = 25_000;
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number) =>
+  new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("TIMEOUT")), ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+
+const normalizeJson = (text: string) => {
+  if (!text) return text;
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```json\s*/i, "").replace(/^```\s*/i, "");
+    cleaned = cleaned.replace(/```$/, "").trim();
+  }
+  const first = cleaned.indexOf("{");
+  const last = cleaned.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    cleaned = cleaned.slice(first, last + 1);
+  }
+  return cleaned;
+};
+
+const extractPuterContent = (result: any): string => {
+  const content =
+    result?.message?.content ??
+    (Array.isArray(result?.messages) ? result.messages.at(-1)?.content : undefined) ??
+    (Array.isArray(result?.choices) ? result.choices[0]?.message?.content : undefined) ??
+    result?.output_text ??
+    result?.result ??
+    "";
+  if (typeof content === "string") return content;
+  return JSON.stringify(content ?? "");
+};
+
+const parseExplanation = (raw: string): { text: string; parseError: boolean } => {
+  const cleaned = normalizeJson(raw);
+  if (!cleaned) return { text: raw?.trim() ?? "", parseError: true };
+  try {
+    const parsed = JSON.parse(cleaned);
+    const text =
+      (parsed.general_explanation || parsed.explanation || "").trim();
+    if (text) return { text, parseError: false };
+  } catch {
+    // fall through
+  }
+  return { text: cleaned.trim() || raw.trim(), parseError: true };
+};
 
 export default function CreateQuestionSetPage() {
   const [isGenerating, setIsGenerating] = useState<number | null>(null);
@@ -340,46 +400,124 @@ export default function CreateQuestionSetPage() {
     setIsGenerating(index);
     setFeedbackErrors((prev) => ({ ...prev, [index]: "" }));
     try {
-      const response = await fetch('/api/generate-feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: question.content,
-          option_a: question.option_a,
-          option_b: question.option_b,
-          option_c: question.option_c,
-          option_d: question.option_d,
-          correct_option: question.correct_option,
-        }),
-      });
+      const payload = {
+        content: question.content,
+        option_a: question.option_a,
+        option_b: question.option_b,
+        option_c: question.option_c,
+        option_d: question.option_d,
+        correct_option: question.correct_option,
+      };
 
-      const responseText = await response.text();
+      const prompt = `
+**Role:**
+You are an expert Loksewa (Public Service Commission of Nepal) General Knowledge (GK) facilitator and instructor. Your primary goal is to prepare competitive exam aspirants by providing deeply informative, context-rich explanations for given Multiple Choice Questions (MCQs).
 
-      if (!response.ok) {
-        let parsedError;
-        try {
-          parsedError = JSON.parse(responseText);
-        } catch {
-          parsedError = null;
+**Task:**
+You will be provided with a Question, its Options, and the Correct Option. You must provide a comprehensive explanation in formal, grammatically correct Nepali.
+IMPORTANT: Return ONLY a valid JSON object (no markdown fences, no extra prose). Schema:
+{
+  "general_explanation": "string"
+}
+
+**Instructions for the "general_explanation" Section:**
+- Do not just state the right answer. Provide a rich context just like a real Loksewa facilitator would in a classroom.
+- Always include related supplementary facts (e.g., exact dates of the event, themes, key participants, previous iterations, or historical significance) because Loksewa exams frequently test candidates on these peripheral details.
+- Keep the tone educational, highly factual, accurate, and precise.
+
+**CONTENT:**
+- Question: ${payload.content}
+- Option A: ${payload.option_a}
+- Option B: ${payload.option_b}
+- Option C: ${payload.option_c}
+- Option D: ${payload.option_d}
+- Correct Option: ${payload.correct_option}
+
+**Reference Example of desired explanation style:**
+If Question: International AI Impact Summit २०२६ कहाँ आयोजना भएको थियो?
+And Options: A. Tokyo, B. New Delhi, C. London, D. Paris
+And Correct Option: B
+Your general_explanation string should be: "यो सम्मेलन भारतको नयाँ दिल्लीमा सन् २०२६ फेब्रुअरी १६ देखि २१ सम्म आयोजना गरिएको थियो। यसमा १०० भन्दा बढी देशका प्रतिनिधिहरु सहभागी भएका थिए। यस सम्मेलनको मुख्य उद्देश्य कृत्रिम बुद्धिमत्ता (AI) को सुरक्षित र जिम्मेवार प्रयोगका लागि विश्वव्यापी मापदण्ड तय गर्नु र यसले मानव जीवनमा पार्ने प्रभावको बारेमा छलफल गर्नु थियो।"
+
+Return only JSON; must parse with JSON.parse without trimming.`;
+
+      let explanation = "";
+      let usedFallback = false;
+
+      try {
+        const startedPuter = performance.now();
+        const puterResult = await withTimeout(
+          puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }),
+          PUTER_TIMEOUT_MS
+        );
+        const puterText = extractPuterContent(puterResult);
+        const parsed = parseExplanation(puterText);
+        explanation = parsed.text;
+        if (parsed.parseError && process.env.NODE_ENV === "development") {
+          console.warn("Puter parse fallback; raw:", puterText);
         }
-
-        const message = parsedError?.error ?? responseText ?? 'Unknown error';
-        const code = parsedError?.code ? ` (${parsedError.code})` : '';
-        throw new Error(`Failed to generate feedback: ${message}${code}`);
+        if (!explanation && process.env.NODE_ENV === "development") {
+          console.warn(
+            "Puter returned empty explanation in",
+            Math.round(performance.now() - startedPuter),
+            "ms"
+          );
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Puter call failed, will fall back:", err);
+        }
       }
 
-      const generatedData = JSON.parse(responseText);
-      setValue(
-        `questions.${index}.general_explanation`,
-        generatedData.general_explanation || ""
-      );
+      // If Puter failed to produce explanation, fall back to backend
+      if (!explanation || explanation.toLowerCase().includes("ai response was empty")) {
+        usedFallback = true;
+        const controller = new AbortController();
+        const fallbackTimeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
+        const response = await fetch("/api/generate-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }).catch((err) => {
+          clearTimeout(fallbackTimeout);
+          throw err;
+        });
+        clearTimeout(fallbackTimeout);
+
+        const responseText = await response.text();
+        if (!response.ok) {
+          let parsedError: any = null;
+          try {
+            parsedError = JSON.parse(responseText);
+          } catch {
+            parsedError = null;
+          }
+          const message = parsedError?.error ?? responseText ?? "Unknown error";
+          const code = parsedError?.code ? ` (${parsedError.code})` : "";
+          throw new Error(`Failed to generate feedback: ${message}${code}`);
+        }
+
+        const parsed = parseExplanation(responseText);
+        explanation = parsed.text || "Could not generate explanation.";
+        if (parsed.parseError && process.env.NODE_ENV === "development") {
+          console.warn("Fallback parse fallback; raw:", responseText);
+        }
+      }
+
+      if (!explanation) {
+        throw new Error("Failed to generate feedback: Empty explanation from AI");
+      }
+
+      if (usedFallback && process.env.NODE_ENV === "development") {
+        console.warn("Used OpenAI fallback for explanation");
+      }
+
+      setValue(`questions.${index}.general_explanation`, explanation);
       setFeedbackErrors((prev) => {
         const { [index]: _, ...rest } = prev;
         return rest;
       });
-      
     } catch (error) {
       console.error(error);
       const userMessage = error instanceof Error ? error.message : "Unknown error";
