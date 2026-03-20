@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const router = useRouter();
   const supabase = createClient();
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div role="alert" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
                 {error}
               </div>
             )}
@@ -86,7 +86,7 @@ export default function LoginPage() {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
             <div className="text-sm text-center text-gray-500">
-               Need an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+              Need an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
             </div>
           </CardFooter>
         </form>
