@@ -1,5 +1,5 @@
-const fs = require( fs);
-const path = src/app/api/question-sets/route.ts;
+const fs = require(fs);
+const path = src / app / api / question - sets / route.ts;
 const lines = [
   'import { NextResponse } from next/server;',
   'import { createClient } from @/lib/supabase/server;',
