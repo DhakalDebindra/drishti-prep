@@ -1,8 +1,8 @@
-﻿import OpenAI, { OpenAIError } from "openai";
+import OpenAI, { OpenAIError } from "openai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-type RouteParams = { params: { id: string } };
+type RouteParams = { params: Promise<{ id: string }> };
 
 type QuestionRow = {
   id: string;
@@ -33,9 +33,9 @@ const getOpenAIClient = () => {
   return new OpenAI({ apiKey });
 };
 
-export async function POST(_req: Request, { params }: RouteParams) {
+export async function POST(req: Request, { params }: RouteParams) {
   const supabase = await createClient();
-  const attemptId = params.id;
+  const attemptId = (await params).id;
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PracticeSetClient, { DecoratedAnswer, PracticeReview } from "./PracticeSetClient";
@@ -52,19 +52,7 @@ export default async function PracticeSetPage({ params }: PageProps) {
         .maybeSingle()
     : { data: null } as { data: any };
 
-  const { data: latestSubmitted } = user
-    ? await supabase
-        .from("attempts")
-        .select("id, status, question_count, score_raw, score_pct, set_version, submitted_at")
-        .eq("set_id", setId)
-        .eq("user_id", user.id)
-        .eq("status", "submitted")
-        .order("submitted_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    : { data: null } as { data: any };
-
-  const attempt = activeAttempt ?? latestSubmitted ?? null;
+  const attempt = activeAttempt ?? null;
 
   const { data: existingAnswers } = attempt
     ? await supabase
@@ -72,10 +60,6 @@ export default async function PracticeSetPage({ params }: PageProps) {
         .select("question_id, selected_option, is_correct")
         .eq("attempt_id", attempt.id)
     : { data: [] } as { data: { question_id: string; selected_option: string; is_correct: boolean }[] };
-
-  const { data: feedback } = attempt?.status === "submitted"
-    ? await supabase.from("ai_feedback").select("attempt_id, strengths, weak_zones, explanations, model, latency_ms, cost_cents, created_at").eq("attempt_id", attempt.id).maybeSingle()
-    : { data: null } as { data: PracticeReview["feedback"] | null };
 
   const decorated: DecoratedAnswer[] = (questions ?? []).map((q) => {
     const existing = existingAnswers?.find((a) => a.question_id === q.id);
@@ -87,20 +71,6 @@ export default async function PracticeSetPage({ params }: PageProps) {
       explanation: q.explanation ?? null,
     };
   });
-
-  const initialReview: PracticeReview | null = attempt && attempt.status === "submitted"
-    ? {
-        attempt: {
-          id: attempt.id,
-          question_count: attempt.question_count,
-          score_raw: attempt.score_raw ?? 0,
-          score_pct: attempt.score_pct ?? 0,
-          submitted_at: attempt.submitted_at ?? undefined,
-        },
-        answers: decorated,
-        feedback: feedback ?? null,
-      }
-    : null;
 
   return (
     <PracticeSetClient
@@ -118,7 +88,7 @@ export default async function PracticeSetPage({ params }: PageProps) {
       questions={questions ?? []}
       existingAttempt={attempt}
       existingAnswers={decorated}
-      initialReview={initialReview}
+      initialReview={null}
       userEmail={user?.email ?? null}
     />
   );

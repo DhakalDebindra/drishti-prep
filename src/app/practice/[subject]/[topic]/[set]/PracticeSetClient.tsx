@@ -1,12 +1,122 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { puter } from "@heyputer/puter.js";
+
+const PUTER_MODEL = process.env.NEXT_PUBLIC_PUTER_MODEL ?? "deepseek/deepseek-chat";
+const PUTER_TIMEOUT_MS = 25000;
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T | { isTimeoutError: true }> =>
+  new Promise((resolve) => {
+    const timer = setTimeout(() => resolve({ isTimeoutError: true }), ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        resolve({ isTimeoutError: true });
+      });
+  });
+
+const extractPuterContent = (result: any): string => {
+  if (typeof result === "string") return result;
+  
+  const content =
+    result?.message?.content ??
+    (Array.isArray(result?.messages) ? result.messages.at(-1)?.content : undefined) ??
+    (Array.isArray(result?.choices) ? result.choices[0]?.message?.content : undefined) ??
+    result?.output_text ??
+    result?.result ??
+    "";
+  if (typeof content === "string") return content;
+  return JSON.stringify(content ?? "");
+};
+
+const normalizeJson = (str: string) => {
+  const s = str.trim();
+  if (s.startsWith("```json")) {
+    const end = s.indexOf("```", 7);
+    if (end > 7) return s.slice(7, end).trim();
+  }
+  if (s.startsWith("```")) {
+    const end = s.indexOf("```", 3);
+    if (end > 3) return s.slice(3, end).trim();
+  }
+  return s;
+};
+
+const generateGuestFeedbackLocally = async (answers: any[]) => {
+  const prompt = `
+**Role:**
+You are an expert tutor providing constructive feedback for a student who just submitted a practice quiz.
+You will be provided with an array of answers the student just submitted, including the question content, their selected option, the correct option, whether it was correct or not, and the authoritative factual "explanation" for that question.
+
+**Task:**
+Analyze the student's performance and provide:
+1. "strengths": A short paragraph summarizing what they did well.
+2. "weakZones": An object categorized by topic showing areas for improvement.
+3. "explanations": An object mapping the \`question_id\` to a short string explanation of WHY the correct answer is right and why their wrong answer was wrong (only provide explanations for questions they answered INCORRECTLY). Use the provided authoritative "explanation" text to ensure your facts are completely accurate and contextually rich for Nepali exam prep.
+
+IMPORTANT: Return ONLY a valid JSON object (no markdown fences, no extra prose). Schema:
+{
+  "strengths": string,
+  "weakZones": Record<string, string>,
+  "explanations": Record<string, string>
+}
+
+**Answers to Analyze:**
+${JSON.stringify(answers, null, 2)}
+`;
+
+  const started = performance.now();
+  const puterResult = await withTimeout(
+    (puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }) as unknown) as Promise<any>,
+    PUTER_TIMEOUT_MS
+  );
+
+  if (puterResult && typeof puterResult === "object" && "isTimeoutError" in puterResult) {
+    throw new Error("AI response empty or invalid (Timeout)");
+  }
+
+  const puterText = extractPuterContent(puterResult);
+  console.log("RAW PUTER TEXT:", puterText);
+  let parsed: any = null;
+  const cleaned = normalizeJson(puterText);
+  try {
+    if (cleaned) {
+      parsed = JSON.parse(cleaned);
+    }
+  } catch {
+    console.warn("Could not parse guest feedback JSON from puter", cleaned);
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+     throw new Error("AI response empty or invalid");
+  }
+
+  return {
+    strengths: parsed.strengths ?? null,
+    weakZones: parsed.weakZones ?? null,
+    explanations: parsed.explanations ?? {},
+    model: PUTER_MODEL,
+    latency_ms: Math.round(performance.now() - started),
+  };
+};
+
 
 export type DecoratedAnswer = {
   question_id: string;
+  content?: string;
+  option_a?: string;
+  option_b?: string;
+  option_c?: string;
+  option_d?: string;
   selected_option: string | null;
   is_correct: boolean;
   correct_option: string;
@@ -108,6 +218,17 @@ export default function PracticeSetClient({
     questions.forEach((q) => (map[q.id] = false));
     return map;
   });
+  const [focusedOption, setFocusedOption] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    setFocusedOption(null);
+  }, [currentIndex]);
+
+  // Prevent guest sessions from bleeding across attempts
+  useEffect(() => {
+    sessionStorage.removeItem("demoReviewData");
+  }, []);
 
   const questionCount = useMemo(() => questions.length, [questions.length]);
   const currentQuestion = questions[currentIndex];
@@ -123,13 +244,14 @@ export default function PracticeSetClient({
     setAnswers({});
     setCorrectness({});
     setStatus("idle");
-    setReview(null);
     setAttemptId(null);
     setMessage(null);
     setError(null);
+    setFocusedOption(null);
   };
 
   const ensureAttempt = async () => {
+    if (!userEmail) throw new Error("Please log in to save your progress.");
     if (attemptId && status !== "submitted") return attemptId;
 
     setSaving(true);
@@ -170,6 +292,16 @@ export default function PracticeSetClient({
     setMessage(null);
     setAnswers((prev) => ({ ...prev, [questionId]: option }));
 
+    if (!userEmail) {
+      // Guest users handle selection offline
+      const tQuestion = questions.find(q => q.id === questionId);
+      const isCorrect = tQuestion ? tQuestion.correct_option === option : false;
+      setCorrectness((prev) => ({ ...prev, [questionId]: isCorrect }));
+      setStatus("in_progress");
+      setShowExplanation((prev) => ({ ...prev, [questionId]: true }));
+      return;
+    }
+
     try {
       const id = await ensureAttempt();
       setSaving(true);
@@ -197,6 +329,86 @@ export default function PracticeSetClient({
 
   const handleSubmit = async () => {
     if (status === "submitted") return;
+    
+    // Guest submission flow
+    if (!userEmail) {
+      setSubmitting(true);
+      setError(null);
+      
+      const payloadAnswers = questions.filter(q => answers[q.id]).map((q) => ({
+        question_id: q.id,
+        content: q.content,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        option_c: q.option_c,
+        option_d: q.option_d,
+        selected_option: answers[q.id],
+        correct_option: q.correct_option,
+        is_correct: correctness[q.id] || false,
+        explanation: q.explanation
+      }));
+
+      try {
+        const data = await generateGuestFeedbackLocally(payloadAnswers);
+
+        const mockReview: PracticeReview = {
+          attempt: {
+            id: "guest-attempt",
+            question_count: questionCount,
+            score_raw: Object.values(correctness).filter(Boolean).length,
+            score_pct: (Object.values(correctness).filter(Boolean).length / questionCount) * 100,
+          },
+          answers: payloadAnswers.map(a => ({ 
+            ...a, 
+            explanation: data.explanations?.[a.question_id] || null, 
+            selected_option: a.selected_option || null,
+            content: a.content,
+            option_a: a.option_a,
+            option_b: a.option_b,
+            option_c: a.option_c,
+            option_d: a.option_d
+          })),
+          feedback: {
+            strengths: data.strengths || null,
+            weak_zones: data.weakZones || null,
+            explanations: data.explanations || null
+          }
+        };
+
+        sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
+        setStatus("submitted");
+        router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review`);
+      } catch (err: any) {
+         console.warn("DEMO MODE ERROR:", err.message);
+         const mockReview: PracticeReview = {
+           attempt: {
+             id: "guest-attempt-fallback",
+             question_count: questionCount,
+             score_raw: Object.values(correctness).filter(Boolean).length,
+             score_pct: (Object.values(correctness).filter(Boolean).length / questionCount) * 100,
+           },
+           answers: payloadAnswers.map(a => ({ 
+             ...a, 
+             explanation: null, 
+             selected_option: a.selected_option || null,
+             content: a.content,
+             option_a: a.option_a,
+             option_b: a.option_b,
+             option_c: a.option_c,
+             option_d: a.option_d
+           })),
+           feedback: null
+         };
+         sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
+         setStatus("submitted");
+         router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review`);
+         return;
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (!attemptId) {
       try {
         await ensureAttempt();
@@ -221,9 +433,8 @@ export default function PracticeSetClient({
       if (!res.ok) {
         throw new Error(data.error || "Submit failed");
       }
-      setReview(data as PracticeReview);
       setStatus("submitted");
-      setMessage("Attempt submitted. See feedback below.");
+      router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review?attemptId=${id}`);
     } catch (err: any) {
       setSubmitting(false);
       setError(err.message || "Submit failed");
@@ -233,8 +444,6 @@ export default function PracticeSetClient({
   const startNewAttempt = () => {
     resetStateForNewAttempt();
   };
-
-  const feedbackExplanations = review?.feedback?.explanations || {};
 
   const goPrev = () => setCurrentIndex((i) => Math.max(0, i - 1));
   const goNext = () => setCurrentIndex((i) => Math.min(questionCount - 1, i + 1));
@@ -296,7 +505,32 @@ export default function PracticeSetClient({
             <p id={questionLabelId} className="text-base text-gray-900">
               {currentQuestion.content}
             </p>
-            <div className="space-y-3" role="radiogroup" aria-labelledby={questionLabelId}>
+            <div 
+              className="space-y-3" 
+              role="radiogroup" 
+              aria-labelledby={questionLabelId}
+              onKeyDown={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.role !== "radio") return;
+
+                if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(e.key)) {
+                  e.preventDefault();
+                  
+                  const buttons = Array.from(e.currentTarget.querySelectorAll('[role="radio"]')) as HTMLButtonElement[];
+                  const currentIdx = buttons.indexOf(target as HTMLButtonElement);
+                  if (currentIdx === -1) return;
+
+                  let nextIndex = currentIdx;
+                  if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                    nextIndex = (currentIdx + 1) % buttons.length;
+                  } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                    nextIndex = (currentIdx - 1 + buttons.length) % buttons.length;
+                  }
+
+                  buttons[nextIndex].focus();
+                }
+              }}
+            >
               {optionKeys.map((key) => {
                 const value = currentQuestion[`option_${key.toLowerCase() as "a" | "b" | "c" | "d"}`];
                 const selected = answers[currentQuestion.id];
@@ -306,6 +540,12 @@ export default function PracticeSetClient({
                 const disabled = status === "submitted" || Boolean(answers[currentQuestion.id]);
                 const optionLabelId = `option-${currentQuestion.id}-${key}-label`;
                 const labelledBy = optionLabelId;
+                
+                const isTabbable = 
+                  focusedOption === key || 
+                  isSelected || 
+                  (!answers[currentQuestion.id] && !focusedOption && key === "A");
+
                 return (
                   <button
                     key={key}
@@ -314,6 +554,8 @@ export default function PracticeSetClient({
                     aria-checked={isSelected}
                     aria-labelledby={labelledBy}
                     disabled={disabled}
+                    tabIndex={disabled ? undefined : (isTabbable ? 0 : -1)}
+                    onFocus={() => setFocusedOption(key)}
                     onClick={() => {
                       if (!disabled) handleSelect(currentQuestion.id, key);
                     }}
@@ -383,8 +625,7 @@ export default function PracticeSetClient({
                 <div className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-800">
                   <p className="font-semibold text-gray-900">Explanation</p>
                   <p className="text-gray-700">
-                    {feedbackExplanations[currentQuestion.id] ||
-                      currentQuestion.explanation ||
+                    {currentQuestion.explanation ||
                       "No explanation available."}
                   </p>
                   <p className="mt-2 text-xs text-gray-600">
@@ -409,7 +650,7 @@ export default function PracticeSetClient({
                   onClick={handleSubmit}
                   disabled={status === "submitted" || submitting || saving || !allAnswered}
                 >
-                  {submitting ? "Submitting..." : status === "submitted" ? "Submitted" : "Done"}
+                  {submitting ? "Submitting..." : status === "submitted" ? "Submitted" : !userEmail ? "Submit & See Demo Feedback" : "Done"}
                 </Button>
               ) : (
                 <Button
@@ -426,44 +667,16 @@ export default function PracticeSetClient({
       )}
 
       <div className="flex flex-wrap gap-3">
-        {review && (
-          <Button variant="outline" onClick={startNewAttempt}>
-            Start a new attempt
-          </Button>
-        )}
         {/* Keep a secondary Done button hidden when using the inline Done above */}
         {currentIndex !== questionCount - 1 && (
           <Button
             onClick={handleSubmit}
             disabled={status === "submitted" || submitting || saving || !allAnswered}
           >
-            {submitting ? "Submitting..." : status === "submitted" ? "Submitted" : "Done"}
+            {submitting ? "Submitting..." : status === "submitted" ? "Submitted" : !userEmail ? "Submit & See Demo Feedback" : "Done"}
           </Button>
         )}
       </div>
-
-      {review && (
-        <Card className="border-emerald-200">
-          <CardHeader>
-            <CardTitle className="text-lg">Review</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-gray-900">Score: {review.attempt.score_raw}/{review.attempt.question_count} ({review.attempt.score_pct.toFixed(1)}%)</p>
-            {review.feedback?.strengths && (
-              <div>
-                <p className="font-semibold text-gray-900">Strengths</p>
-                <p className="text-gray-700">{review.feedback.strengths}</p>
-              </div>
-            )}
-            {review.feedback?.weak_zones && Object.keys(review.feedback.weak_zones).length > 0 && (
-              <div>
-                <p className="font-semibold text-gray-900">Weak zones</p>
-                <pre className="whitespace-pre-wrap text-sm text-gray-700">{JSON.stringify(review.feedback.weak_zones, null, 2)}</pre>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </section>
   );
 }

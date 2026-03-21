@@ -102,6 +102,8 @@ const normalizeJson = (text: string) => {
 };
 
 const extractPuterContent = (result: any): string => {
+  if (typeof result === "string") return result;
+  
   const content =
     result?.message?.content ??
     (Array.isArray(result?.messages) ? result.messages.at(-1)?.content : undefined) ??
@@ -153,7 +155,7 @@ export default function CreateQuestionSetPage() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<QuestionSetFormValues>({
-    resolver: zodResolver(questionSetSchema),
+    resolver: zodResolver(questionSetSchema as any),
     defaultValues: defaultFormValues,
   });
 
@@ -447,7 +449,7 @@ Return only JSON; must parse with JSON.parse without trimming.`;
       try {
         const startedPuter = performance.now();
         const puterResult = await withTimeout(
-          puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }),
+          (puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }) as unknown) as Promise<any>,
           PUTER_TIMEOUT_MS
         );
         const puterText = extractPuterContent(puterResult);
@@ -573,6 +575,7 @@ Return only JSON; must parse with JSON.parse without trimming.`;
       title: values.title,
       difficulty_level: Number(values.difficulty_level),
       is_verified: values.is_verified,
+      
       questions: values.questions.map((question, index) => ({
         order_number: Number(question.order_number ?? index + 1),
         content: question.content,

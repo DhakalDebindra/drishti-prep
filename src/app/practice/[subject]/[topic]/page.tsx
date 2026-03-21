@@ -75,7 +75,7 @@ export default async function TopicSetsPage({
                   Level {set.difficulty_level}
                 </span>
               </div>
-              <p className="text-sm text-gray-600">Version {set.version} • {set.is_verified ? "Verified" : "Unverified"}</p>
+              
             </Link>
           ))}
         </div>
