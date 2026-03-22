@@ -1,5 +1,13 @@
-import OpenAI, { OpenAIError } from "openai";
 import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const apiKey =
+  process.env.GEMINI_API_KEY ??
+  process.env.DRISTI_API_KEY ??
+  process.env.DristiApiKey ??
+  "";
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const REQUEST_TIMEOUT_MS = 25_000;
 
@@ -18,15 +26,7 @@ const withTimeout = <T>(promise: Promise<T>, ms: number) => {
   });
 };
 
-const getOpenAIClient = () => {
-  const apiKey =
-    process.env.OPENAI_API_KEY ??
-    process.env.DRISTI_API_KEY ??
-    process.env.DristiApiKey ??
-    process.env.DristiprepOpenAIKey;
-  if (!apiKey) return null;
-  return new OpenAI({ apiKey });
-};
+
 
 export async function POST(req: Request) {
   try {
@@ -71,34 +71,28 @@ Your general_explanation string should be: "यो सम्मेलन भा�
 
 Return only the JSON object; it must parse with JSON.parse without trimming.`;
 
-    const openAIClient = getOpenAIClient();
-    if (!openAIClient) {
+    if (!apiKey) {
       return NextResponse.json(
         {
           error:
-            "OPENAI_API_KEY or DRISTI_API_KEY environment variable is not configured",
+            "AI key environment variable is not configured",
         },
         { status: 500 }
       );
     }
 
-    const started = performance.now();
-    const completionPromise = openAIClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert educator writing accessible, detailed feedback for multiple choice questions.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
     });
 
-    const completion = await withTimeout(completionPromise, REQUEST_TIMEOUT_MS);
+    const started = performance.now();
+    const result = await withTimeout(model.generateContent(prompt), REQUEST_TIMEOUT_MS);
     const latencyMs = Math.round(performance.now() - started);
-    const responseText = completion.choices?.[0]?.message?.content?.trim() ?? "";
+    const responseText = result.response.text();
     const cleaned = normalizeJson(responseText);
 
     let explanation = "";
@@ -116,13 +110,13 @@ Return only the JSON object; it must parse with JSON.parse without trimming.`;
     return NextResponse.json(
       {
         general_explanation: explanation,
-        provider: "openai",
-        model: completion.model ?? "gpt-4o-mini",
+        provider: "google",
+        model: "gemini-2.0-flash",
         latency_ms: latencyMs,
       },
       { status: 200 }
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     if (error instanceof Error && error.message === "TIMEOUT") {
       return NextResponse.json(
         { error: "Generation timed out after 25s" },

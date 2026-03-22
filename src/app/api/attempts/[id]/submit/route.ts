@@ -1,6 +1,6 @@
-import OpenAI, { OpenAIError } from "openai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { generateReviewFeedback } from "@/lib/gemini";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -23,15 +23,7 @@ type DecoratedAnswer = {
   explanation: string | null;
 };
 
-const getOpenAIClient = () => {
-  const apiKey =
-    process.env.OPENAI_API_KEY ??
-    process.env.DRISTI_API_KEY ??
-    process.env.DristiApiKey ??
-    process.env.DristiprepOpenAIKey;
-  if (!apiKey) return null;
-  return new OpenAI({ apiKey });
-};
+// OpenAI client removed in favor of Gemini
 
 export async function POST(req: Request, { params }: RouteParams) {
   const supabase = await createClient();
@@ -113,10 +105,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     updatedAttempt = { ...attempt, ...updated, status: "submitted" } as typeof attempt;
   }
 
-  const aiClient = getOpenAIClient();
-
   const feedbackPayload = await buildFeedback({
-    aiClient,
     attemptId,
     decorated,
     scoreRaw,
@@ -154,7 +143,6 @@ export async function POST(req: Request, { params }: RouteParams) {
 }
 
 type FeedbackInput = {
-  aiClient: OpenAI | null;
   attemptId: string;
   decorated: DecoratedAnswer[];
   scoreRaw: number;
@@ -164,80 +152,46 @@ type FeedbackInput = {
 
 type FeedbackPayload = {
   strengths: string | null;
-  weak_zones: Record<string, unknown> | null;
+  weak_zones: Record<string, unknown> | string[] | null;
   explanations: Record<string, string> | null;
   model?: string | null;
   latency_ms?: number | null;
   cost_cents?: number | null;
 };
 
-async function buildFeedback({ aiClient, decorated, scoreRaw, scorePct, totalQuestions }: FeedbackInput): Promise<FeedbackPayload | null> {
+async function buildFeedback({ decorated, scoreRaw, scorePct, totalQuestions }: FeedbackInput): Promise<FeedbackPayload | null> {
   const explanationsFallback: Record<string, string> = {};
   decorated.forEach((a) => {
     if (a.explanation) explanationsFallback[a.question_id] = a.explanation;
   });
 
-  if (!aiClient) {
+  const questionsSummary = decorated.map((a) => ({
+    question_id: a.question_id,
+    selected: a.selected_option,
+    correct: a.correct_option,
+    is_correct: a.is_correct,
+  }));
+
+  const result = await generateReviewFeedback(questionsSummary, scoreRaw, totalQuestions, scorePct);
+
+  if (!result.feedback) {
     return {
-      strengths: "AI key not configured; showing stored explanations only.",
+      strengths: result.error || "AI generation failed. Using stored explanations.",
       weak_zones: null,
       explanations: explanationsFallback,
+      model: result.model,
+      latency_ms: result.latency_ms,
     };
   }
 
-  const missed = decorated.filter((a) => !a.is_correct);
-  const prompt = `You are an encouraging exam coach. The learner just finished a multiple-choice set.
-Score: ${scoreRaw}/${totalQuestions} (${scorePct.toFixed(1)}%).
-Questions summary (JSON): ${JSON.stringify(
-    decorated.map((a) => ({
-      question_id: a.question_id,
-      selected: a.selected_option,
-      correct: a.correct_option,
-      is_correct: a.is_correct,
-    })),
-  null,
-  2)}
+  // Merge generated and fallback explanations
+  const mergedExplanations = { ...explanationsFallback, ...(result.feedback.explanations || {}) };
 
-Return JSON with keys:
-- strengths: 1-2 sentences celebrating what went well.
-- weak_zones: array of 1-3 short pointers on what to review (cite question_id when relevant).
-- explanations: object mapping question_id -> short plain-text explanation (2-3 sentences, screen-reader friendly).
-`;
-
-  const started = performance.now();
-  try {
-    const completion = await aiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are an accessible, supportive tutor for Nepali civil service prep." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
-    });
-    const latency = Math.round(performance.now() - started);
-    const text = completion.choices?.[0]?.message?.content?.trim() || "";
-    let parsed: FeedbackPayload | null = null;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = null;
-    }
-    return parsed
-      ? { ...parsed, model: completion.model, latency_ms: latency }
-      : {
-          strengths: "AI response was not parseable; using stored explanations.",
-          weak_zones: null,
-          explanations: explanationsFallback,
-          model: completion.model,
-          latency_ms: latency,
-        };
-  } catch (error) {
-    const message = error instanceof OpenAIError ? error.message : "AI generation failed";
-    console.error("AI feedback error", message);
-    return {
-      strengths: message,
-      weak_zones: null,
-      explanations: explanationsFallback,
-    };
-  }
+  return {
+    strengths: result.feedback.strengths,
+    weak_zones: result.feedback.weakZones as any,
+    explanations: mergedExplanations,
+    model: result.model,
+    latency_ms: result.latency_ms,
+  };
 }

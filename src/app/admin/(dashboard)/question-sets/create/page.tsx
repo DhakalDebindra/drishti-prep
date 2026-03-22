@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
-import { puter } from "@heyputer/puter.js";
+
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -68,23 +68,7 @@ const createDefaultFormValues = (): QuestionSetFormValues => ({
 
 const defaultFormValues = createDefaultFormValues();
 
-const PUTER_MODEL = process.env.NEXT_PUBLIC_PUTER_MODEL ?? "deepseek/deepseek-chat";
-const PUTER_TIMEOUT_MS = 25_000;
-const FALLBACK_TIMEOUT_MS = 25_000;
-
-const withTimeout = <T,>(promise: Promise<T>, ms: number) =>
-  new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("TIMEOUT")), ms);
-    promise
-      .then((res) => {
-        clearTimeout(timer);
-        resolve(res);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
+const TIMEOUT_MS = 25_000;
 
 const normalizeJson = (text: string) => {
   if (!text) return text;
@@ -101,19 +85,7 @@ const normalizeJson = (text: string) => {
   return cleaned;
 };
 
-const extractPuterContent = (result: any): string => {
-  if (typeof result === "string") return result;
-  
-  const content =
-    result?.message?.content ??
-    (Array.isArray(result?.messages) ? result.messages.at(-1)?.content : undefined) ??
-    (Array.isArray(result?.choices) ? result.choices[0]?.message?.content : undefined) ??
-    result?.output_text ??
-    result?.result ??
-    "";
-  if (typeof content === "string") return content;
-  return JSON.stringify(content ?? "");
-};
+
 
 const parseExplanation = (raw: string): { text: string; parseError: boolean } => {
   const cleaned = normalizeJson(raw);
@@ -443,76 +415,38 @@ Your general_explanation string should be: "यो सम्मेलन भा�
 
 Return only JSON; must parse with JSON.parse without trimming.`;
 
-      let explanation = "";
-      let usedFallback = false;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      
+      const response = await fetch("/api/generate-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      }).catch((err) => {
+        clearTimeout(timeoutId);
+        throw err;
+      });
+      clearTimeout(timeoutId);
 
-      try {
-        const startedPuter = performance.now();
-        const puterResult = await withTimeout(
-          (puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }) as unknown) as Promise<any>,
-          PUTER_TIMEOUT_MS
-        );
-        const puterText = extractPuterContent(puterResult);
-        const parsed = parseExplanation(puterText);
-        explanation = parsed.text;
-        if (parsed.parseError && process.env.NODE_ENV === "development") {
-          console.warn("Puter parse fallback; raw:", puterText);
+      const responseText = await response.text();
+      if (!response.ok) {
+        let parsedError: any = null;
+        try {
+          parsedError = JSON.parse(responseText);
+        } catch {
+          parsedError = null;
         }
-        if (!explanation && process.env.NODE_ENV === "development") {
-          console.warn(
-            "Puter returned empty explanation in",
-            Math.round(performance.now() - startedPuter),
-            "ms"
-          );
-        }
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("Puter call failed, will fall back:", err);
-        }
+        const message = parsedError?.error ?? responseText ?? "Unknown error";
+        const code = parsedError?.code ? ` (${parsedError.code})` : "";
+        throw new Error(`Failed to generate feedback: ${message}${code}`);
       }
 
-      // If Puter failed to produce explanation, fall back to backend
-      if (!explanation || explanation.toLowerCase().includes("ai response was empty")) {
-        usedFallback = true;
-        const controller = new AbortController();
-        const fallbackTimeout = setTimeout(() => controller.abort(), FALLBACK_TIMEOUT_MS);
-        const response = await fetch("/api/generate-feedback", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        }).catch((err) => {
-          clearTimeout(fallbackTimeout);
-          throw err;
-        });
-        clearTimeout(fallbackTimeout);
-
-        const responseText = await response.text();
-        if (!response.ok) {
-          let parsedError: any = null;
-          try {
-            parsedError = JSON.parse(responseText);
-          } catch {
-            parsedError = null;
-          }
-          const message = parsedError?.error ?? responseText ?? "Unknown error";
-          const code = parsedError?.code ? ` (${parsedError.code})` : "";
-          throw new Error(`Failed to generate feedback: ${message}${code}`);
-        }
-
-        const parsed = parseExplanation(responseText);
-        explanation = parsed.text || "Could not generate explanation.";
-        if (parsed.parseError && process.env.NODE_ENV === "development") {
-          console.warn("Fallback parse fallback; raw:", responseText);
-        }
-      }
+      const parsed = parseExplanation(responseText);
+      const explanation = parsed.text || "Could not generate explanation.";
 
       if (!explanation) {
         throw new Error("Failed to generate feedback: Empty explanation from AI");
-      }
-
-      if (usedFallback && process.env.NODE_ENV === "development") {
-        console.warn("Used OpenAI fallback for explanation");
       }
 
       setValue(`questions.${index}.general_explanation`, explanation);

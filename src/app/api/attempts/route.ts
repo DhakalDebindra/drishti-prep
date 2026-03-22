@@ -20,18 +20,18 @@ export async function POST(req: Request) {
   }
 
   // Reuse existing in-progress attempt if present.
-  const { data: existing } = await supabase
+  const { data: recent } = await supabase
     .from("attempts")
     .select("id, status, question_count, score_raw, score_pct, set_version")
     .eq("user_id", user.id)
     .eq("set_id", setId)
-    .eq("status", "in_progress")
     .order("started_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (existing) {
-    return NextResponse.json(existing, { status: 200 });
+  // If the absolute most recent attempt is in_progress, reuse it.
+  if (recent && recent.status === "in_progress") {
+    return NextResponse.json(recent, { status: 200 });
   }
 
   const { data: set, error: setError } = await supabase

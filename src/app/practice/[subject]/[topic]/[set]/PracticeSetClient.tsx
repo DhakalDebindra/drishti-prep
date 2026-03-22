@@ -5,111 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { puter } from "@heyputer/puter.js";
-
-const PUTER_MODEL = process.env.NEXT_PUBLIC_PUTER_MODEL ?? "deepseek/deepseek-chat";
-const PUTER_TIMEOUT_MS = 25000;
-
-const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T | { isTimeoutError: true }> =>
-  new Promise((resolve) => {
-    const timer = setTimeout(() => resolve({ isTimeoutError: true }), ms);
-    promise
-      .then((res) => {
-        clearTimeout(timer);
-        resolve(res);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        resolve({ isTimeoutError: true });
-      });
-  });
-
-const extractPuterContent = (result: any): string => {
-  if (typeof result === "string") return result;
-  
-  const content =
-    result?.message?.content ??
-    (Array.isArray(result?.messages) ? result.messages.at(-1)?.content : undefined) ??
-    (Array.isArray(result?.choices) ? result.choices[0]?.message?.content : undefined) ??
-    result?.output_text ??
-    result?.result ??
-    "";
-  if (typeof content === "string") return content;
-  return JSON.stringify(content ?? "");
-};
-
-const normalizeJson = (str: string) => {
-  const s = str.trim();
-  if (s.startsWith("```json")) {
-    const end = s.indexOf("```", 7);
-    if (end > 7) return s.slice(7, end).trim();
-  }
-  if (s.startsWith("```")) {
-    const end = s.indexOf("```", 3);
-    if (end > 3) return s.slice(3, end).trim();
-  }
-  return s;
-};
-
-const generateGuestFeedbackLocally = async (answers: any[]) => {
-  const prompt = `
-**Role:**
-You are an expert tutor providing constructive feedback for a student who just submitted a practice quiz.
-You will be provided with an array of answers the student just submitted, including the question content, their selected option, the correct option, whether it was correct or not, and the authoritative factual "explanation" for that question.
-
-**Task:**
-Analyze the student's performance and provide:
-1. "strengths": A short paragraph summarizing what they did well.
-2. "weakZones": An object categorized by topic showing areas for improvement.
-3. "explanations": An object mapping the \`question_id\` to a short string explanation of WHY the correct answer is right and why their wrong answer was wrong (only provide explanations for questions they answered INCORRECTLY). Use the provided authoritative "explanation" text to ensure your facts are completely accurate and contextually rich for Nepali exam prep.
-
-IMPORTANT: Return ONLY a valid JSON object (no markdown fences, no extra prose). Schema:
-{
-  "strengths": string,
-  "weakZones": Record<string, string>,
-  "explanations": Record<string, string>
-}
-
-**Answers to Analyze:**
-${JSON.stringify(answers, null, 2)}
-`;
-
-  const started = performance.now();
-  const puterResult = await withTimeout(
-    (puter.ai.chat(prompt, { model: PUTER_MODEL, stream: false }) as unknown) as Promise<any>,
-    PUTER_TIMEOUT_MS
-  );
-
-  if (puterResult && typeof puterResult === "object" && "isTimeoutError" in puterResult) {
-    throw new Error("AI response empty or invalid (Timeout)");
-  }
-
-  const puterText = extractPuterContent(puterResult);
-  console.log("RAW PUTER TEXT:", puterText);
-  let parsed: any = null;
-  const cleaned = normalizeJson(puterText);
-  try {
-    if (cleaned) {
-      parsed = JSON.parse(cleaned);
-    }
-  } catch {
-    console.warn("Could not parse guest feedback JSON from puter", cleaned);
-  }
-
-  if (!parsed || typeof parsed !== "object") {
-     throw new Error("AI response empty or invalid");
-  }
-
-  return {
-    strengths: parsed.strengths ?? null,
-    weakZones: parsed.weakZones ?? null,
-    explanations: parsed.explanations ?? {},
-    model: PUTER_MODEL,
-    latency_ms: Math.round(performance.now() - started),
-  };
-};
-
-
 export type DecoratedAnswer = {
   question_id: string;
   content?: string;
@@ -192,7 +87,21 @@ export default function PracticeSetClient({
   initialReview,
   userEmail,
 }: Props) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (!userEmail || !existingAttempt || questions.length === 0) return 0;
+    
+    const answeredMap: Record<string, boolean> = {};
+    existingAnswers.forEach((a) => {
+      if (a.selected_option) answeredMap[a.question_id] = true;
+    });
+
+    for (let i = 0; i < questions.length; i++) {
+      if (!answeredMap[questions[i].id]) {
+        return i;
+      }
+    }
+    return questions.length - 1;
+  });
   const [attemptId, setAttemptId] = useState<string | null>(existingAttempt?.id ?? null);
   const [status, setStatus] = useState<string>(existingAttempt?.status ?? "idle");
   const [saving, setSaving] = useState(false);
@@ -349,14 +258,32 @@ export default function PracticeSetClient({
       }));
 
       try {
-        const data = await generateGuestFeedbackLocally(payloadAnswers);
+        const scoreRaw = Object.values(correctness).filter(Boolean).length;
+        const scorePct = questionCount > 0 ? (scoreRaw / questionCount) * 100 : 0;
+
+        const res = await fetch("/api/guest-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            answers: payloadAnswers,
+            scoreRaw,
+            totalQuestions: questionCount,
+            scorePct,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch guest feedback");
+        }
+
+        const data = await res.json();
 
         const mockReview: PracticeReview = {
           attempt: {
             id: "guest-attempt",
             question_count: questionCount,
-            score_raw: Object.values(correctness).filter(Boolean).length,
-            score_pct: (Object.values(correctness).filter(Boolean).length / questionCount) * 100,
+            score_raw: scoreRaw,
+            score_pct: scorePct,
           },
           answers: payloadAnswers.map(a => ({ 
             ...a, 

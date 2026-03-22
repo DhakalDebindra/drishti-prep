@@ -40,19 +40,18 @@ export default async function PracticeSetPage({ params }: PageProps) {
     notFound();
   }
 
-  const { data: activeAttempt } = user
+  const { data: recentAttempt } = user
     ? await supabase
         .from("attempts")
         .select("id, status, question_count, score_raw, score_pct, set_version, submitted_at")
         .eq("set_id", setId)
         .eq("user_id", user.id)
-        .eq("status", "in_progress")
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle()
     : { data: null } as { data: any };
 
-  const attempt = activeAttempt ?? null;
+  const attempt = recentAttempt?.status === "in_progress" ? recentAttempt : null;
 
   const { data: existingAnswers } = attempt
     ? await supabase
