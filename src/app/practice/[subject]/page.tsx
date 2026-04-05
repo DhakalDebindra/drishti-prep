@@ -1,29 +1,41 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SubjectTopicsPage({
   params,
 }: {
-  params: Promise<{ subject: string }>;
+  params: { subject: string } | Promise<{ subject: string }>;
 }) {
-  const { subject } = await params;
-  const supabase = await createClient();
-  const subjectName = decodeURIComponent(subject);
+  const resolvedParams = await Promise.resolve(params);
+  const decodedSubject = decodeURIComponent(resolvedParams.subject);
 
-  const [{ data: subjectRow }, { data: topics, error }] = await Promise.all([
-    supabase.from("subjects").select("id, name, description").eq("name", subjectName).maybeSingle(),
-    supabase
-      .from("topics")
-      .select("id, name, description, subject_id")
-      .order("name", { ascending: true }),
-  ]);
+  const supabase = await createClient();
+
+  const { data: subjectRow, error: subjectError } = await supabase
+    .from("subjects")
+    .select("id, name, description")
+    .eq("name", decodedSubject)
+    .maybeSingle();
 
   if (!subjectRow) {
-    notFound();
+    return (
+      <div className="p-10 font-mono text-sm">
+        <h1 className="text-xl text-red-500 mb-4">Debug: Subject Not Found</h1>
+        <p><strong>Raw Param:</strong> {resolvedParams.subject}</p>
+        <p><strong>Decoded Param:</strong> {decodedSubject}</p>
+        <p><strong>Supabase Error:</strong> {JSON.stringify(subjectError, null, 2)}</p>
+        <p><strong>Attempted Query:</strong> .eq('name', '{decodedSubject}')</p>
+      </div>
+    );
   }
 
-  const topicList = (topics ?? []).filter((t) => t.subject_id === subjectRow.id);
+  const { data: topics, error } = await supabase
+    .from("topics")
+    .select("id, name, description, subject_id")
+    .eq("subject_id", subjectRow.id)
+    .order("name", { ascending: true });
+
+  const topicList = topics ?? [];
 
   return (
     <section className="space-y-6">

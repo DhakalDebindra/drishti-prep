@@ -6,6 +6,8 @@ import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Prompts } from "@/config/prompts";
+import { parseExplanation } from "@/utils/parseExplanation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,36 +72,7 @@ const defaultFormValues = createDefaultFormValues();
 
 const TIMEOUT_MS = 25_000;
 
-const normalizeJson = (text: string) => {
-  if (!text) return text;
-  let cleaned = text.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```json\s*/i, "").replace(/^```\s*/i, "");
-    cleaned = cleaned.replace(/```$/, "").trim();
-  }
-  const first = cleaned.indexOf("{");
-  const last = cleaned.lastIndexOf("}");
-  if (first !== -1 && last !== -1 && last > first) {
-    cleaned = cleaned.slice(first, last + 1);
-  }
-  return cleaned;
-};
 
-
-
-const parseExplanation = (raw: string): { text: string; parseError: boolean } => {
-  const cleaned = normalizeJson(raw);
-  if (!cleaned) return { text: raw?.trim() ?? "", parseError: true };
-  try {
-    const parsed = JSON.parse(cleaned);
-    const text =
-      (parsed.general_explanation || parsed.explanation || "").trim();
-    if (text) return { text, parseError: false };
-  } catch {
-    // fall through
-  }
-  return { text: cleaned.trim() || raw.trim(), parseError: true };
-};
 
 export default function CreateQuestionSetPage() {
   const [isGenerating, setIsGenerating] = useState<number | null>(null);
@@ -383,37 +356,14 @@ export default function CreateQuestionSetPage() {
         correct_option: question.correct_option,
       };
 
-      const prompt = `
-**Role:**
-You are an expert Loksewa (Public Service Commission of Nepal) General Knowledge (GK) facilitator and instructor. Your primary goal is to prepare competitive exam aspirants by providing deeply informative, context-rich explanations for given Multiple Choice Questions (MCQs).
-
-**Task:**
-You will be provided with a Question, its Options, and the Correct Option. You must provide a comprehensive explanation in formal, grammatically correct Nepali.
-IMPORTANT: Return ONLY a valid JSON object (no markdown fences, no extra prose). Schema:
-{
-  "general_explanation": "string"
-}
-
-**Instructions for the "general_explanation" Section:**
-- Do not just state the right answer. Provide a rich context just like a real Loksewa facilitator would in a classroom.
-- Always include related supplementary facts (e.g., exact dates of the event, themes, key participants, previous iterations, or historical significance) because Loksewa exams frequently test candidates on these peripheral details.
-- Keep the tone educational, highly factual, accurate, and precise.
-
-**CONTENT:**
-- Question: ${payload.content}
-- Option A: ${payload.option_a}
-- Option B: ${payload.option_b}
-- Option C: ${payload.option_c}
-- Option D: ${payload.option_d}
-- Correct Option: ${payload.correct_option}
-
-**Reference Example of desired explanation style:**
-If Question: International AI Impact Summit २०२६ कहाँ आयोजना भएको थियो?
-And Options: A. Tokyo, B. New Delhi, C. London, D. Paris
-And Correct Option: B
-Your general_explanation string should be: "यो सम्मेलन भारतको नयाँ दिल्लीमा सन् २०२६ फेब्रुअरी १६ देखि २१ सम्म आयोजना गरिएको थियो। यसमा १०० भन्दा बढी देशका प्रतिनिधिहरु सहभागी भएका थिए। यस सम्मेलनको मुख्य उद्देश्य कृत्रिम बुद्धिमत्ता (AI) को सुरक्षित र जिम्मेवार प्रयोगका लागि विश्वव्यापी मापदण्ड तय गर्नु र यसले मानव जीवनमा पार्ने प्रभावको बारेमा छलफल गर्नु थियो।"
-
-Return only JSON; must parse with JSON.parse without trimming.`;
+      const prompt = Prompts["loksewa gk facilitator"](
+        payload.content,
+        payload.option_a,
+        payload.option_b,
+        payload.option_c,
+        payload.option_d,
+        payload.correct_option
+      );
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);

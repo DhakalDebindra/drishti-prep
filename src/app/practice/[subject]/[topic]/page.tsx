@@ -1,44 +1,69 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
+﻿import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function TopicSetsPage({
   params,
 }: {
-  params: Promise<{ subject: string; topic: string }>;
+  params: { subject: string; topic: string } | Promise<{ subject: string; topic: string }>;
 }) {
-  const { subject, topic } = await params;
+  const resolvedParams = await Promise.resolve(params);
+  const subjectSlug = resolvedParams.subject;
+  const topicSlug = resolvedParams.topic;
+  const subjectName = decodeURIComponent(subjectSlug);
+  const topicName = decodeURIComponent(topicSlug);
+
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user ?? null;
-  const subjectName = decodeURIComponent(subject);
-  const topicName = decodeURIComponent(topic);
 
-  const [subjectRes, topicRes, setsRes] = await Promise.all([
-    supabase.from("subjects").select("id, name").eq("name", subjectName).maybeSingle(),
-    supabase.from("topics").select("id, name, description, subject_id").eq("name", topicName).maybeSingle(),
-    supabase
-      .from("question_sets")
-      .select("id, title, difficulty_level, is_verified, version, topic_id")
-      .order("created_at", { ascending: false }),
-  ]);
+  const { data: subjectRow, error: subjectError } = await supabase
+    .from("subjects")
+    .select("id, name")
+    .eq("name", subjectName)
+    .maybeSingle();
 
-  if (!subjectRes.data || !topicRes.data) {
-    notFound();
+  if (!subjectRow) {
+    return (
+      <div className="p-10 font-mono text-sm">
+        <h1 className="text-xl text-red-500 mb-4">Debug: Subject Not Found</h1>
+        <p><strong>Raw Subject Param:</strong> {subjectSlug}</p>
+        <p><strong>Decoded Subject:</strong> {subjectName}</p>
+        <p><strong>Supabase Error:</strong> {JSON.stringify(subjectError, null, 2)}</p>
+        <p><strong>Attempted Query:</strong> subjects.eq('name', '{subjectName}')</p>
+      </div>
+    );
   }
 
-  const topicRow = topicRes.data;
-  const subjectRow = subjectRes.data;
+  const { data: topicRow, error: topicError } = await supabase
+    .from("topics")
+    .select("id, name, description, subject_id")
+    .eq("name", topicName)
+    .eq("subject_id", subjectRow.id)
+    .maybeSingle();
 
-  if (topicRow.subject_id !== subjectRow.id) {
-    notFound();
+  if (!topicRow) {
+    return (
+      <div className="p-10 font-mono text-sm">
+        <h1 className="text-xl text-red-500 mb-4">Debug: Topic Not Found</h1>
+        <p><strong>Raw Subject Param:</strong> {subjectSlug}</p>
+        <p><strong>Decoded Subject:</strong> {subjectName}</p>
+        <p><strong>Raw Topic Param:</strong> {topicSlug}</p>
+        <p><strong>Decoded Topic:</strong> {topicName}</p>
+        <p><strong>Supabase Error:</strong> {JSON.stringify(topicError, null, 2)}</p>
+        <p><strong>Attempted Query:</strong> topics.eq('name', '{topicName}').eq('subject_id', '{subjectRow.id}')</p>
+      </div>
+    );
   }
 
-  const sets = (setsRes.data ?? []).filter((set) => set.topic_id === topicRow.id);
+  const { data: sets = [] } = await supabase
+    .from("question_sets")
+    .select("id, title, difficulty_level, is_verified, version, topic_id")
+    .eq("topic_id", topicRow.id)
+    .order("created_at", { ascending: false });
 
   // Surface user progress
   const setAttemptsMap: Record<string, any> = {};
-  if (user && sets.length > 0) {
+  if (user && sets && sets.length > 0) {
     const setIds = sets.map((s) => s.id);
     const { data: userAttempts } = await supabase
       .from("attempts")
@@ -126,3 +151,4 @@ export default async function TopicSetsPage({
     </section>
   );
 }
+

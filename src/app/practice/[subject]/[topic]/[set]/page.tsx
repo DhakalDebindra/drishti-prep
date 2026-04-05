@@ -1,7 +1,8 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import PracticeSetClient, { DecoratedAnswer, PracticeReview } from "./PracticeSetClient";
+import PracticeSetClient from "./PracticeSetClient";
+import type { DecoratedAnswer, PracticeReview } from "@/types/practice";
 
 interface PageProps {
   params: Promise<{ subject: string; topic: string; set: string }>;
@@ -92,3 +93,4 @@ export default async function PracticeSetPage({ params }: PageProps) {
     />
   );
 }
+
