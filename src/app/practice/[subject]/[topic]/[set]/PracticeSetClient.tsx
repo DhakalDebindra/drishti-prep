@@ -39,9 +39,10 @@ type QuestionOptionsProps = {
   selectedAnswer: { question_id: string; selected_option: string; is_correct?: boolean } | null;
   onSelect: (option: (typeof optionKeys)[number]) => void;
   isSubmitted?: boolean;
+  correctAnswer: string | null;
 };
 
-const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, isSubmitted }: QuestionOptionsProps) => {
+const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, isSubmitted, correctAnswer }: QuestionOptionsProps) => {
   const questionTitleId = `question-${questionId}-title`;
   const optionsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -91,6 +92,7 @@ const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, i
       {options.map((option, index) => {
         const optionLabelId = `option-${questionId}-${option.value}-label`;
         const isSelected = selectedAnswer?.selected_option === option.value;
+        const isCorrectOption = option.value === correctAnswer;
         const isAnswered = selectedAnswer != null;
         const tabIndex = isSelected ? 0 : index === 0 ? 0 : -1;
 
@@ -100,7 +102,7 @@ const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, i
             type="button"
             role="radio"
             aria-checked={isSelected}
-            aria-labelledby={`${optionLabelId} ${questionTitleId}`}
+            aria-labelledby={`${optionLabelId} `}
             tabIndex={tabIndex}
             onClick={(e) => {
               e.preventDefault();
@@ -111,6 +113,8 @@ const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, i
             className={`w-full rounded-md border p-3 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-400 ${
               isSelected
                 ? "border-blue-400 bg-blue-50"
+                : isCorrectOption && selectedAnswer
+                ? "border-emerald-500 bg-emerald-50"
                 : "border-gray-200 hover:border-blue-200 hover:bg-gray-50"
             } ${isSubmitted ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
           >
@@ -118,7 +122,11 @@ const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, i
               <span
                 aria-hidden="true"
                 className={`mt-1 h-5 w-5 rounded-full border ${
-                  isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
+                  isSelected 
+                    ? "border-blue-500 bg-blue-500" 
+                    : isCorrectOption && selectedAnswer
+                    ? "border-emerald-500 bg-emerald-500"
+                    : "border-gray-300"
                 }`}
               />
               <div className="space-y-1">
@@ -126,12 +134,19 @@ const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSelect, i
                   <span className="mr-2 font-semibold">{option.value}.</span>
                   {option.text}
                 </p>
-                {isSelected && selectedAnswer?.selected_option !== "skipped" && (
-                  <p className={`text-xs font-semibold ${selectedAnswer?.is_correct ? 'text-emerald-700' : 'text-orange-700'}`}>
-                    <span className="sr-only">{selectedAnswer?.is_correct ? 'correct' : 'incorrect'}</span>
-                    Your choice
-                  </p>
-                )}
+                <div className="flex items-center gap-2">
+                  {isSelected && selectedAnswer?.selected_option !== "skipped" && (
+                    <p className={`text-xs font-semibold ${selectedAnswer?.is_correct ? 'text-emerald-700' : 'text-orange-700'}`}>
+                      <span className="sr-only">{selectedAnswer?.is_correct ? 'correct' : 'incorrect'}</span>
+                      Your choice
+                    </p>
+                  )}
+                  {isCorrectOption && selectedAnswer && (
+                    <p className="text-xs font-semibold text-emerald-700">
+                      Correct Answer
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </button>
@@ -263,6 +278,7 @@ function PracticeSetView() {
             selectedAnswer={selectedAnswer}
             onSelect={handleOptionSelect}
             isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
+            correctAnswer={selectedAnswer && selectedAnswer.selected_option !== 'skipped' ? currentQuestion.correct_option : null}
           />
 
           {state.answers[currentQuestion.id] &&
@@ -330,7 +346,7 @@ function PracticeSetView() {
                   : !userEmail
                   ? !currentHandled
                     ? "Skip & See Demo Feedback"
-                    : "Submit & See Demo Feedback"
+                    : "Submit & Get   Feedback"
                   : !currentHandled
                   ? "Skip & Submit"
                   : "Done"}
