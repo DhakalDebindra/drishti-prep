@@ -139,7 +139,7 @@ export default async function TopicSetsPage({
                   </div>
                   <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">{set.title}</h2>
                 </div>
-                
+
                 <div className="mt-6 flex items-center text-sm font-medium text-blue-600 transition-colors group-hover:text-blue-800">
                   {isCompleted ? "Practice Again" : isInProgress ? "Resume" : "Start Practice"}
                 </div>

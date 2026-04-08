@@ -1,10 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { SystemInstructions } from "@/config/prompts";
 
 const AIConfig = {
-  systemInstructions: {
-    strictNepaliJson:
-      "Please provide your response formatted STRICTLY as a JSON object. All textual explanations MUST be in formal Nepali.",
-  },
   providers: {
     gemini: {
       model: "gemini-2.5-flash",
@@ -49,8 +46,8 @@ export async function generateAiContentJSON(
   const started = performance.now();
 
   const finalPrompt = useStrictNepali
-    ? `${prompt}\n\n${AIConfig.systemInstructions.strictNepaliJson}`
-    : `${prompt}\n\nPlease provide your response formatted STRICTLY as a JSON object.`;
+    ? `${prompt}\n\n${SystemInstructions.strictNepaliJson}`
+    : `${prompt}\n\n${SystemInstructions.defaultJson}`;
 
   const model = genAI.getGenerativeModel({
     model: AIConfig.providers.gemini.model,

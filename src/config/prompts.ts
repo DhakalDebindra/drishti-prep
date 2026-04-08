@@ -56,3 +56,10 @@ Your general_explanation string  should be like: "यो सम्मेलन �
 
 Return only the JSON object; it must parse with JSON.parse without trimming.`,
 };
+
+export const SystemInstructions = {
+  strictNepaliJson:
+    "Please provide your response formatted STRICTLY as a JSON object. All textual explanations MUST be in formal Nepali.",
+  defaultJson:
+    "Please provide your response formatted STRICTLY as a JSON object.",
+};
