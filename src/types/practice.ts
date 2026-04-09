@@ -11,6 +11,15 @@ export type DecoratedAnswer = {
   explanation: string | null;
 };
 
+export type AIFeedback = {
+  strengths: string | null;
+  weak_zones: Record<string, unknown> | null;
+  explanations: Record<string, string> | null;
+  model?: string | null;
+  latency_ms?: number | null;
+  cost_cents?: number | null;
+};
+
 export type PracticeReview = {
   attempt: {
     id: string;
@@ -20,14 +29,7 @@ export type PracticeReview = {
     submitted_at?: string;
   };
   answers: DecoratedAnswer[];
-  feedback: {
-    strengths: string | null;
-    weak_zones: Record<string, unknown> | null;
-    explanations: Record<string, string> | null;
-    model?: string | null;
-    latency_ms?: number | null;
-    cost_cents?: number | null;
-  } | null;
+  feedback?: AIFeedback | null;
 };
 
 export type Question = {
