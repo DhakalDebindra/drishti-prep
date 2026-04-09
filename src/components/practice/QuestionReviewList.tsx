@@ -28,6 +28,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
   const [expandedId, setExpandedId] = useState<string | null>(questions[0]?.id || null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set(initialBookmarkedIds));
   const [reportingQuestionId, setReportingQuestionId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   const filteredQuestions = questions.filter((q) => {
     const isSkipped = q.selected_option === null || q.selected_option === "skipped";
@@ -41,24 +42,43 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
   const handleBookmark = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Optimistic toggle
     const isCurrentlyBookmarked = bookmarkedIds.has(id);
-    setBookmarkedIds(prev => {
-      const newSet = new Set(prev);
-      if (isCurrentlyBookmarked) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
+    
+    // Optimistic toggle
+    if (isCurrentlyBookmarked) {
+      setBookmarkedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+      setAnnouncement("Bookmark removed");
+    } else {
+      setBookmarkedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(id);
+        return newSet;
+      });
+      setAnnouncement("Question bookmarked");
+    }
 
     const result = await toggleBookmark(id);
     if (!result.success) {
       // Revert on failure
-      setBookmarkedIds(prev => {
-        const newSet = new Set(prev);
-        if (isCurrentlyBookmarked) newSet.add(id);
-        else newSet.delete(id);
-        return newSet;
-      });
+      if (isCurrentlyBookmarked) {
+         setBookmarkedIds(prev => {
+            const newSet = new Set(prev);
+            newSet.add(id);
+            return newSet;
+         });
+         setAnnouncement("Failed to remove bookmark");
+      } else {
+         setBookmarkedIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(id);
+            return newSet;
+         });
+         setAnnouncement("Failed to bookmark question");
+      }
       alert(result.error || "Failed to update bookmark status");
     }
   };
@@ -70,6 +90,9 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
 
   return (
     <div className="space-y-6">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Question Review</h3>
         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
@@ -196,10 +219,11 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                     <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
                        <button 
                          onClick={(e) => handleBookmark(q.id, e)} 
-                         aria-label={`Bookmark question ${index + 1}`}
+                         aria-label={`${bookmarkedIds.has(q.id) ? "Remove bookmark for" : "Bookmark"} question ${index + 1}`}
+                         aria-pressed={bookmarkedIds.has(q.id)}
                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        >
-                         <Bookmark className={`w-3.5 h-3.5 ${bookmarkedIds.has(q.id) ? "fill-current text-blue-500" : ""}`} />
+                         <Bookmark aria-hidden="true" className={`w-3.5 h-3.5 ${bookmarkedIds.has(q.id) ? "fill-current text-blue-500" : ""}`} />
                          <span>{bookmarkedIds.has(q.id) ? "Bookmarked" : "Bookmark"}</span>
                        </button>
                        <button 

@@ -34,7 +34,7 @@ export default function LoginPage() {
         setError(`Error (${error.status}): ` + error.message);
       } else {
         console.log("Login successful! Redirecting...");
-        router.push("/admin/question-sets/create");
+        router.push("/dashboard");
         router.refresh(); // Refresh the router cache to ensure the server component picks up the new session
       }
     } catch (err: any) {
@@ -49,8 +49,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">DristiPrep Admin Login</CardTitle>
-          <CardDescription className="text-center">Enter your facilitator credentials</CardDescription>
+          <CardTitle className="text-2xl text-center">Learning Hub Login</CardTitle>
+          <CardDescription className="text-center">Sign in to your learner account</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -64,7 +64,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="facilitator@dristiprep.com"
+                placeholder="learner@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

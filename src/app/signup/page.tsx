@@ -41,7 +41,7 @@ export default function SignupPage() {
         setError(error.message);
       } else {
         if (data.session) {
-           router.push("/admin");
+           router.push("/dashboard");
            router.refresh();
         } else {
            setMessage("Check your email for the confirmation link!");
@@ -59,7 +59,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Create Account</CardTitle>
-          <CardDescription className="text-center">Sign up as a new facilitator</CardDescription>
+          <CardDescription className="text-center">Join the Learning Hub to track your progress</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
@@ -89,7 +89,7 @@ export default function SignupPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="facilitator@dristiprep.com"
+                placeholder="learner@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

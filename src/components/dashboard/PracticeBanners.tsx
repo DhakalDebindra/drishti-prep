@@ -69,13 +69,12 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
             Review questions you found challenging or want to memorize.
           </p>
         </div>
-        <button
-          className="inline-flex items-center text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-lg transition-colors cursor-not-allowed opacity-75"
-          title="Coming soon"
-          disabled
+        <Link
+          href="/bookmarks"
+          className="inline-flex items-center text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-lg transition-colors"
         >
           View Bookmarks
-        </button>
+        </Link>
       </div>
     </div>
   );

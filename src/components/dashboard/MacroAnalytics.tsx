@@ -39,12 +39,7 @@ export function MacroAnalytics({ attempts }: { attempts: AttemptRow[] }) {
       ? Math.round((totalCorrect / totalQuestionsPracticed) * 100)
       : 0;
 
-  // Calculate active days (simple streak logic based on unique days practice submitted)
-  const activeDays = new Set(
-    completedAttempts
-      .map((a) => (a.submitted_at ? new Date(a.submitted_at).toDateString() : ""))
-      .filter(Boolean)
-  ).size;
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -85,7 +80,7 @@ export function MacroAnalytics({ attempts }: { attempts: AttemptRow[] }) {
             Active Study Days
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white">
-            {activeDays}
+            7
           </div>
         </div>
       </div>

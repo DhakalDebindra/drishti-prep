@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
 
   // Prevent logged-in users from seeing the login page
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/admin/question-sets/create', request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Protect admin routes
