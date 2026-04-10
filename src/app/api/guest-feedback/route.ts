@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
 import { generateReviewFeedback } from "@/lib/gemini";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Aggressive IP-based rate limit
+    const limitResult = await rateLimitByIp(req, { windowMs: 60_000, max: 10 });
+    if (!limitResult.ok) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     const body = await req.json();
     const { answers, scoreRaw, totalQuestions, scorePct } = body;
+
+    // Strict size checks
+    const answersSize = JSON.stringify(answers || "").length;
+    if (answersSize > 4000) {
+      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+    }
 
     if (!answers || !Array.isArray(answers)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });

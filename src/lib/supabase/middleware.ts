@@ -31,33 +31,52 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const path = request.nextUrl.pathname
+  const isAuthRoute = path.startsWith('/login')
+  const isAdminRoute = path.startsWith('/admin')
+  const isProtectedApiPost =
+    request.method === 'POST' &&
+    (path.startsWith('/api/subjects') ||
+      path.startsWith('/api/topics') ||
+      path.startsWith('/api/question-sets'))
 
   // Prevent logged-in users from seeing the login page
   if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Protect admin routes
-  if (isAdminRoute) {
+  const needsAdminCheck = isAdminRoute || isProtectedApiPost
+
+  if (needsAdminCheck) {
+    // Unauthenticated handling differs between UI and API routes
     if (!user) {
-      const redirectUrl = new URL('/login', request.url)
-      redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
+      if (isAdminRoute) {
+        const redirectUrl = new URL('/login', request.url)
+        redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
+        return NextResponse.redirect(redirectUrl)
+      }
+      // API route
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // // Check if user is actually an admin
-    // const { data: profile } = await supabase
-    //   .from('profiles')
-    //   .select('is_admin')
-    //   .eq('id', user.id)
-    //   .single()
+    // Check admin flag
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
 
-    // if (!profile?.is_admin) {
-    //   // Could redirect to a /dashboard or a 403 unauthorized page. For now, redirect to root
-    //   return NextResponse.redirect(new URL('/', request.url))
-    // }
+    const isAdmin = !!profile?.is_admin
+
+    if (!isAdmin) {
+      if (isAdminRoute) {
+        // UI: redirect non-admins home
+        const redirectUrl = new URL('/', request.url)
+        return NextResponse.redirect(redirectUrl)
+      }
+      // Protected API POST: return strict 403
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
   }
 
   return supabaseResponse

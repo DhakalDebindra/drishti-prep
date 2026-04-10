@@ -26,6 +26,27 @@ const errorResponse = (message: string, status = 500) =>
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+
+    // Auth + admin guard
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return errorResponse("Not authenticated", 401);
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      return errorResponse("Forbidden", 403);
+    }
+
     const requestBody = await req.json();
     const parseResult = questionSetPayload.safeParse(requestBody);
 
@@ -34,7 +55,6 @@ export async function POST(req: Request) {
       return errorResponse(issue.message, 400);
     }
 
-    const supabase = await createClient();
     const { topic_id, title, difficulty_level, is_verified, questions } =
       parseResult.data;
 
