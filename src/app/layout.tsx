@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Work_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const displayFont = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
+const bodyFont = Work_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const monoFont = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -22,10 +29,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeInitializer = `
+    (function() {
+      try {
+        const root = document.documentElement;
+        const storedContrast = localStorage.getItem('dristiprep-contrast');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const prefersMoreContrast = window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches;
+        if (prefersDark) root.classList.add('dark');
+        if (storedContrast === 'high-contrast' || (!storedContrast && prefersMoreContrast)) root.classList.add('hc');
+      } catch (e) {
+        // noop
+      }
+    })();
+  `;
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} antialiased`}
       >
         {children}
       </body>
