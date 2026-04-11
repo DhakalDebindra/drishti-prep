@@ -1,18 +1,12 @@
-import { Prompts } from "@/config/prompts";
+import { Prompts, QuestionSummaryItem } from "@/config/prompts/index";
 import { generateAiContentJSON } from "./ai-service";
 
-export type GeminiFeedbackResponse = {
-  strengths: string | null;
-  weakZones: Record<string, unknown> | string[] | null;
-  explanations: Record<string, string> | null;
-};
-
 export async function generateReviewFeedback(
-  questionsSummary: any,
+  questionsSummary: QuestionSummaryItem[],
   scoreRaw: number,
   totalQuestions: number,
   scorePct: number
-): Promise<{ feedback: GeminiFeedbackResponse | null; model: string; latency_ms: number; error?: string }> {
+): Promise<{ data: string | null; model: string; latency_ms: number; error?: string }> {
   
   const prompt = Prompts["encouraging exam coach"](
     scoreRaw,
@@ -24,20 +18,14 @@ export async function generateReviewFeedback(
   try {
     const result = await generateAiContentJSON(prompt);
     
-    let parsed: GeminiFeedbackResponse | null = null;
-    try {
-      parsed = JSON.parse(result.data);
-    } catch {
-      parsed = null;
-    }
     return {
-      feedback: parsed,
+      data: result.data,
       model: result.model,
       latency_ms: result.latency_ms,
     };
   } catch (error: any) {
     return {
-      feedback: null,
+      data: null,
       model: "error",
       latency_ms: 0,
       error: error.message || "AI generation failed",

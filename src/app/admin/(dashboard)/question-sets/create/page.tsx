@@ -6,7 +6,7 @@ import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Prompts } from "@/config/prompts";
+import { Prompts } from "@/config/prompts/index";
 import { parseExplanation } from "@/utils/parseExplanation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -356,14 +356,7 @@ export default function CreateQuestionSetPage() {
         correct_option: question.correct_option,
       };
 
-      const prompt = Prompts["loksewa gk facilitator"](
-        payload.content,
-        payload.option_a,
-        payload.option_b,
-        payload.option_c,
-        payload.option_d,
-        payload.correct_option
-      );
+      const prompt = Prompts["loksewa gk facilitator"](payload);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);

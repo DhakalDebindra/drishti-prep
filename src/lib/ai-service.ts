@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { SystemInstructions } from "@/config/prompts";
+import { SystemInstructions } from "@/config/prompts/index";
 
 const AIConfig = {
   providers: {

@@ -93,29 +93,33 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
       <div className="space-y-6">
         {feedback.strengths && (
           <div className="p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl backdrop-blur-sm border border-white dark:border-slate-700/50">
-            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-medium mb-2">
+            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-medium mb-3">
               <Lightbulb className="w-5 h-5" />
-              Overall Performance
+              <h3 className="text-lg font-bold">Overall Performance</h3>
             </div>
             <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
               {feedback.strengths}
             </p>
           </div>
         )}
-
+ 
         {weakZones.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
-              Recommended Focus Areas
-            </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400 font-medium mb-3">
+              <Sparkles className="w-5 h-5" />
+              <h3 className="text-lg font-bold">Recommended Focus Areas</h3>
+            </div>
+            <div className="space-y-3">
               {weakZones.map((zone, idx) => (
-                <span
+                <div
                   key={idx}
-                  className="px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs font-medium rounded-full border border-orange-200 dark:border-orange-800/30"
+                  className="p-4 bg-orange-50 dark:bg-orange-900/10 text-slate-700 dark:text-slate-300 text-sm leading-relaxed rounded-xl border border-orange-100 dark:border-orange-900/20 flex gap-3"
                 >
-                  {typeof zone === "string" ? zone : JSON.stringify(zone)}
-                </span>
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-orange-200 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full">
+                    {idx + 1}
+                  </span>
+                  <span>{typeof zone === "string" ? zone : JSON.stringify(zone)}</span>
+                </div>
               ))}
             </div>
           </div>

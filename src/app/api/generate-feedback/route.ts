@@ -1,27 +1,7 @@
 import { NextResponse } from "next/server";
-import { Prompts } from "@/config/prompts";
-import { normalizeJson } from "@/utils/normalizeJson";
+import { Prompts, safeParseGKExplanation } from "@/config/prompts/index";
 import { generateAiContentJSON } from "@/lib/ai-service";
 import { createClient } from "@/lib/supabase/server";
-
-const REQUEST_TIMEOUT_MS = 25_000;
-
-const withTimeout = <T>(promise: Promise<T>, ms: number) => {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("TIMEOUT")), ms);
-    promise
-      .then((res) => {
-        clearTimeout(timer);
-        resolve(res);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-};
-
-
 
 export async function POST(req: Request) {
   try {
@@ -50,29 +30,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const prompt = Prompts["loksewa gk facilitator"](
-      content,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
-      correct_option
-    );
+    const payload = { content, option_a, option_b, option_c, option_d, correct_option };
+    const prompt = Prompts["loksewa gk facilitator"](payload);
 
     const result = await generateAiContentJSON(prompt, true);
-    const cleaned = normalizeJson(result.data);
+    
+    // Use the new validation layer
+    const parsed = safeParseGKExplanation(result.data);
+    let explanation = parsed?.general_explanation || "AI response format was invalid. Please try again.";
 
-    let explanation = "";
-    try {
-      const parsed = JSON.parse(cleaned);
-      explanation = (parsed.general_explanation || parsed.explanation || "").trim();
-    } catch {
-      explanation = cleaned.trim();
-    }
-
-    if (!explanation) {
-      explanation = "AI response was empty.";
-    }
+    return NextResponse.json(
+      {
+        general_explanation: explanation,
+        provider: result.provider,
+        model: result.model,
+        latency_ms: result.latency_ms,
+      },
+      { status: 200 }
+    );
 
     return NextResponse.json(
       {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateReviewFeedback } from "@/lib/gemini";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { safeParseCoachFeedback } from "@/config/prompts/index";
 
 export async function POST(req: Request) {
   try {
@@ -25,8 +26,9 @@ export async function POST(req: Request) {
 
     const questionsSummary = answers.map((a: any) => ({
       question_id: a.question_id,
-      selected: a.selected_option,
-      correct: a.correct_option,
+      content: a.content,
+      selected_option: a.selected_option,
+      correct_option: a.correct_option,
       is_correct: a.is_correct,
     }));
 
@@ -37,17 +39,18 @@ export async function POST(req: Request) {
       scorePct
     );
 
-    if (!result.feedback) {
-      return NextResponse.json(
-        { error: result.error || "Failed to generate feedback" },
-        { status: 504 }
-      );
-    }
+    const parsed = result.data ? safeParseCoachFeedback(result.data) : null;
+    
+    // Provide a graceful fallback for guest mode instead of an error,
+    // to ensure potential users always see something encouraging.
+    const feedback = parsed || {
+      strengths: "अभ्यास जारी राख्नुहोस्! तपाईंको प्रयास राम्रो छ।",
+      weakZones: ["तपाईंले गलत गर्नुभएको वा छोड्नुभएको प्रश्नहरू फेरि एक पटक दोहोर्याउनुहोस्।"]
+    };
 
     return NextResponse.json({
-      strengths: result.feedback.strengths,
-      weakZones: result.feedback.weakZones,
-      explanations: result.feedback.explanations,
+      strengths: feedback.strengths,
+      weakZones: feedback.weakZones,
       model: result.model,
       latency_ms: result.latency_ms,
     });

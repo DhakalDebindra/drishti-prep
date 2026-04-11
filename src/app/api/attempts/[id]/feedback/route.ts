@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateReviewFeedback } from "@/lib/gemini";
+import { safeParseCoachFeedback } from "@/config/prompts/index";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -59,7 +60,8 @@ export async function GET(req: Request, { params }: RouteParams) {
     const match = answers?.find((a) => a.question_id === q.id);
     return {
       question_id: q.id,
-      selected_option: match?.selected_option ?? null,
+      content: q.content,
+      selected_option: match?.selected_option ?? "skipped",
       is_correct: match?.is_correct ?? false,
       correct_option: q.correct_option,
       explanation: q.explanation ?? null,
@@ -72,12 +74,14 @@ export async function GET(req: Request, { params }: RouteParams) {
 
   const questionsSummary = decorated.map((a) => ({
     question_id: a.question_id,
-    selected: a.selected_option,
-    correct: a.correct_option,
+    content: a.content,
+    selected_option: a.selected_option,
+    correct_option: a.correct_option,
     is_correct: a.is_correct,
   }));
 
   const result = await generateReviewFeedback(questionsSummary, scoreRaw, totalQuestions, scorePct);
+  const parsed = result.data ? safeParseCoachFeedback(result.data) : null;
 
   const explanationsFallback: Record<string, string> = {};
   decorated.forEach((a) => {
@@ -85,9 +89,9 @@ export async function GET(req: Request, { params }: RouteParams) {
   });
 
   const feedbackPayload = {
-    strengths: result.feedback?.strengths || result.error || "AI generation failed.",
-    weak_zones: result.feedback?.weakZones || null,
-    explanations: { ...explanationsFallback, ...(result.feedback?.explanations || {}) },
+    strengths: parsed?.strengths || result.error || "AI feedback generation failed.",
+    weak_zones: parsed?.weakZones || null,
+    explanations: explanationsFallback,
     model: result.model || null,
     latency_ms: result.latency_ms || null,
     cost_cents: null,
