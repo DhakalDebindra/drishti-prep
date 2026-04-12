@@ -9,11 +9,11 @@ type ContrastMode = "normal" | "high-contrast";
 const content = {
   headline: "Study independently. Compete equally.",
   subheadline:
-    "Nepal's accessible exam platform for blind and low-vision candidates — built for Teaching License, TSC, PSC, and GK exams. Fully screen-reader compatible.",
+    "The premier accessibility hub for blind and low-vision aspirants in Nepal. Get structured, screen-reader-first preparation for TSC, PSC, and Teaching Licenses, with an intensive focus on the General Knowledge (GK) components that define success.",
   trust: "Content created with blind educators, for blind learners.",
   pricing: "Free demo available — no account needed. NGO partnerships available for sponsored access.",
   impact: "Helping more visually impaired candidates enter government service.",
-  why: "Mainstream exam platforms assume sighted navigation. Blind candidates are forced to piece together YouTube audio, self-written Braille notes, and repeated recordings. Dristiprep brings structured, screen-reader-first prep with notes, practice, and feedback in one accessible place.",
+  why: "Prep Without Barriers. Why should blind candidates have to piece together their education? While mainstream platforms ignore accessibility, Dristiprep is built from the ground up for screen readers. We move beyond passive audio recordings and unstructured study materials to provide a structured, interactive learning experience that respects your time and your goals.",
   features: [
     {
       title: "Structured notes",
@@ -33,10 +33,10 @@ const content = {
     },
     {
       title: "Exam coverage",
-      description: "Teaching License, TSC, PSC, and GK in one place.",
+      description: "Comprehensive TSC, PSC, and Teaching License prep with a focus on GK.",
     },
   ],
-  exams: ["Teaching License", "TSC", "PSC", "GK"],
+  exams: ["Teaching License", "TSC Preparation", "PSC (Public Service)", "GK Mastery"],
 };
 
 const navLinks = [
@@ -307,7 +307,7 @@ export default function Home() {
           <section className={`rounded-3xl border p-8 text-center shadow-xl shadow-emerald-600/15 backdrop-blur ${palette.panelStrong}`}>
             <h2 className={`text-2xl font-semibold ${palette.headingText}`}>{content.impact}</h2>
             <p className={`mt-3 text-sm ${palette.mutedText}`}>
-              Our goal: more blind candidates succeeding in Teaching License, TSC, PSC, and GK exams—opening doors to government service across Nepal.
+              Our goal: more blind candidates succeeding in Teaching License, TSC, and PSC exams through focused General Knowledge preparation—opening doors to government service across Nepal.
             </p>
           </section>
         </main>
