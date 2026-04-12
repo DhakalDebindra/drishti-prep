@@ -44,13 +44,15 @@ export default async function AdminLayout({
             </Button>
           </Link>
           <Link href="/admin/question-sets/create">
-            <Button variant="secondary" className="w-full justify-start font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">
+            <Button variant="ghost" className="w-full justify-start">
               + Create Question Set
             </Button>
           </Link>
-          <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-gray-900 cursor-not-allowed">
-            Manage Users (Coming Soon)
-          </Button>
+          <Link href="/admin/disputes">
+            <Button variant="ghost" className="w-full justify-start text-red-700 hover:text-red-900 hover:bg-red-50">
+              Dispute Inbox
+            </Button>
+          </Link>
           <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-gray-900 cursor-not-allowed">
             View Analytics (Coming Soon)
           </Button>

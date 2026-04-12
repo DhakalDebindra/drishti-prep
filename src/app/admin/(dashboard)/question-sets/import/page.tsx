@@ -1,0 +1,326 @@
+"use client";
+
+import { useState, useEffect, useId, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+type RowError = { row: number; error: string };
+type SubjectOption = { id: string; name: string };
+type TopicOption = { id: string; name: string; subject_id: string | null; subject_name: string | null };
+
+const TEMPLATE_CSV = `Question Content,Option A,Option B,Option C,Option D,Correct Option,Explanation
+What is the capital of Nepal?,Kathmandu,Pokhara,Lalitpur,Bhaktapur,A,Kathmandu is the political and cultural hub of Nepal.
+Which is the highest mountain?,K2,Kangchenjunga,Mount Everest,Lhotse,C,Mount Everest is the highest peak in the world.`;
+
+export default function BulkImportPage() {
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<RowError[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Metadata Fields
+  const [title, setTitle] = useState("");
+  const [subjectLookup, setSubjectLookup] = useState("");
+  const [topicLookup, setTopicLookup] = useState("");
+  const [difficulty, setDifficulty] = useState("1");
+
+  // Subject/Topic Lists
+  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+  const [topics, setTopics] = useState<TopicOption[]>([]);
+  const subjectListId = useId();
+  const topicListId = useId();
+
+  useEffect(() => {
+    // Load existing subjects/topics for autocomplete
+    Promise.all([
+      fetch("/api/subjects").then(r => r.json()),
+      fetch("/api/topics").then(r => r.json())
+    ]).then(([sData, tData]) => {
+      setSubjects(sData || []);
+      setTopics(tData || []);
+    });
+  }, []);
+
+  const matchedSubject = useMemo(() => {
+    return subjects.find(s => s.name.toLowerCase() === subjectLookup.trim().toLowerCase());
+  }, [subjects, subjectLookup]);
+
+  const filteredTopics = useMemo(() => {
+    if (!matchedSubject) return topics;
+    return topics.filter(t => t.subject_id === matchedSubject.id);
+  }, [topics, matchedSubject]);
+
+  const downloadTemplate = () => {
+    const blob = new Blob([TEMPLATE_CSV], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dristiprep_import_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const processCsv = (text: string) => {
+    const lines = text.trim().split("\n");
+    const parsedData = [];
+    const rowErrors: RowError[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line.trim()) continue;
+        
+        const columns = line.split(",");
+        if (columns.length < 7) {
+            rowErrors.push({ row: i + 1, error: "Missing required columns (needs at least 7, including Explanation)" });
+            continue;
+        }
+
+        const [content, option_a, option_b, option_c, option_d, correct_raw, explanation] = columns;
+        const correct_option = correct_raw?.trim().toUpperCase();
+
+        if (!content || !option_a || !option_b || !option_c || !option_d) {
+            rowErrors.push({ row: i + 1, error: "One or more text fields are completely empty" });
+            continue;
+        }
+
+        if (!["A", "B", "C", "D"].includes(correct_option)) {
+            rowErrors.push({ row: i + 1, error: `Invalid correct option "${correct_option}". Must be A, B, C, or D.` });
+            continue;
+        }
+
+        parsedData.push({
+            content: content.trim(),
+            option_a: option_a.trim(),
+            option_b: option_b.trim(),
+            option_c: option_c.trim(),
+            option_d: option_d.trim(),
+            correct_option,
+            explanation: explanation?.trim() || "",
+            order_number: i // Maintain relative order from file
+        });
+    }
+    return { parsedData, rowErrors };
+  };
+
+  const resolveSubjectId = async (name: string) => {
+    const existing = subjects.find(s => s.name.toLowerCase() === name.trim().toLowerCase());
+    if (existing) return existing.id;
+    
+    // Create new subject
+    const res = await fetch("/api/subjects", {
+        method: "POST",
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({ name: name.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create subject");
+    return data.id;
+  };
+
+  const resolveTopicId = async (name: string, subject_id: string) => {
+    const existing = topics.find(t => t.name.toLowerCase() === name.trim().toLowerCase() && t.subject_id === subject_id);
+    if (existing) return existing.id;
+
+    // Create new topic
+    const res = await fetch("/api/topics", {
+        method: "POST",
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({ name: name.trim(), subject_id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create topic");
+    return data.id;
+  };
+
+  const handleUploadAndImport = async () => {
+    if (!file || !title || !subjectLookup || !topicLookup) {
+        alert("Please fill in all metadata fields (Title, Subject, Topic) and select a file.");
+        return;
+    }
+
+    setIsProcessing(true);
+    setErrors([]);
+    setSuccessMessage(null);
+
+    try {
+        const text = await file.text();
+        const { parsedData, rowErrors } = processCsv(text);
+        
+        if (rowErrors.length > 0) {
+            setErrors(rowErrors);
+            setIsProcessing(false);
+            return;
+        }
+
+        // Resolving Meta IDs
+        const sId = await resolveSubjectId(subjectLookup);
+        const tId = await resolveTopicId(topicLookup, sId);
+
+        // Map client field 'explanation' back to API-expected 'general_explanation'
+        const questionsPayload = parsedData.map(q => ({
+            ...q,
+            general_explanation: q.explanation // Map to API schema
+        }));
+
+        // 1. Submit the entire set
+        const response = await fetch("/api/question-sets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                topic_id: tId, // Send required ID
+                difficulty_level: parseInt(difficulty),
+                is_verified: true,
+                questions: questionsPayload
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Failed to import");
+
+        setSuccessMessage(`Success! Created practice set with ${parsedData.length} questions.`);
+        setTimeout(() => router.push("/admin"), 2000);
+    } catch (e: any) {
+        setErrors([{ row: 0, error: e.message }]);
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Bulk Import Engine</h1>
+          <p className="text-muted-foreground mt-1">Convert your offline CSV files into interactive practice sets.</p>
+        </div>
+        <Button variant="outline" onClick={downloadTemplate}>Download CSV Template</Button>
+      </div>
+      
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Metadata Configuration */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>1. Set Configuration</CardTitle>
+            <CardDescription>Tell us where these questions belong.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="set-title">Practice Set Title</Label>
+              <Input 
+                id="set-title" 
+                placeholder="e.g. Modern History Mock 01" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="set-subject">Subject</Label>
+              <Input 
+                id="set-subject" 
+                list={subjectListId} 
+                placeholder="Select or create subject" 
+                value={subjectLookup} 
+                onChange={e => setSubjectLookup(e.target.value)} 
+              />
+              <datalist id={subjectListId}>
+                {subjects.map(s => <option key={s.id} value={s.name} />)}
+              </datalist>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="set-topic">Topic</Label>
+              <Input 
+                id="set-topic" 
+                list={topicListId} 
+                placeholder="Select or create topic" 
+                value={topicLookup} 
+                onChange={e => setTopicLookup(e.target.value)} 
+              />
+              <datalist id={topicListId}>
+                {filteredTopics.map(t => <option key={t.id} value={t.name} />)}
+              </datalist>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="set-difficulty">Difficulty</Label>
+              <select 
+                id="set-difficulty" 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={difficulty}
+                onChange={e => setDifficulty(e.target.value)}
+              >
+                <option value="1">Beginner</option>
+                <option value="2">Intermediate</option>
+                <option value="3">Advanced</option>
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upload & Validation */}
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle>2. Question Source File</CardTitle>
+                <CardDescription>Upload your completed CSV file for structure validation.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="relative border-2 border-dashed rounded-xl p-8 text-center bg-slate-50 transition-colors hover:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500">
+                    <Input 
+                      type="file" 
+                      accept=".csv" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                      id="csv-upload"
+                      aria-label="Upload CSV file"
+                      onChange={(e) => setFile(e.target.files?.[0] || null)} 
+                    />
+                    <div className="space-y-4 pointer-events-none">
+                        <div className="text-4xl">📄</div>
+                        <div className="space-y-1 text-center">
+                            <p className="font-bold text-blue-700">{file ? file.name : "Click or drag to select CSV file"}</p>
+                            <p className="text-xs text-muted-foreground">Only .csv files following our template are supported.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <Button 
+                   onClick={handleUploadAndImport} 
+                   disabled={!file || isProcessing}
+                   className="w-full h-12 text-lg font-bold"
+                >
+                   {isProcessing ? "Processing Batch Ingestion..." : "Validate & Start Import"}
+                </Button>
+
+                {errors.length > 0 && (
+                  <Card className="border-red-300 bg-red-50" role="alert" aria-live="assertive">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-sm text-red-700">Schema Errors Found</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <ul className="text-xs text-red-800 space-y-1">
+                        {errors.map((err, idx) => (
+                          <li key={idx}><strong>Row {err.row}:</strong> {err.error}</li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {successMessage && (
+                  <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative animate-pulse">
+                    <strong className="font-bold">Ingestion Success! </strong>
+                    <span className="block sm:inline">{successMessage} Redirecting to Studio...</span>
+                  </div>
+                )}
+            </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
