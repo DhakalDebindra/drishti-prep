@@ -4,51 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useManageDisputes } from "@/hooks/admin/useManageDisputes";
+import { InlineQuestionForm } from "@/components/admin/InlineQuestionForm";
 
 export default function ResolveClient({ question: initialQ, reports }: { question: any, reports: any[] }) {
   const router = useRouter();
-  const [q, setQ] = useState(initialQ);
   const [isEditing, setIsEditing] = useState(false);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-
-  const updateQuestion = async (updates: any) => {
-    setSavingKey('question');
-    try {
-      const res = await fetch(`/api/questions/${q.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
-      });
-      if (!res.ok) throw new Error("Failed to update question");
-      
-      const updatedQ = await res.json();
-      setQ(updatedQ);
-      setIsEditing(false);
-    } catch (e) {
-      alert("Error updating question");
-    } finally {
-      setSavingKey(null);
-    }
-  };
-
-  const markResolved = async () => {
-    setSavingKey('resolve');
-    try {
-      const res = await fetch(`/api/reports/${q.id}/resolve`, {
-        method: "POST"
-      });
-      if (!res.ok) throw new Error("Failed to mark as resolved");
-      
-      router.push('/admin/disputes');
-      router.refresh(); // force reload of Inbox
-    } catch (e) {
-      alert("Error resolving dispute");
-    } finally {
-      setSavingKey(null);
-    }
-  };
+  const { q, savingKey, updateQuestion, markResolved } = useManageDisputes(initialQ);
 
   return (
     <div className="space-y-6">
@@ -104,49 +66,17 @@ export default function ResolveClient({ question: initialQ, reports }: { questio
             </div>
 
             {isEditing ? (
-                 <Card className="border-blue-400 border-2">
-                 <CardHeader>
-                   <CardTitle className="text-blue-700">Correcting Content</CardTitle>
-                 </CardHeader>
-                 <CardContent className="space-y-4">
-                   <div>
-                     <label htmlFor="edit-content" className="text-sm font-medium">Question Content</label>
-                     <Textarea defaultValue={q.content} id="edit-content" rows={4} autoFocus />
-                   </div>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div><label htmlFor="edit-a" className="text-sm text-muted-foreground">Option A</label><Input defaultValue={q.option_a} id="edit-a" /></div>
-                     <div><label htmlFor="edit-b" className="text-sm text-muted-foreground">Option B</label><Input defaultValue={q.option_b} id="edit-b" /></div>
-                     <div><label htmlFor="edit-c" className="text-sm text-muted-foreground">Option C</label><Input defaultValue={q.option_c} id="edit-c" /></div>
-                     <div><label htmlFor="edit-d" className="text-sm text-muted-foreground">Option D</label><Input defaultValue={q.option_d} id="edit-d" /></div>
-                   </div>
-                   <div>
-                     <label htmlFor="edit-correct" className="text-sm font-bold text-red-600">Correct Option (A, B, C, D)</label>
-                     <Input defaultValue={q.correct_option} id="edit-correct" className="border-red-300 font-bold" />
-                   </div>
-                   <div>
-                     <label htmlFor="edit-explanation" className="text-sm font-medium">General Explanation</label>
-                     <Textarea defaultValue={q.explanation} id="edit-explanation" rows={3} />
-                   </div>
-                   <div className="flex gap-2 justify-end mt-4 pt-4 border-t">
-                     <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                     <Button 
-                       disabled={savingKey === 'question'}
-                       aria-live="polite"
-                       onClick={() => {
-                         const content = (document.getElementById("edit-content") as HTMLTextAreaElement).value;
-                         const option_a = (document.getElementById("edit-a") as HTMLInputElement).value;
-                         const option_b = (document.getElementById("edit-b") as HTMLInputElement).value;
-                         const option_c = (document.getElementById("edit-c") as HTMLInputElement).value;
-                         const option_d = (document.getElementById("edit-d") as HTMLInputElement).value;
-                         const correct_option = (document.getElementById("edit-correct") as HTMLInputElement).value.toUpperCase();
-                         const explanation = (document.getElementById("edit-explanation") as HTMLTextAreaElement).value;
-                         updateQuestion({ content, option_a, option_b, option_c, option_d, correct_option, explanation });
-                       }}>
-                       {savingKey === 'question' ? 'Saving...' : 'Save Emergency Fix'}
-                     </Button>
-                   </div>
-                 </CardContent>
-               </Card>
+                 <InlineQuestionForm
+                    q={q}
+                    title="Correcting Content"
+                    savingKey={savingKey}
+                    highlightCorrect={true}
+                    onCancel={() => setIsEditing(false)}
+                    onSave={async (updates) => {
+                      const success = await updateQuestion(updates);
+                      if (success) setIsEditing(false);
+                    }}
+                 />
             ) : (
                 <Card>
                     <CardContent className="p-6 space-y-4">

@@ -1,91 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { useManageQuestionSet } from "@/hooks/admin/useManageQuestionSet";
+import { useManageQuestions } from "@/hooks/admin/useManageQuestions";
+import { InlineQuestionForm } from "@/components/admin/InlineQuestionForm";
 
 export default function EditorClient({ initialSet, initialQuestions }: { initialSet: any, initialQuestions: any[] }) {
-  const [questionSet, setQuestionSet] = useState(initialSet);
-  const [questions, setQuestions] = useState(initialQuestions);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-
-  const togglePublishStatus = async () => {
-    setSavingKey('set');
-    const newStatus = !questionSet.is_verified;
-    try {
-      const res = await fetch(`/api/question-sets/${questionSet.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_verified: newStatus })
-      });
-      if (!res.ok) throw new Error("Failed to update status");
-      
-      const payload = await res.json();
-      setQuestionSet(payload);
-    } catch (e) {
-      alert("Error updating status");
-    } finally {
-      setSavingKey(null);
-    }
-  };
-
-  const updateQuestion = async (id: string, updates: any) => {
-    setSavingKey(id);
-    try {
-      const res = await fetch(`/api/questions/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
-      });
-      if (!res.ok) throw new Error("Failed to update question");
-      
-      const updatedQ = await res.json();
-      setQuestions(prev => prev.map(q => q.id === id ? updatedQ : q));
-      setEditingId(null);
-    } catch (e) {
-      alert("Error updating question");
-    } finally {
-      setSavingKey(null);
-    }
-  };
-
-  // Accessible drag and drop alias: Move up/down
-  const moveQuestion = async (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === questions.length - 1) return;
-
-    const newQuestions = [...questions];
-    const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    // Swap order_number
-    const tempOrder = newQuestions[index].order_number;
-    newQuestions[index].order_number = newQuestions[swapIndex].order_number;
-    newQuestions[swapIndex].order_number = tempOrder;
-
-    // Swap position in array for optimistic UI
-    const tempQ = newQuestions[index];
-    newQuestions[index] = newQuestions[swapIndex];
-    newQuestions[swapIndex] = tempQ;
-    
-    setQuestions(newQuestions);
-
-    // Save both
-    await Promise.all([
-      fetch(`/api/questions/${newQuestions[index].id}`, {
-        method: "PATCH",
-        headers:{ "Content-Type" : "application/json" },
-        body: JSON.stringify({ order_number: newQuestions[index].order_number })
-      }),
-      fetch(`/api/questions/${newQuestions[swapIndex].id}`, {
-        method: "PATCH",
-        headers:{ "Content-Type" : "application/json" },
-        body: JSON.stringify({ order_number: newQuestions[swapIndex].order_number })
-      })
-    ]);
-  };
+  const { questionSet, savingKey: setSavingKey, togglePublishStatus } = useManageQuestionSet(initialSet);
+  const { questions, editingId, savingKey, setEditingId, updateQuestion, moveQuestion } = useManageQuestions(initialQuestions);
 
   return (
     <div className="space-y-6">
@@ -99,10 +22,10 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
         <Button 
           variant={questionSet.is_verified ? "outline" : "default"}
           onClick={togglePublishStatus}
-          disabled={savingKey === 'set'}
+          disabled={setSavingKey === 'set'}
           aria-live="polite"
         >
-          {savingKey === 'set' ? "Saving..." : (questionSet.is_verified ? "Revert to Draft" : "Publish Set")}
+          {setSavingKey === 'set' ? "Saving..." : (questionSet.is_verified ? "Revert to Draft" : "Publish Set")}
         </Button>
       </div>
 
@@ -113,53 +36,14 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
 
           if (isEditing) {
             return (
-              <Card key={q.id} className="border-blue-400 border-2">
-                <CardHeader>
-                  <CardTitle>Editing Question {q.order_number}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label htmlFor={`edit-content-${q.id}`} className="text-sm font-medium">Question Content</label>
-                    <Textarea 
-                      defaultValue={q.content} 
-                      id={`edit-content-${q.id}`} 
-                      autoFocus
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label htmlFor={`edit-a-${q.id}`} className="text-sm">Option A</label><Input defaultValue={q.option_a} id={`edit-a-${q.id}`} /></div>
-                    <div><label htmlFor={`edit-b-${q.id}`} className="text-sm">Option B</label><Input defaultValue={q.option_b} id={`edit-b-${q.id}`} /></div>
-                    <div><label htmlFor={`edit-c-${q.id}`} className="text-sm">Option C</label><Input defaultValue={q.option_c} id={`edit-c-${q.id}`} /></div>
-                    <div><label htmlFor={`edit-d-${q.id}`} className="text-sm">Option D</label><Input defaultValue={q.option_d} id={`edit-d-${q.id}`} /></div>
-                  </div>
-                  <div>
-                    <label htmlFor={`edit-correct-${q.id}`} className="text-sm font-medium">Correct Option (A, B, C, D)</label>
-                    <Input defaultValue={q.correct_option} id={`edit-correct-${q.id}`} />
-                  </div>
-                  <div>
-                    <label htmlFor={`edit-explanation-${q.id}`} className="text-sm font-medium">General Explanation</label>
-                    <Textarea defaultValue={q.explanation} id={`edit-explanation-${q.id}`} rows={3} />
-                  </div>
-                  <div className="flex gap-2 justify-end mt-4">
-                    <Button variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
-                    <Button 
-                      disabled={savingKey === q.id}
-                      aria-live="polite"
-                      onClick={() => {
-                        const content = (document.getElementById(`edit-content-${q.id}`) as HTMLTextAreaElement).value;
-                        const option_a = (document.getElementById(`edit-a-${q.id}`) as HTMLInputElement).value;
-                        const option_b = (document.getElementById(`edit-b-${q.id}`) as HTMLInputElement).value;
-                        const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
-                        const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
-                        const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
-                        const explanation = (document.getElementById(`edit-explanation-${q.id}`) as HTMLTextAreaElement).value;
-                        updateQuestion(q.id, { content, option_a, option_b, option_c, option_d, correct_option, explanation });
-                      }}>
-                      {savingKey === q.id ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <InlineQuestionForm
+                key={q.id}
+                q={q}
+                title={`Editing Question ${q.order_number}`}
+                savingKey={savingKey}
+                onCancel={() => setEditingId(null)}
+                onSave={(updates) => updateQuestion(q.id, updates)}
+              />
             );
           }
 

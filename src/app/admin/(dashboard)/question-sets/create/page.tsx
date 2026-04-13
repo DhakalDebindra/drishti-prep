@@ -13,10 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const MAX_QUESTIONS = 20;
+const MAX_QUESTIONS = 30;
 
 const questionSchema = z.object({
-  order_number: z.number().min(1).max(20),
+  order_number: z.number().min(1).max(30),
   content: z.string().min(1, "Question content is required"),
   option_a: z.string().min(1, "Option A is required"),
   option_b: z.string().min(1, "Option B is required"),
@@ -32,7 +32,7 @@ const questionSetSchema = z.object({
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
   is_verified: z.boolean().default(false),
-  questions: z.array(questionSchema).min(1, "At least one question is required").max(20),
+  questions: z.array(questionSchema).min(1, "At least one question is required").max(30, "Maximum of 30 questions allowed per set"),
 });
 
 type QuestionSetFormValues = z.infer<typeof questionSetSchema>;

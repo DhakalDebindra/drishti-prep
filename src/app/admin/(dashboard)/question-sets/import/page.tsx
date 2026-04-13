@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Papa from "papaparse";
+import toast from "react-hot-toast";
 
 type RowError = { row: number; error: string };
 type SubjectOption = { id: string; name: string };
@@ -65,15 +67,26 @@ export default function BulkImportPage() {
   };
 
   const processCsv = (text: string) => {
-    const lines = text.trim().split("\n");
     const parsedData = [];
     const rowErrors: RowError[] = [];
 
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue;
+    const result = Papa.parse(text, {
+        header: false,
+        skipEmptyLines: true
+    });
+
+    const rows = result.data as string[][];
+
+    // Check high level papa errors if any
+    if (result.errors.length > 0) {
+        rowErrors.push({ row: 0, error: `CSV Parsing Error: ${result.errors[0].message}` });
+        return { parsedData, rowErrors };
+    }
+
+    // Skip header row at index 0
+    for (let i = 1; i < rows.length; i++) {
+        const columns = rows[i];
         
-        const columns = line.split(",");
         if (columns.length < 7) {
             rowErrors.push({ row: i + 1, error: "Missing required columns (needs at least 7, including Explanation)" });
             continue;
@@ -138,7 +151,7 @@ export default function BulkImportPage() {
 
   const handleUploadAndImport = async () => {
     if (!file || !title || !subjectLookup || !topicLookup) {
-        alert("Please fill in all metadata fields (Title, Subject, Topic) and select a file.");
+        toast.error("Please fill in all metadata fields (Title, Subject, Topic) and select a file.");
         return;
     }
 
@@ -152,6 +165,12 @@ export default function BulkImportPage() {
         
         if (rowErrors.length > 0) {
             setErrors(rowErrors);
+            setIsProcessing(false);
+            return;
+        }
+
+        if (parsedData.length > 30) {
+            toast.error("A question set can contain a maximum of 30 questions.");
             setIsProcessing(false);
             return;
         }
@@ -182,9 +201,11 @@ export default function BulkImportPage() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Failed to import");
 
-        setSuccessMessage(`Success! Created practice set with ${parsedData.length} questions.`);
+        toast.success(`Success! Created practice set with ${parsedData.length} questions.`);
+        setSuccessMessage(`Success! Created practice set with ${parsedData.length} questions. Redirecting...`);
         setTimeout(() => router.push("/admin"), 2000);
     } catch (e: any) {
+        toast.error(e.message || "Failed to import CSV");
         setErrors([{ row: 0, error: e.message }]);
     } finally {
         setIsProcessing(false);

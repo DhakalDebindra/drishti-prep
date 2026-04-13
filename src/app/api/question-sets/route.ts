@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from "../../../lib/supabase/server";
 import * as z from "zod";
 
@@ -18,7 +18,7 @@ const questionSetPayload = z.object({
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().int().min(1).max(3),
   is_verified: z.boolean(),
-  questions: z.array(questionPayload).min(1, "At least one question is required"),
+  questions: z.array(questionPayload).min(1, "At least one question is required").max(30, "Maximum of 30 questions allowed per set"),
 });
 
 const errorResponse = (message: string, status = 500) =>

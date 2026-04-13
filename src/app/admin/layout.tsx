@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "react-hot-toast";
 
 export default async function AdminLayout({
   children,
@@ -84,6 +85,7 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
+      <Toaster position="top-right" />
     </div>
   );
 }
