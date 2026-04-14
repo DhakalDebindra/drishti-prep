@@ -81,7 +81,7 @@ export function AttemptHistoryList({ attempts }: { attempts: AttemptWithSet[] })
            return (
              <Link 
                key={latest.set_id} 
-               href={`/practice/${subject.toLowerCase()}/${topic.toLowerCase()}/${setTitle.toLowerCase()}/review?attemptId=${latest.id}`}
+               href={`/practice/${subject.toLowerCase().replace(/\s+/g, '%20')}/${topic.toLowerCase().replace(/\s+/g, '%20')}/${latest.set_id}/review?attemptId=${latest.id}`}
                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group gap-4"
              >
                 <div className="flex-1">

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PracticeSetClient from "./PracticeSetClient";
@@ -18,7 +18,7 @@ export default async function PracticeSetPage({ params }: PageProps) {
   const topicName = decodeURIComponent(topic);
   const setId = decodeURIComponent(set);
 
-  const [{ data: subjectRow }, { data: topicRow }, { data: setRow }, { data: questions }] = await Promise.all([
+  const [{ data: subjectRow }, { data: topicRow }, { data: setRow }, { data: qsqResponse }] = await Promise.all([
     supabase.from("subjects").select("id, name").eq("name", subjectName).maybeSingle(),
     supabase.from("topics").select("id, name, subject_id").eq("name", topicName).maybeSingle(),
     supabase
@@ -27,11 +27,13 @@ export default async function PracticeSetPage({ params }: PageProps) {
       .eq("id", setId)
       .maybeSingle(),
     supabase
-      .from("questions")
-      .select("id, content, option_a, option_b, option_c, option_d, correct_option, explanation, order_number")
-      .eq("set_id", setId)
-      .order("order_number", { ascending: true }),
+      .from("question_set_questions")
+      .select("position, questions(id, content, option_a, option_b, option_c, option_d, correct_option, explanation, order_number)")
+      .eq("question_set_id", setId)
+      .order("position", { ascending: true }),
   ]);
+
+  const questions = qsqResponse?.map((row: any) => row.questions) || [];
 
   if (!subjectRow || !topicRow || !setRow) {
     notFound();

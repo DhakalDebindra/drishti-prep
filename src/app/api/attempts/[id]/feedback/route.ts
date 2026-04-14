@@ -46,10 +46,12 @@ export async function GET(req: Request, { params }: RouteParams) {
   }
 
   // Generate new feedback
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("id, content, option_a, option_b, option_c, option_d, correct_option, explanation")
-    .eq("set_id", attempt.set_id);
+  const { data: qsqResponse } = await supabase
+    .from("question_set_questions")
+    .select("questions(id, content, option_a, option_b, option_c, option_d, correct_option, explanation)")
+    .eq("question_set_id", attempt.set_id);
+
+  const questions = qsqResponse?.map((row: any) => row.questions) || [];
 
   const { data: answers } = await supabase
     .from("attempt_answers")

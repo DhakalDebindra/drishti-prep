@@ -51,13 +51,14 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   }
 
   // Fetch Questions and Answers
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("id, content, option_a, option_b, option_c, option_d, correct_option, explanation, order_number")
-    .eq("set_id", attempt.set_id)
-    .order("order_number", { ascending: true });
+  const { data: qsqResponse } = await supabase
+    .from("question_set_questions")
+    .select("position, questions(id, content, option_a, option_b, option_c, option_d, correct_option, explanation, order_number)")
+    .eq("question_set_id", attempt.set_id)
+    .order("position", { ascending: true });
 
-  const questionIds = questions?.map((q) => q.id) || [];
+  const questions = qsqResponse?.map((row: any) => row.questions) || [];
+  const questionIds = questions.map((q: any) => q.id);
 
   const [{ data: answers }, { data: bookmarks }] = await Promise.all([
     supabase

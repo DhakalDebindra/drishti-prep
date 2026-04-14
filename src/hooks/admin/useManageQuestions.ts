@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-export function useManageQuestions(initialQuestions: any[]) {
+export function useManageQuestions(initialQuestions: any[], setId: string) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
@@ -46,17 +46,17 @@ export function useManageQuestions(initialQuestions: any[]) {
     
     setQuestions(newQuestions);
 
-    // Save both
+    // Save both positions in the junction table
     await Promise.all([
-      fetch(`/api/questions/${newQuestions[index].id}`, {
+      fetch(`/api/question-sets/${setId}/questions/${newQuestions[index].id}`, {
         method: "PATCH",
         headers:{ "Content-Type" : "application/json" },
-        body: JSON.stringify({ order_number: newQuestions[index].order_number })
+        body: JSON.stringify({ position: newQuestions[index].order_number })
       }),
-      fetch(`/api/questions/${newQuestions[swapIndex].id}`, {
+      fetch(`/api/question-sets/${setId}/questions/${newQuestions[swapIndex].id}`, {
         method: "PATCH",
         headers:{ "Content-Type" : "application/json" },
-        body: JSON.stringify({ order_number: newQuestions[swapIndex].order_number })
+        body: JSON.stringify({ position: newQuestions[swapIndex].order_number })
       })
     ]);
   };

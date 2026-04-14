@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
-
 import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Prompts } from "@/config/prompts/index";
 import { parseExplanation } from "@/utils/parseExplanation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Plus, Search, Loader2 } from "lucide-react";
+
+// Modularized Components
+import { SetMetadataForm } from "@/components/admin/SetMetadataForm";
+import { QuestionFormCard } from "@/components/admin/QuestionFormCard";
+import { QuestionSearchModal } from "@/components/admin/QuestionSearchModal";
 
 const MAX_QUESTIONS = 30;
 
 const questionSchema = z.object({
+  id: z.string().optional(), // For imported questions
   order_number: z.number().min(1).max(30),
   content: z.string().min(1, "Question content is required"),
   option_a: z.string().min(1, "Option A is required"),
@@ -24,6 +27,9 @@ const questionSchema = z.object({
   option_d: z.string().min(1, "Option D is required"),
   correct_option: z.enum(["A", "B", "C", "D"]),
   general_explanation: z.string().optional(),
+  exam_year: z.coerce.number().optional().nullable(),
+  paper_ref: z.string().optional().nullable(),
+  language: z.enum(["nepali", "english", "both"]).default("nepali").optional(),
 });
 
 const questionSetSchema = z.object({
@@ -31,6 +37,7 @@ const questionSetSchema = z.object({
   topic_lookup: z.string().min(1, "Topic is required"),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
+  set_type: z.enum(["learning", "mock_exam", "daily_challenge", "revision"]).default("learning"),
   is_verified: z.boolean().default(false),
   questions: z.array(questionSchema).min(1, "At least one question is required").max(30, "Maximum of 30 questions allowed per set"),
 });
@@ -57,6 +64,9 @@ const createBlankQuestion = (order_number: number) => ({
   option_d: "",
   correct_option: "A" as const,
   general_explanation: "",
+  exam_year: null,
+  paper_ref: "",
+  language: "nepali" as const,
 });
 
 const createDefaultFormValues = (): QuestionSetFormValues => ({
@@ -64,6 +74,7 @@ const createDefaultFormValues = (): QuestionSetFormValues => ({
   topic_lookup: "",
   title: "",
   difficulty_level: 1,
+  set_type: "learning",
   is_verified: false,
   questions: [createBlankQuestion(1)],
 });
@@ -451,9 +462,11 @@ export default function CreateQuestionSetPage() {
       topic_id: topicId,
       title: values.title,
       difficulty_level: Number(values.difficulty_level),
+      set_type: values.set_type,
       is_verified: values.is_verified,
       
       questions: values.questions.map((question, index) => ({
+        id: question.id, // Pass ID for imported questions
         order_number: Number(question.order_number ?? index + 1),
         content: question.content,
         option_a: question.option_a,
@@ -461,8 +474,10 @@ export default function CreateQuestionSetPage() {
         option_c: question.option_c,
         option_d: question.option_d,
         correct_option: question.correct_option,
-        general_explanation:
-          question.general_explanation?.trim() ? question.general_explanation : undefined,
+        general_explanation: question.general_explanation?.trim() ? question.general_explanation : undefined,
+        exam_year: question.exam_year,
+        paper_ref: question.paper_ref,
+        language: question.language,
       })),
     };
 
@@ -496,262 +511,143 @@ export default function CreateQuestionSetPage() {
     }
   };
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleImportQuestion = (q: any) => {
+    append({
+        id: q.id,
+        order_number: fields.length + 1,
+        content: q.content,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        option_c: q.option_c,
+        option_d: q.option_d,
+        correct_option: q.correct_option as any,
+        general_explanation: q.explanation || "",
+        exam_year: q.exam_year || null,
+        paper_ref: q.paper_ref || "",
+        language: (q.language as any) || "nepali",
+    });
+    setIsSearchOpen(false);
+  };
+
+  const existingQuestionIds = useMemo(() => {
+    return (questionsWatch || []).map((q: any) => q.id).filter(Boolean) as string[];
+  }, [questionsWatch]);
+
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Create New Question Set</h1>
+    <div className="container mx-auto py-8 max-w-6xl">
+      <div className="flex justify-between items-center mb-10">
+        <div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 border-b-4 border-blue-600 pb-2 inline-block">Create Question Set</h1>
+            <p className="text-slate-500 mt-2 font-medium">Build curated learning paths and mock exams.</p>
+        </div>
+        <Button 
+            type="button" 
+            size="lg"
+            variant="outline"
+            className="rounded-full shadow-sm hover:shadow transition-all bg-white border-slate-200"
+            onClick={() => setIsSearchOpen(true)}
+        >
+            <Search className="w-4 h-4 mr-2" />
+            Import Existing
+        </Button>
+      </div>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Set details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" {...register("title")} placeholder="E.G. नेपालको भूगोल Set 1" />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="difficulty_level">Difficulty Level (1-3)</Label>
-              <Input
-                id="difficulty_level"
-                type="number"
-                min="1"
-                max="3"
-                {...register("difficulty_level")}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+        <SetMetadataForm
+            register={register}
+            errors={errors}
+            subjectListId={subjectListId}
+            topicListId={topicListId}
+            subjects={subjects}
+            subjectsLoading={subjectsLoading}
+            isCreatingSubject={isCreatingSubject}
+            subjectsError={subjectsError}
+            subjectCreationError={subjectCreationError}
+            onSubjectChange={(event) => {
+                subjectRegister.onChange(event);
+                setSubjectTouched(true);
+            }}
+            topicsLoading={topicsLoading}
+            filteredTopics={filteredTopics}
+            topicsError={topicsError}
+            topicCreationError={topicCreationError}
+            matchedTopic={matchedTopic}
+            matchedSubject={matchedSubject}
+            submissionMessage={submissionMessage}
+            submissionError={submissionError}
+        />
+
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+               Content Builder
+               <span className="text-sm font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                 {fields.length} {fields.length === 1 ? 'Question' : 'Questions'}
+               </span>
+            </h2>
+          </div>
+          
+          <div className="space-y-8">
+            {fields.map((field, index) => (
+              <QuestionFormCard
+                key={field.id}
+                index={index}
+                register={register}
+                setValue={setValue}
+                getValues={getValues}
+                watch={watch}
+                remove={remove}
+                isGenerating={isGenerating}
+                generateFeedback={generateFeedback}
+                feedbackError={feedbackErrors[index]}
+                isQuestionComplete={isQuestionComplete}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="subject_lookup">Subject (select or add new)</Label>
-              <div className="relative">
-                <Input
-                  id="subject_lookup"
-                  list={subjectListId}
-                  placeholder="Select or type a subject"
-                  {...subjectRegister}
-                  onChange={(event) => {
-                    subjectRegister.onChange(event);
-                    setSubjectTouched(true);
-                  }}
-                  disabled={subjectsLoading || isCreatingSubject}
-                  autoComplete="off"
-                />
-                <datalist id={subjectListId}>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.name} label={subject.name} />
-                  ))}
-                </datalist>
-              </div>
-              {subjectsError && (
-                <p className="text-sm text-destructive">{subjectsError}</p>
-              )}
-              {subjectCreationError && (
-                <p className="text-sm text-destructive">{subjectCreationError}</p>
-              )}
-              {errors.subject_lookup && (
-                <p className="text-sm text-destructive">{errors.subject_lookup.message}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Pick an existing subject or type a new one. New subjects are created automatically when you save the set.
-              </p>
-              {matchedSubject && (
-                <p className="text-xs text-muted-foreground">
-                  Existing subject "{matchedSubject.name}" will be reused.
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="topic_lookup">Topic (select or add new)</Label>
-              <div className="relative">
-                <Input
-                  id="topic_lookup"
-                  list={topicListId}
-                  placeholder="Select or type a topic name"
-                  {...register("topic_lookup")}
-                  disabled={topicsLoading}
-                  autoComplete="off"
-                />
-                <datalist id={topicListId}>
-                  {filteredTopics.map((topic) => (
-                    <option
-                      key={topic.id}
-                      value={topic.name}
-                      label={
-                        topic.subject_name
-                          ? `${topic.name} (${topic.subject_name})`
-                          : topic.name
-                      }
-                    />
-                  ))}
-                </datalist>
-              </div>
-              {topicsError && (
-                <p className="text-sm text-destructive">{topicsError}</p>
-              )}
-              {topicCreationError && (
-                <p className="text-sm text-destructive">{topicCreationError}</p>
-              )}
-              {errors.topic_lookup && (
-                <p className="text-sm text-destructive">{errors.topic_lookup.message}</p>
-              )}
-              {matchedTopic?.subject_name && (
-                <p className="text-xs text-muted-foreground">
-                  Subject: {matchedTopic.subject_name}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Pick an existing topic or type a new one. New topics are created automatically under the selected subject when you save the set.
-              </p>
-              {matchedSubject && filteredTopics.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  No topics exist for "{matchedSubject.name}" yet; type a new topic to create one.
-                </p>
-              )}
-              {submissionMessage && (
-                <p className="text-sm text-emerald-700">{submissionMessage}</p>
-              )}
-              {submissionError && (
-                <p className="text-sm text-destructive">{submissionError}</p>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2 pt-8">
-              <input 
-                type="checkbox"
-                id="is_verified"
-                {...register("is_verified")}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="is_verified">Mark as Verified (Publishes the set)</Label>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-8">
-          {fields.map((field, index) => (
-            <Card key={field.id} className="border-l-4 border-l-blue-500">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Question {index + 1}</CardTitle>
-                <Button variant="destructive" size="sm" type="button" onClick={() => remove(index)}>
-                  Remove Question
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                
-                {/* Hidden Order Number */}
-                <input type="hidden" {...register(`questions.${index}.order_number` as const)} value={index + 1} />
-
-                <div className="space-y-2">
-                  <Label>Question Content</Label>
-                  <Textarea {...register(`questions.${index}.content` as const)} placeholder="Enter the main question..." className="min-h-[100px]" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Options */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">MCQ Options</h3>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label>Option A</Label>
-                        <input type="radio" value="A" {...register(`questions.${index}.correct_option` as const)} className="w-4 h-4 ml-2" title="Mark as correct" />
-                      </div>
-                      <Input {...register(`questions.${index}.option_a` as const)} placeholder="Option A text..." />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label>Option B</Label>
-                        <input type="radio" value="B" {...register(`questions.${index}.correct_option` as const)} className="w-4 h-4 ml-2" title="Mark as correct" />
-                      </div>
-                      <Input {...register(`questions.${index}.option_b` as const)} placeholder="Option B text..." />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label>Option C</Label>
-                        <input type="radio" value="C" {...register(`questions.${index}.correct_option` as const)} className="w-4 h-4 ml-2" title="Mark as correct" />
-                      </div>
-                      <Input {...register(`questions.${index}.option_c` as const)} placeholder="Option C text..." />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label>Option D</Label>
-                        <input type="radio" value="D" {...register(`questions.${index}.correct_option` as const)} className="w-4 h-4 ml-2" title="Mark as correct" />
-                      </div>
-                      <Input {...register(`questions.${index}.option_d` as const)} placeholder="Option D text..." />
-                    </div>
-                    
-                  </div>
-
-                  {/* Master Explanation */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-lg">Master Explanation</h3>
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="sm"
-                        disabled={
-                          isGenerating === index ||
-                          !isQuestionComplete(questionsWatch?.[index])
-                        }
-                        onClick={() => generateFeedback(index)}
-                      >
-                        {isGenerating === index ? "Generating with GPT..." : "Generate Explanation (AI)"}
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>GK Feedback</Label>
-                      <Textarea 
-                        {...register(`questions.${index}.general_explanation` as const)} 
-                        placeholder="Wait for AI or type manually..." 
-                        className="bg-slate-50 border-blue-200" 
-                        rows={5}
-                      />
-                      {feedbackErrors[index] && (
-                        <p className="text-sm text-destructive">{feedbackErrors[index]}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-              </CardContent>
-            </Card>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center justify-center py-10 border-t border-dashed border-slate-300">
             <Button
               type="button"
               variant="outline"
+              size="lg"
+              className="rounded-full px-8 shadow-sm hover:shadow-md transition-all h-14 text-base font-bold bg-white"
               disabled={fields.length >= MAX_QUESTIONS}
-              title={fields.length >= MAX_QUESTIONS ? "Question sets support up to 20 questions" : undefined}
               onClick={() => {
                 if (fields.length >= MAX_QUESTIONS) return;
                 append(createBlankQuestion(fields.length + 1));
               }}
             >
-            Add Another Question
+            <Plus className="w-5 h-5 mr-2" />
+            Add New Question
           </Button>
 
           <Button
             type="submit"
             size="lg"
-            className="ml-auto"
+            className="rounded-full px-12 h-14 text-base font-bold shadow-lg shadow-blue-200 bg-blue-600 hover:bg-blue-700 transition-all text-white"
             disabled={
               topicsLoading || isCreatingTopic || Boolean(topicsError) || isSubmitting
             }
           >
-            {isCreatingTopic || isSubmitting ? "Saving…" : "Save Question Set"}
+            {isCreatingTopic || isSubmitting ? (
+              <span className="flex items-center gap-2">
+                 <Loader2 className="w-5 h-5 animate-spin" /> Saving…
+              </span>
+            ) : "Submit Question Set"}
           </Button>
         </div>
 
       </form>
+
+      <QuestionSearchModal 
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onImport={handleImportQuestion}
+        existingQuestionIds={existingQuestionIds}
+      />
     </div>
   );
 }

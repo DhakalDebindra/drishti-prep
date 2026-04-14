@@ -42,9 +42,9 @@ export async function POST(req: Request, { params }: RouteParams) {
   let totalQuestions = attempt.question_count;
   if (!totalQuestions) {
     const { count } = await supabase
-      .from("questions")
+      .from("question_set_questions")
       .select("*", { count: "exact", head: true })
-      .eq("set_id", attempt.set_id);
+      .eq("question_set_id", attempt.set_id);
     totalQuestions = count || 0;
   }
 

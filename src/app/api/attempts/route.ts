@@ -45,9 +45,9 @@ export async function POST(req: Request) {
   }
 
   const { count } = await supabase
-    .from("questions")
+    .from("question_set_questions")
     .select("id", { count: "exact", head: true })
-    .eq("set_id", setId);
+    .eq("question_set_id", setId);
 
   const questionCount = count ?? 0;
 

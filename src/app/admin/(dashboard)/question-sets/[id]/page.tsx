@@ -20,11 +20,13 @@ export default async function EditQuestionSetPage({
     return notFound();
   }
 
-  const { data: questions, error: questionsError } = await supabase
-    .from("questions")
-    .select("*")
-    .eq("set_id", id)
-    .order("order_number", { ascending: true });
+  const { data: qsqResponse, error: questionsError } = await supabase
+    .from("question_set_questions")
+    .select("position, questions(*)")
+    .eq("question_set_id", id)
+    .order("position", { ascending: true });
+
+  const questions = qsqResponse?.map((row: any) => row.questions) || [];
 
   if (questionsError) {
     console.error("Failed to load questions", questionsError);

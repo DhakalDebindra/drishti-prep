@@ -47,18 +47,25 @@ export async function POST(req: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Attempt is not in progress" }, { status: 400 });
   }
 
+  const { data: qsq, error: qsqError } = await supabase
+    .from("question_set_questions")
+    .select("question_id")
+    .eq("question_set_id", attempt.set_id)
+    .eq("question_id", questionId)
+    .maybeSingle();
+
+  if (qsqError || !qsq) {
+    return NextResponse.json({ error: "Question does not belong to this set" }, { status: 400 });
+  }
+
   const { data: question, error: questionError } = await supabase
     .from("questions")
-    .select("id, correct_option, set_id")
+    .select("id, correct_option")
     .eq("id", questionId)
     .maybeSingle();
 
   if (questionError || !question) {
     return NextResponse.json({ error: "Question not found" }, { status: 404 });
-  }
-
-  if (question.set_id !== attempt.set_id) {
-    return NextResponse.json({ error: "Question does not belong to this set" }, { status: 400 });
   }
 
   const isCorrect = question.correct_option === selected;

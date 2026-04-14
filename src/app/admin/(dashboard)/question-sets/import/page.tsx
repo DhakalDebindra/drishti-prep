@@ -13,9 +13,9 @@ type RowError = { row: number; error: string };
 type SubjectOption = { id: string; name: string };
 type TopicOption = { id: string; name: string; subject_id: string | null; subject_name: string | null };
 
-const TEMPLATE_CSV = `Question Content,Option A,Option B,Option C,Option D,Correct Option,Explanation
-What is the capital of Nepal?,Kathmandu,Pokhara,Lalitpur,Bhaktapur,A,Kathmandu is the political and cultural hub of Nepal.
-Which is the highest mountain?,K2,Kangchenjunga,Mount Everest,Lhotse,C,Mount Everest is the highest peak in the world.`;
+const TEMPLATE_CSV = `Question Content,Option A,Option B,Option C,Option D,Correct Option,Explanation,Exam Year,Paper Reference,Language
+What is the capital of Nepal?,Kathmandu,Pokhara,Lalitpur,Bhaktapur,A,Kathmandu is the political and cultural hub of Nepal.,2080,S.O. 2080-1,nepali
+Which is the highest mountain?,K2,Kangchenjunga,Mount Everest,Lhotse,C,Mount Everest is the highest peak in the world.,,,nepali`;
 
 export default function BulkImportPage() {
   const router = useRouter();
@@ -29,6 +29,7 @@ export default function BulkImportPage() {
   const [subjectLookup, setSubjectLookup] = useState("");
   const [topicLookup, setTopicLookup] = useState("");
   const [difficulty, setDifficulty] = useState("1");
+  const [setType, setSetType] = useState("learning");
 
   // Subject/Topic Lists
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
@@ -88,11 +89,11 @@ export default function BulkImportPage() {
         const columns = rows[i];
         
         if (columns.length < 7) {
-            rowErrors.push({ row: i + 1, error: "Missing required columns (needs at least 7, including Explanation)" });
+            rowErrors.push({ row: i + 1, error: "Missing required columns (needs at least 7 basic columns)" });
             continue;
         }
 
-        const [content, option_a, option_b, option_c, option_d, correct_raw, explanation] = columns;
+        const [content, option_a, option_b, option_c, option_d, correct_raw, explanation, exam_year, paper_ref, language] = columns;
         const correct_option = correct_raw?.trim().toUpperCase();
 
         if (!content || !option_a || !option_b || !option_c || !option_d) {
@@ -113,6 +114,9 @@ export default function BulkImportPage() {
             option_d: option_d.trim(),
             correct_option,
             explanation: explanation?.trim() || "",
+            exam_year: exam_year?.trim() ? parseInt(exam_year) : null,
+            paper_ref: paper_ref?.trim() || "",
+            language: language?.trim().toLowerCase() || "nepali",
             order_number: i // Maintain relative order from file
         });
     }
@@ -193,6 +197,7 @@ export default function BulkImportPage() {
                 title,
                 topic_id: tId, // Send required ID
                 difficulty_level: parseInt(difficulty),
+                set_type: setType,
                 is_verified: true,
                 questions: questionsPayload
             })
@@ -280,6 +285,21 @@ export default function BulkImportPage() {
                 <option value="1">Beginner</option>
                 <option value="2">Intermediate</option>
                 <option value="3">Advanced</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="set-type">Set Type</Label>
+              <select 
+                id="set-type" 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={setType}
+                onChange={e => setSetType(e.target.value)}
+              >
+                <option value="learning">Learning Path (Standard)</option>
+                <option value="mock_exam">Mock Exam</option>
+                <option value="daily_challenge">Daily Challenge</option>
+                <option value="revision">Revision Set</option>
               </select>
             </div>
           </CardContent>

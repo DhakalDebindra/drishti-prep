@@ -8,7 +8,7 @@ import { InlineQuestionForm } from "@/components/admin/InlineQuestionForm";
 
 export default function EditorClient({ initialSet, initialQuestions }: { initialSet: any, initialQuestions: any[] }) {
   const { questionSet, savingKey: setSavingKey, togglePublishStatus } = useManageQuestionSet(initialSet);
-  const { questions, editingId, savingKey, setEditingId, updateQuestion, moveQuestion } = useManageQuestions(initialQuestions);
+  const { questions, editingId, savingKey, setEditingId, updateQuestion, moveQuestion } = useManageQuestions(initialQuestions, initialSet.id);
 
   return (
     <div className="space-y-6">
