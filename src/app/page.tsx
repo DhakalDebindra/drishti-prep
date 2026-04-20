@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 
 type ContrastMode = "normal" | "high-contrast";
 
@@ -25,7 +26,7 @@ const content = {
     },
     {
       title: "MCQ practice",
-      description: "Topicwise sets, daily drills, and model questions with AI feedback.",
+      description: "Curriculum-aligned modules, daily drills, and model questions with AI feedback.",
     },
     {
       title: "Progress tracking",
@@ -39,31 +40,14 @@ const content = {
   exams: ["Teaching License", "TSC Preparation", "PSC (Public Service)", "GK Mastery"],
 };
 
-const navLinks = [
-  { href: "/practice", label: "Practice (topicwise sets)" },
-  { href: "/dashboard", label: "Progress" },
-  { href: "/bookmarks", label: "Bookmarks" },
-  { href: "#about", label: "About" },
-];
+const impact = "Helping more visually impaired candidates enter government service.";
+const pricing = "NGO partnerships available for sponsored access.";
 
 export default function Home() {
-  const [contrast, setContrast] = useState<ContrastMode>(() => {
-    if (typeof document !== "undefined") {
-      return document.documentElement.classList.contains("hc") ? "high-contrast" : "normal";
-    }
-    return "normal";
-  });
   const [isDark, setIsDark] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const storedContrast = localStorage.getItem("dristiprep-contrast");
-    if (storedContrast === "high-contrast" || storedContrast === "normal") {
-      setContrast(storedContrast);
-    } else {
-      const prefersMore = window.matchMedia?.("(prefers-contrast: more)")?.matches;
-      if (prefersMore) setContrast("high-contrast");
-    }
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     const updateDark = () => setIsDark(Boolean(mq?.matches || document.documentElement.classList.contains("dark")));
     updateDark();
@@ -81,59 +65,36 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-    root.classList.toggle("hc", contrast === "high-contrast");
-    localStorage.setItem("dristiprep-contrast", contrast);
-  }, [contrast]);
+  const themeClass = isDark ? "dark" : "";
 
   const containerClass = useMemo(
     () =>
-      contrast === "high-contrast"
-        ? "min-h-screen bg-black text-white"
-        : isDark
-          ? "min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50"
-          : "min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900",
-    [contrast, isDark],
+      `min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50 ${themeClass}`,
+    [isDark]
   );
 
   const palette = useMemo(() => {
-    if (contrast === "high-contrast") {
-      return {
-        panel: "border-white bg-black",
-        panelStrong: "border-white bg-black",
-        labelTone: "text-yellow-200",
-        subText: "text-white",
-        mutedText: "text-gray-200",
-        headingText: "text-white",
-        navText: "text-white",
-        buttonBorder: "border-white/80 text-white",
-      };
-    }
     if (isDark) {
       return {
-        panel: "border-white/10 bg-white/5",
+        panel: "border-white/10 bg-white/5 shadow-emerald-500/10",
         panelStrong: "border-white/10 bg-slate-900/60",
         labelTone: "text-emerald-200",
         subText: "text-slate-200",
         mutedText: "text-slate-300",
         headingText: "text-white",
-        navText: "text-slate-100",
         buttonBorder: "border-white/25 text-slate-50",
       };
     }
     return {
-      panel: "border-slate-200 bg-white",
-      panelStrong: "border-slate-200 bg-white",
+      panel: "border-slate-200 bg-white shadow-emerald-600/5",
+      panelStrong: "border-slate-200 bg-white shadow-inner shadow-black/5",
       labelTone: "text-emerald-700",
       subText: "text-slate-700",
       mutedText: "text-slate-600",
       headingText: "text-slate-900",
-      navText: "text-slate-900",
       buttonBorder: "border-slate-300 text-slate-900",
     };
-  }, [contrast, isDark]);
+  }, [isDark]);
 
   return (
     <div className={containerClass}>
@@ -145,52 +106,7 @@ export default function Home() {
       </a>
 
       <div className="mx-auto flex max-w-6xl flex-col px-6 pb-20 pt-10 lg:px-10">
-        <header className={`flex items-center justify-between rounded-2xl px-4 py-3 backdrop-blur ${palette.panel}`}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-300 text-slate-950 font-semibold shadow-lg shadow-emerald-500/30">
-                DP
-              </div>
-              <div>
-                <p className={`text-sm uppercase tracking-[0.2em] ${palette.labelTone}`}>Drishtiprep</p>
-                <p className={`text-sm ${palette.subText}`}>Accessible exam prep</p>
-              </div>
-            </div>
-          <nav aria-label="Main navigation" className={`hidden items-center gap-6 text-sm font-medium sm:flex ${palette.navText}`}>
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-md px-2 py-1 transition hover:text-emerald-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-300"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-pressed={contrast === "high-contrast"}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition hover:border-emerald-200 hover:text-emerald-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 ${palette.buttonBorder}`}
-              onClick={() =>
-                setContrast((mode) => (mode === "high-contrast" ? "normal" : "high-contrast"))
-              }
-            >
-              {contrast === "high-contrast" ? "High contrast on" : "High contrast off"}
-            </button>
-            <Link
-              href="/login"
-              className={`hidden rounded-full px-4 py-2 text-sm font-semibold transition hover:border-emerald-200 hover:text-emerald-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:inline-flex ${palette.buttonBorder}`}
-            >
-              Login
-            </Link>
-            <Link
-              href="/practice"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-            >
-              Try a Free Practice Set
-            </Link>
-          </div>
-        </header>
+        <PublicHeader />
 
         <main id="main" className="mt-14 space-y-16">
           <section className={`grid gap-10 rounded-3xl p-8 shadow-2xl shadow-emerald-600/15 backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:p-12 ${palette.panel}`}>
@@ -214,10 +130,10 @@ export default function Home() {
               <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-100">{content.trust}</p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/practice"
+                  href="/signup"
                   className="flex h-12 items-center justify-center rounded-full bg-emerald-400 px-6 text-base font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                 >
-                  Try a Free Practice Set
+                  Join Dristiprep
                 </Link>
                 <Link
                   href="/login"
@@ -286,10 +202,10 @@ export default function Home() {
             </div>
             <div className="flex gap-3">
               <Link
-                href="/practice"
+                href="/signup"
                 className={`rounded-full px-5 py-3 text-sm font-semibold shadow-md transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${isDark ? "bg-slate-50 text-slate-950 hover:bg-white focus-visible:outline-slate-900" : "bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline-slate-700"}`}
               >
-                Start free demo
+                Join Now
               </Link>
               <Link
                 href="/signup"

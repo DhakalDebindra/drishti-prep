@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      modules: {
+        Row: {
+          id: string
+          name: string
+          name_np: string | null
+          slug: string
+          description: string | null
+          is_universal: boolean
+          exam_levels: string[] | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          name_np?: string | null
+          slug: string
+          description?: string | null
+          is_universal?: boolean
+          exam_levels?: string[] | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          name_np?: string | null
+          slug?: string
+          description?: string | null
+          is_universal?: boolean
+          exam_levels?: string[] | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           best_streak: number
@@ -53,6 +92,7 @@ export type Database = {
           title: string
           topic_id: string
           version: number
+          set_type: string
         }
         Insert: {
           created_at?: string
@@ -62,6 +102,7 @@ export type Database = {
           title: string
           topic_id: string
           version?: number
+          set_type?: string
         }
         Update: {
           created_at?: string
@@ -71,6 +112,7 @@ export type Database = {
           title?: string
           topic_id?: string
           version?: number
+          set_type?: string
         }
         Relationships: [
           {
@@ -95,6 +137,13 @@ export type Database = {
           option_d: string
           order_number: number
           set_id: string
+          exam_year: number | null
+          paper_ref: string | null
+          is_verified: boolean
+          verified_by: string | null
+          language: string
+          source_question_id: string | null
+          status: string | null
         }
         Insert: {
           content: string
@@ -108,6 +157,13 @@ export type Database = {
           option_d: string
           order_number: number
           set_id: string
+          exam_year?: number | null
+          paper_ref?: string | null
+          is_verified?: boolean
+          verified_by?: string | null
+          language?: string
+          source_question_id?: string | null
+          status?: string | null
         }
         Update: {
           content?: string
@@ -121,6 +177,13 @@ export type Database = {
           option_d?: string
           order_number?: number
           set_id?: string
+          exam_year?: number | null
+          paper_ref?: string | null
+          is_verified?: boolean
+          verified_by?: string | null
+          language?: string
+          source_question_id?: string | null
+          status?: string | null
         }
         Relationships: [
           {
@@ -275,20 +338,43 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          module_id: string | null
+          name_np: string | null
+          slug: string
+          syllabus_ref: string | null
+          display_order: number
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          module_id?: string | null
+          name_np?: string | null
+          slug: string
+          syllabus_ref?: string | null
+          display_order?: number
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          module_id?: string | null
+          name_np?: string | null
+          slug?: string
+          syllabus_ref?: string | null
+          display_order?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subjects_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topics: {
         Row: {
@@ -296,21 +382,30 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          slug: string
           subject_id: string
+          syllabus_ref: string | null
+          display_order: number
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          slug: string
           subject_id: string
+          syllabus_ref?: string | null
+          display_order?: number
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          slug?: string
           subject_id?: string
+          syllabus_ref?: string | null
+          display_order?: number
         }
         Relationships: [
           {
@@ -460,4 +555,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

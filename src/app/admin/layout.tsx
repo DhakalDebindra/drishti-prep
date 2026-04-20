@@ -49,6 +49,11 @@ export default async function AdminLayout({
               + Create Question Set
             </Button>
           </Link>
+          <Link href="/admin/curriculum">
+            <Button variant="ghost" className="w-full justify-start">
+              Curriculum Manager
+            </Button>
+          </Link>
           <Link href="/admin/disputes">
             <Button variant="ghost" className="w-full justify-start text-red-700 hover:text-red-900 hover:bg-red-50">
               Dispute Inbox

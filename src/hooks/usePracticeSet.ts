@@ -120,7 +120,7 @@ export function usePracticeSet({
 
         sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
         setStatus("submitted");
-        router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review`);
+        router.push(`/practice/${setInfo.id}/review`);
       } catch (err: any) {
         console.warn("DEMO MODE ERROR:", err.message);
         const mockReview: PracticeReview = {
@@ -144,7 +144,7 @@ export function usePracticeSet({
         };
         sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
         setStatus("submitted");
-        router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review`);
+        router.push(`/practice/${setInfo.id}/review`);
         return;
       }
       return;
@@ -180,7 +180,7 @@ export function usePracticeSet({
         throw new Error(data.error || "Submit failed");
       }
       setStatus("submitted");
-      router.push(`/practice/${setInfo.subjectName}/${setInfo.topicName}/${setInfo.id}/review?attemptId=${idToSubmit}`);
+      router.push(`/practice/${setInfo.id}/review?attemptId=${idToSubmit}`);
     } catch (err: any) {
       setIsSubmitting(false);
       setError(err.message || "Submit failed");

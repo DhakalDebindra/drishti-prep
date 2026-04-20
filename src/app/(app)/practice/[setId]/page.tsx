@@ -5,43 +5,44 @@ import PracticeSetClient from "./PracticeSetClient";
 import type { DecoratedAnswer, PracticeReview } from "@/types/practice";
 
 interface PageProps {
-  params: Promise<{ subject: string; topic: string; set: string }>;
+  params: Promise<{ setId: string }>;
 }
 
 export default async function PracticeSetPage({ params }: PageProps) {
-  const { subject, topic, set } = await params;
+  const { setId } = await params;
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user ?? null;
 
-  const subjectName = decodeURIComponent(subject);
-  const topicName = decodeURIComponent(topic);
-  const setId = decodeURIComponent(set);
-
-  const [{ data: subjectRow }, { data: topicRow }, { data: setRow }, { data: qsqResponse }] = await Promise.all([
-    supabase.from("subjects").select("id, name").eq("name", subjectName).maybeSingle(),
-    supabase.from("topics").select("id, name, subject_id").eq("name", topicName).maybeSingle(),
+  const [{ data: setRow }, { data: qsqResponse }] = await Promise.all([
     supabase
       .from("question_sets")
-      .select("id, title, difficulty_level, is_verified, version, topic_id")
+      .select("id, title, difficulty_level, is_verified, version, topic_id, topics!inner(id, name, slug, subjects!inner(id, name, slug, modules!inner(slug)))")
       .eq("id", setId)
       .maybeSingle(),
     supabase
       .from("question_set_questions")
-      .select("position, questions(id, content, option_a, option_b, option_c, option_d, correct_option, explanation, order_number)")
+      .select(`
+        position, 
+        questions!inner(
+          id, content, option_a, option_b, option_c, option_d, 
+          correct_option, explanation, order_number, status
+        )
+      `)
       .eq("question_set_id", setId)
+      .or("status.neq.deprecated,status.is.null", { foreignTable: "questions" })
       .order("position", { ascending: true }),
   ]);
 
   const questions = qsqResponse?.map((row: any) => row.questions) || [];
 
-  if (!subjectRow || !topicRow || !setRow) {
+  if (!setRow || !setRow.topics || !setRow.topics.subjects) {
     notFound();
   }
 
-  if (topicRow.subject_id !== subjectRow.id || setRow.topic_id !== topicRow.id) {
-    notFound();
-  }
+  const topicRow = setRow.topics;
+  const subjectRow = Array.isArray(topicRow.subjects) ? topicRow.subjects[0] : topicRow.subjects;
+  const moduleRow = subjectRow ? (Array.isArray(subjectRow.modules) ? subjectRow.modules[0] : subjectRow.modules) : null;
 
   const { data: recentAttempt } = user
     ? await supabase
@@ -83,8 +84,11 @@ export default async function PracticeSetPage({ params }: PageProps) {
         version: setRow.version ?? 1,
         topicId: topicRow.id,
         topicName: topicRow.name,
-        subjectId: subjectRow.id,
-        subjectName: subjectRow.name,
+        topicSlug: topicRow.slug,
+        subjectId: subjectRow?.id || "",
+        subjectName: subjectRow?.name || "",
+        subjectSlug: subjectRow?.slug || "",
+        moduleSlug: moduleRow?.slug || "",
         is_verified: setRow.is_verified,
       }}
       questions={questions ?? []}

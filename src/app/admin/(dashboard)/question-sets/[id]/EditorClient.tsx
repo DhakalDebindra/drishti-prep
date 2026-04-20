@@ -1,35 +1,172 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useManageQuestionSet } from "@/hooks/admin/useManageQuestionSet";
 import { useManageQuestions } from "@/hooks/admin/useManageQuestions";
 import { InlineQuestionForm } from "@/components/admin/InlineQuestionForm";
+import { EditQuestionSetDialog } from "@/components/admin/EditQuestionSetDialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
+import { Settings, Trash2, Loader2, Globe, Lock } from "lucide-react";
 
 export default function EditorClient({ initialSet, initialQuestions }: { initialSet: any, initialQuestions: any[] }) {
-  const { questionSet, savingKey: setSavingKey, togglePublishStatus } = useManageQuestionSet(initialSet);
-  const { questions, editingId, savingKey, setEditingId, updateQuestion, moveQuestion } = useManageQuestions(initialQuestions, initialSet.id);
+  const { 
+    questionSet, 
+    savingKey: setSavingKey, 
+    togglePublishStatus, 
+    updateQuestionSet, 
+    deleteQuestionSet 
+  } = useManageQuestionSet(initialSet);
+  
+  const { 
+    questions, 
+    editingId, 
+    savingKey: questionsSavingKey, 
+    setEditingId, 
+    updateQuestion, 
+    moveQuestion 
+  } = useManageQuestions(initialQuestions, initialSet.id);
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border">
+      {/* Header / Toolbar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl border shadow-sm gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{questionSet.title}</h1>
-          <p className="text-muted-foreground text-sm">
-            Status: {questionSet.is_verified ? "Published" : "Draft"} | Questions: {questions.length}
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold text-slate-900">{questionSet.title}</h1>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              questionSet.is_verified 
+                ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
+                : "bg-amber-100 text-amber-700 border border-amber-200"
+            }`}>
+              {questionSet.is_verified ? "Published" : "Draft"}
+            </span>
+          </div>
+          <p className="text-slate-500 text-sm flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Questions: {questions.length} ({questions.filter(q => q.status !== 'deprecated').length} active)
+            </span>
+            <span className="flex items-center gap-1.5 capitalize">
+               {questionSet.set_type.replace('_', ' ')}
+            </span>
           </p>
         </div>
-        <Button 
-          variant={questionSet.is_verified ? "outline" : "default"}
-          onClick={togglePublishStatus}
-          disabled={setSavingKey === 'set'}
-          aria-live="polite"
-        >
-          {setSavingKey === 'set' ? "Saving..." : (questionSet.is_verified ? "Revert to Draft" : "Publish Set")}
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Settings Button */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsEditOpen(true)}
+            className="gap-2"
+            aria-label="Edit question set settings"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
+
+          {/* Delete Button with Confirmation */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
+                aria-label="Delete question set"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action <strong>cannot be undone</strong>. This will permanently delete the 
+                  <strong> {questionSet.title}</strong> question set, all of its questions, 
+                  and all associated records.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={setSavingKey === 'deleting'}>Cancel</AlertDialogCancel>
+                <Button 
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    console.log("Starting deletion for:", questionSet.id);
+                    try {
+                      await deleteQuestionSet();
+                    } catch (err) {
+                      console.error("Critical Delete Error:", err);
+                    }
+                  }}
+                  disabled={setSavingKey === 'deleting'}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {setSavingKey === 'deleting' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete Everything"
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+          {/* Publish Toggle Button */}
+          <Button 
+            variant={questionSet.is_verified ? "outline" : "default"}
+            size="sm"
+            onClick={togglePublishStatus}
+            disabled={setSavingKey === 'set'}
+            className="gap-2 min-w-[140px]"
+            aria-live="polite"
+          >
+            {setSavingKey === 'set' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : questionSet.is_verified ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <Globe className="w-4 h-4" />
+            )}
+            {setSavingKey === 'set' ? "Saving..." : (questionSet.is_verified ? "Revert to Draft" : "Publish Set")}
+          </Button>
+        </div>
       </div>
 
+      {/* Edit Settings Dialog */}
+      <EditQuestionSetDialog 
+        isOpen={isEditOpen} 
+        onClose={() => setIsEditOpen(false)}
+        questionSet={questionSet}
+        onSave={updateQuestionSet}
+      />
+
+      {/* Question List */}
       <div className="space-y-4">
+        {questions.length === 0 && (
+          <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+             <p className="text-slate-400">No questions in this set yet.</p>
+          </div>
+        )}
         {questions.map((q, index) => {
           const isEditing = editingId === q.id;
           const isDeprecated = q.status === 'deprecated';
@@ -40,7 +177,7 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
                 key={q.id}
                 q={q}
                 title={`Editing Question ${q.order_number}`}
-                savingKey={savingKey}
+                savingKey={questionsSavingKey}
                 onCancel={() => setEditingId(null)}
                 onSave={(updates) => updateQuestion(q.id, updates)}
               />
@@ -48,28 +185,28 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
           }
 
           return (
-            <Card key={q.id} className={isDeprecated ? "opacity-60 bg-gray-50 strike bg-diagonal-stripes" : ""}>
+            <Card key={q.id} className={isDeprecated ? "opacity-60 bg-gray-50 border-slate-200 strike bg-diagonal-stripes" : "border-slate-200 hover:border-slate-300 transition-colors"}>
               {isDeprecated && <span className="sr-only">Status: Deprecated</span>}
               <CardContent className="p-4 flex flex-col md:flex-row gap-4">
                 <div className="flex md:flex-col items-center justify-center space-x-2 md:space-x-0 md:space-y-1">
                   <Button 
-                    aria-label="Move question up" 
-                    aria-describedby={`q-content-${q.id}`}
+                    aria-label={`Move question ${q.order_number} up`} 
                     variant="ghost" 
                     size="sm" 
                     onClick={() => moveQuestion(index, 'up')} 
                     disabled={index === 0}
+                    className="h-8 w-8 p-0"
                   >
                     ▲
                   </Button>
-                  <span className="font-bold">{q.order_number}</span>
+                  <span className="font-bold text-slate-700">{q.order_number}</span>
                   <Button 
-                    aria-label="Move question down" 
-                    aria-describedby={`q-content-${q.id}`}
+                    aria-label={`Move question ${q.order_number} down`} 
                     variant="ghost" 
                     size="sm" 
                     onClick={() => moveQuestion(index, 'down')} 
                     disabled={index === questions.length - 1}
+                    className="h-8 w-8 p-0"
                   >
                     ▼
                   </Button>
@@ -78,41 +215,52 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
                 <div className="flex-1 space-y-2">
                   <p 
                     id={`q-content-${q.id}`}
-                    className={`font-medium ${isDeprecated ? 'line-through text-gray-500' : ''}`}
+                    className={`font-medium text-slate-800 ${isDeprecated ? 'line-through text-slate-400' : ''}`}
                   >
                     {q.content}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                    <div className={q.correct_option === 'A' ? 'font-bold text-green-600' : ''}>A: {q.option_a}</div>
-                    <div className={q.correct_option === 'B' ? 'font-bold text-green-600' : ''}>B: {q.option_b}</div>
-                    <div className={q.correct_option === 'C' ? 'font-bold text-green-600' : ''}>C: {q.option_c}</div>
-                    <div className={q.correct_option === 'D' ? 'font-bold text-green-600' : ''}>D: {q.option_d}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div className={`p-2 rounded border ${q.correct_option === 'A' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                      <span className="opacity-60 mr-2">A:</span> {q.option_a}
+                    </div>
+                    <div className={`p-2 rounded border ${q.correct_option === 'B' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                      <span className="opacity-60 mr-2">B:</span> {q.option_b}
+                    </div>
+                    <div className={`p-2 rounded border ${q.correct_option === 'C' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                      <span className="opacity-60 mr-2">C:</span> {q.option_c}
+                    </div>
+                    <div className={`p-2 rounded border ${q.correct_option === 'D' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                      <span className="opacity-60 mr-2">D:</span> {q.option_d}
+                    </div>
                   </div>
                   {q.explanation && (
-                    <p className="text-xs text-muted-foreground mt-2 bg-slate-50 p-2 rounded border italic">
-                      Exp: {q.explanation}
-                    </p>
+                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-xs text-blue-800 italic flex gap-2">
+                      <span className="font-bold shrink-0">Explanation:</span>
+                      <span>{q.explanation}</span>
+                    </div>
                   )}
                   {isDeprecated && (
-                    <span className="inline-block mt-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Deprecated</span>
+                    <span className="inline-block mt-2 bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded font-medium">Deprecated</span>
                   )}
                 </div>
 
-                <div className="flex flex-col space-y-2 min-w-[120px]">
+                <div className="flex flex-col space-y-2 min-w-[130px]">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => setEditingId(q.id)}
+                    className="w-full justify-start gap-2"
                   >
-                    Edit Inline
+                    Edit Content
                   </Button>
                   <Button 
-                    variant={isDeprecated ? "default" : "destructive"} 
+                    variant={isDeprecated ? "outline" : "ghost"} 
                     size="sm"
-                    disabled={savingKey === q.id}
+                    disabled={questionsSavingKey === q.id}
                     onClick={() => updateQuestion(q.id, { status: isDeprecated ? 'active' : 'deprecated' })}
+                    className={`w-full justify-start gap-2 ${isDeprecated ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
                   >
-                    {isDeprecated ? "Restore Object" : "Deprecate"}
+                    {isDeprecated ? "Restore Question" : "Deprecate"}
                   </Button>
                 </div>
               </CardContent>

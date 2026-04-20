@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const isAuthRoute = path.startsWith('/login')
+  const isAuthRoute = path.startsWith('/login') || path.startsWith('/signup')
   const isAdminRoute = path.startsWith('/admin')
+  const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/courses') || path.startsWith('/bookmarks') || path.startsWith('/practice')
   const isProtectedApiPost =
     request.method === 'POST' &&
     (path.startsWith('/api/subjects') ||
@@ -46,6 +47,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   const needsAdminCheck = isAdminRoute || isProtectedApiPost
+
+  if (isProtectedRoute && !user) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
 
   if (needsAdminCheck) {
     // Unauthenticated handling differs between UI and API routes

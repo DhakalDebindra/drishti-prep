@@ -67,14 +67,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors mb-2"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 id="main-heading" className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Bookmark className="w-6 h-6 text-blue-500" />
             My Bookmarks
           </h1>

@@ -21,7 +21,7 @@ const questionSetPayload = z.object({
   topic_id: z.string().min(1, "Topic ID is required"),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().int().min(1).max(3),
-  set_type: z.enum(["learning", "mock_exam", "daily_challenge", "revision"]).default("learning"),
+  set_type: z.enum(["learning", "mock_exam", "daily_practice", "revision", "custom"]).default("learning"),
   is_verified: z.boolean(),
   questions: z.array(questionPayload).min(1, "At least one question is required").max(30, "Maximum of 30 questions allowed per set"),
 });
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
     if (setInsertError || !insertedSet?.id) {
       console.error("Failed to insert question set", setInsertError);
-      return errorResponse("Failed to create question set");
+      return errorResponse(setInsertError?.message || "Failed to create question set");
     }
 
     // Handle Questions: 

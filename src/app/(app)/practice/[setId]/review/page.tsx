@@ -9,9 +9,7 @@ import { ChevronLeft } from "lucide-react";
 
 type PageProps = {
   params: Promise<{
-    subject: string;
-    topic: string;
-    set: string;
+    setId: string;
   }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
@@ -47,7 +45,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   if (attempt.status !== "submitted") {
     // If somehow they get here without submitting, push them back to the set
     const resolvedParams = await params;
-    redirect(`/practice/${resolvedParams.subject}/${resolvedParams.topic}/${resolvedParams.set}`);
+    redirect(`/practice/${resolvedParams.setId}`);
   }
 
   // Fetch Questions and Answers
@@ -97,14 +95,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Performance Review</h1>
+        <h1 id="main-heading" className="text-2xl font-bold text-slate-900 dark:text-white">Performance Review</h1>
       </div>
 
       <ScoreOverview

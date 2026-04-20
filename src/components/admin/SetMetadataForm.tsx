@@ -145,8 +145,9 @@ export function SetMetadataForm({
           >
             <option value="learning">Learning Path (Standard)</option>
             <option value="mock_exam">Mock Exam</option>
-            <option value="daily_challenge">Daily Challenge</option>
+            <option value="daily_practice">Daily Practice</option>
             <option value="revision">Revision Set</option>
+            <option value="custom">Custom Set</option>
           </select>
         </div>
 

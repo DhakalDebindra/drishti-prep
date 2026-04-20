@@ -1,15 +1,23 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 type SubjectRecord = { id: string; name: string };
-type TopicRecord = { id: string; name: string; subject_id: string | null };
+type TopicRecord = { 
+  id: string; 
+  name: string; 
+  subject_id: string | null;
+  syllabus_ref: string | null;
+  display_order: number;
+};
 type TopicPayload = {
   id: string;
   name: string;
   subject_id: string | null;
   subject_name: string | null;
+  syllabus_ref: string | null;
+  display_order: number;
 };
 
 const errorResponse = (message: string, status = 500) =>
@@ -23,6 +31,8 @@ const enrichWithSubjectName = (
   name: topic.name,
   subject_id: topic.subject_id,
   subject_name: topic.subject_id ? subjectMap.get(topic.subject_id) ?? null : null,
+  syllabus_ref: topic.syllabus_ref,
+  display_order: topic.display_order,
 });
 
 const fetchSubjects = async (supabase: SupabaseClient) => {
@@ -51,7 +61,8 @@ export async function GET() {
 
     const { data: topics, error } = await supabase
       .from("topics")
-      .select("id,name,subject_id")
+      .select("id, name, subject_id, syllabus_ref, display_order")
+      .order("display_order", { ascending: true })
       .order("name", { ascending: true });
 
     if (error) {
@@ -105,7 +116,7 @@ export async function POST(req: Request) {
 
     const { data: existingTopics, error: searchError } = await supabase
       .from("topics")
-      .select("id,name,subject_id")
+      .select("id, name, subject_id, syllabus_ref, display_order")
       .ilike("name", name)
       .limit(1);
 
@@ -129,10 +140,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const syllabusRef = typeof body?.syllabus_ref === "string" ? body.syllabus_ref.trim() : null;
+    const displayOrder = typeof body?.display_order === "number" ? body.display_order : 0;
+
     const { data: insertedTopic, error: insertError } = await supabase
       .from("topics")
-      .insert({ name, subject_id: subjectId })
-      .select("id,name,subject_id")
+      .insert({ 
+        name, 
+        subject_id: subjectId,
+        syllabus_ref: syllabusRef,
+        display_order: displayOrder
+      })
+      .select("id, name, subject_id, syllabus_ref, display_order")
       .single();
 
     if (insertError) {

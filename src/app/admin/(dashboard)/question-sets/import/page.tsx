@@ -106,6 +106,17 @@ export default function BulkImportPage() {
             continue;
         }
 
+        const rawLanguage = language?.trim().toLowerCase() || "";
+        let finalLanguage: "nepali" | "english" | "both" = "nepali";
+        
+        if (rawLanguage === "english" || rawLanguage === "en" || rawLanguage === "eng") {
+            finalLanguage = "english";
+        } else if (rawLanguage === "both" || rawLanguage === "all") {
+            finalLanguage = "both";
+        } else if (rawLanguage === "nepali" || rawLanguage === "np" || rawLanguage === "nep") {
+            finalLanguage = "nepali";
+        }
+
         parsedData.push({
             content: content.trim(),
             option_a: option_a.trim(),
@@ -116,7 +127,7 @@ export default function BulkImportPage() {
             explanation: explanation?.trim() || "",
             exam_year: exam_year?.trim() ? parseInt(exam_year) : null,
             paper_ref: paper_ref?.trim() || "",
-            language: language?.trim().toLowerCase() || "nepali",
+            language: finalLanguage,
             order_number: i // Maintain relative order from file
         });
     }
@@ -210,8 +221,19 @@ export default function BulkImportPage() {
         setSuccessMessage(`Success! Created practice set with ${parsedData.length} questions. Redirecting...`);
         setTimeout(() => router.push("/admin"), 2000);
     } catch (e: any) {
-        toast.error(e.message || "Failed to import CSV");
-        setErrors([{ row: 0, error: e.message }]);
+        console.error("Import Batch Error:", e);
+        const isReadError = e.name === "NotReadableError" || e.message?.toLowerCase().includes("could not be read");
+        
+        const finalError = isReadError 
+            ? "Error reading file. This happens if you edited the file after selecting it. Please click the upload area and select the file again."
+            : (e.message || "Failed to import CSV");
+
+        toast.error(finalError);
+        setErrors([{ row: 0, error: finalError }]);
+        
+        if (isReadError) {
+          setFile(null); // Force re-selection
+        }
     } finally {
         setIsProcessing(false);
     }
@@ -298,8 +320,9 @@ export default function BulkImportPage() {
               >
                 <option value="learning">Learning Path (Standard)</option>
                 <option value="mock_exam">Mock Exam</option>
-                <option value="daily_challenge">Daily Challenge</option>
+                <option value="daily_practice">Daily Practice</option>
                 <option value="revision">Revision Set</option>
+                <option value="custom">Custom Set</option>
               </select>
             </div>
           </CardContent>

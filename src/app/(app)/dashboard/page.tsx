@@ -48,7 +48,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <h1 id="main-heading" className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
           Welcome back
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
@@ -56,7 +56,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <MacroAnalytics attempts={safeAttempts} />
+
+      <div id="analytics">
+        <MacroAnalytics attempts={safeAttempts} />
+      </div>
 
       <PracticeBanners attempts={safeAttempts} />
 

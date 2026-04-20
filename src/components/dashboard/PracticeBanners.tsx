@@ -38,7 +38,7 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
             </p>
           </div>
           <Link
-            href={`/practice/${inProgressAttempt.question_sets.topic.subject.name.toLowerCase()}/${inProgressAttempt.question_sets.topic.name.toLowerCase()}/${inProgressAttempt.question_sets.title.toLowerCase()}`}
+            href={`/practice/${inProgressAttempt.set_id}`}
             className="inline-flex items-center bg-white text-indigo-600 hover:bg-indigo-50 font-medium px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <PlayCircle className="w-4 h-4 mr-2" />

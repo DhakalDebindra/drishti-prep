@@ -19,8 +19,11 @@ type Props = {
     version: number;
     topicId: string;
     topicName: string;
+    topicSlug: string;
     subjectId: string;
     subjectName: string;
+    subjectSlug: string;
+    moduleSlug: string;
     is_verified: boolean;
   };
   questions: Question[];
@@ -95,16 +98,16 @@ function PracticeSetView() {
         {state.announcementText}
       </div>
       <div className="flex items-center gap-2 text-sm text-gray-500" aria-label="Breadcrumb">
-        <Link href="/practice" className="text-blue-700 hover:text-blue-900">
-          Practice
+        <Link href="/courses" className="text-blue-700 hover:text-blue-900">
+          Courses
         </Link>
         <span aria-hidden="true">/</span>
-        <Link href={`/practice/${setInfo.subjectName}`} className="text-blue-700 hover:text-blue-900">
+        <Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900">
           {setInfo.subjectName}
         </Link>
         <span aria-hidden="true">/</span>
         <Link
-          href={`/practice/${setInfo.subjectName}/${setInfo.topicName}`}
+          href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
           className="text-blue-700 hover:text-blue-900"
         >
           {setInfo.topicName}
@@ -116,7 +119,7 @@ function PracticeSetView() {
       </div>
 
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-gray-900">{setInfo.title}</h1>
+        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">{setInfo.title}</h1>
         <p className="text-gray-600">Difficulty {setInfo.difficulty_level}</p>
         {state.message && (
           <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{state.message}</p>

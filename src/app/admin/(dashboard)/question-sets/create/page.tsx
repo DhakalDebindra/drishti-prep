@@ -37,7 +37,7 @@ const questionSetSchema = z.object({
   topic_lookup: z.string().min(1, "Topic is required"),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
-  set_type: z.enum(["learning", "mock_exam", "daily_challenge", "revision"]).default("learning"),
+  set_type: z.enum(["learning", "mock_exam", "daily_practice", "revision", "custom"]).default("learning"),
   is_verified: z.boolean().default(false),
   questions: z.array(questionSchema).min(1, "At least one question is required").max(30, "Maximum of 30 questions allowed per set"),
 });
