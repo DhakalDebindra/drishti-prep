@@ -1,4 +1,4 @@
-  import React, { createContext, useContext, useReducer, ReactNode, useMemo } from "react";
+import React, { createContext, useContext, useReducer, ReactNode, useMemo, useEffect } from "react";
 import { usePracticeSet } from "@/hooks/usePracticeSet";
 import type { DecoratedAnswer, Question } from "@/types/practice";
 

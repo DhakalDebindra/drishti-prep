@@ -30,8 +30,13 @@ export default async function DashboardPage() {
         title,
         topic:topics (
           name,
+          slug,
           subject:subjects (
-            name
+            name,
+            slug,
+            module:modules (
+              slug
+            )
           )
         )
       )

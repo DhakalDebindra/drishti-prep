@@ -6,8 +6,13 @@ interface SetInfo {
   title: string;
   topic: {
     name: string;
+    slug: string;
     subject: {
       name: string;
+      slug: string;
+      module: {
+        slug: string;
+      };
     };
   };
 }
@@ -78,10 +83,15 @@ export function AttemptHistoryList({ attempts }: { attempts: AttemptWithSet[] })
              ? new Date(latest.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
              : "Unknown Date";
 
+           const latestSet = latest.question_sets;
+           const topicSlug = latestSet?.topic.slug || "";
+           const subjectSlug = latestSet?.topic.subject.slug || "";
+           const moduleSlug = latestSet?.topic.subject.module.slug || "";
+
            return (
              <Link 
                key={latest.set_id} 
-               href={`/practice/${latest.set_id}/review?attemptId=${latest.id}`}
+               href={`/courses/${moduleSlug}/${subjectSlug}/${topicSlug}/practice/${latest.set_id}/review?attemptId=${latest.id}`}
                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group gap-4"
              >
                 <div className="flex-1">

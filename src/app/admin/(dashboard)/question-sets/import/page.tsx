@@ -13,9 +13,9 @@ type RowError = { row: number; error: string };
 type SubjectOption = { id: string; name: string };
 type TopicOption = { id: string; name: string; subject_id: string | null; subject_name: string | null };
 
-const TEMPLATE_CSV = `Question Content,Option A,Option B,Option C,Option D,Correct Option,Explanation,Exam Year,Paper Reference,Language
-What is the capital of Nepal?,Kathmandu,Pokhara,Lalitpur,Bhaktapur,A,Kathmandu is the political and cultural hub of Nepal.,2080,S.O. 2080-1,nepali
-Which is the highest mountain?,K2,Kangchenjunga,Mount Everest,Lhotse,C,Mount Everest is the highest peak in the world.,,,nepali`;
+const TEMPLATE_CSV = `Question Content;Option A;Option B;Option C;Option D;Correct Option;Explanation;Exam Year;Paper Reference;Language
+Which city is known as the "City of Temples", Kathmandu?;Kathmandu;Pokhara;Lalitpur;Bhaktapur;A;Kathmandu is a historical city, famous for its temples.;2080;S.O. 2080-1;nepali
+Which is the highest mountain?;K2;Kangchenjunga;Mount Everest;Lhotse;C;Mount Everest is the highest peak in the world.;;;nepali`;
 
 export default function BulkImportPage() {
   const router = useRouter();
@@ -62,7 +62,7 @@ export default function BulkImportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "dristiprep_import_template.csv";
+    a.download = "dristiprep_import_template_semicolon.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -71,9 +71,23 @@ export default function BulkImportPage() {
     const parsedData = [];
     const rowErrors: RowError[] = [];
 
+    // Pre-validation: Detect if they are using commas instead of semicolons
+    const lines = text.split('\n').filter(l => l.trim()).slice(0, 5);
+    const hasSemicolons = lines.some(l => l.includes(';'));
+    const hasCommas = lines.some(l => l.includes(','));
+
+    if (!hasSemicolons && hasCommas) {
+        rowErrors.push({ 
+            row: 0, 
+            error: "Delimiter mismatch: This file appears to use commas to separate fields. Dristiprep now requires a semicolon (;) as the separator to allow commas within your question content." 
+        });
+        return { parsedData, rowErrors };
+    }
+
     const result = Papa.parse(text, {
         header: false,
-        skipEmptyLines: true
+        skipEmptyLines: true,
+        delimiter: ";"
     });
 
     const rows = result.data as string[][];
@@ -102,7 +116,12 @@ export default function BulkImportPage() {
         }
 
         if (!["A", "B", "C", "D"].includes(correct_option)) {
-            rowErrors.push({ row: i + 1, error: `Invalid correct option "${correct_option}". Must be A, B, C, or D.` });
+            let errorMsg = `Invalid correct option "${correct_option}". Must be A, B, C, or D.`;
+            // If we have more than 10 columns (the max expected), it's likely a delimiter leak
+            if (columns.length > 10) {
+                errorMsg += " Check if your question content or options contain a semicolon (;), as it's used as the field separator.";
+            }
+            rowErrors.push({ row: i + 1, error: errorMsg });
             continue;
         }
 
@@ -246,7 +265,7 @@ export default function BulkImportPage() {
           <h1 className="text-3xl font-bold">Bulk Import Engine</h1>
           <p className="text-muted-foreground mt-1">Convert your offline CSV files into interactive practice sets.</p>
         </div>
-        <Button variant="outline" onClick={downloadTemplate}>Download CSV Template</Button>
+        <Button variant="outline" onClick={downloadTemplate}>Download Semicolon Template</Button>
       </div>
       
       <div className="grid lg:grid-cols-3 gap-6">
@@ -347,8 +366,8 @@ export default function BulkImportPage() {
                     <div className="space-y-4 pointer-events-none">
                         <div className="text-4xl">📄</div>
                         <div className="space-y-1 text-center">
-                            <p className="font-bold text-blue-700">{file ? file.name : "Click or drag to select CSV file"}</p>
-                            <p className="text-xs text-muted-foreground">Only .csv files following our template are supported.</p>
+                            <p className="font-bold text-blue-700">{file ? file.name : "Click or drag to select Semicolon CSV"}</p>
+                            <p className="text-xs text-muted-foreground">Ensure your file uses semicolon (;) as the field separator.</p>
                         </div>
                     </div>
                 </div>

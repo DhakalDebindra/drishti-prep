@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Question, PracticeReview } from "@/types/practice";
 
@@ -34,7 +34,6 @@ export function usePracticeSet({
   setInfo,
   attemptId,
   ensureAttempt,
-  setError,
   setStatus,
   setAuthRequired,
 }: SubmissionProps) {
@@ -120,7 +119,8 @@ export function usePracticeSet({
 
         sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
         setStatus("submitted");
-        router.push(`/practice/${setInfo.id}/review`);
+        const reviewPath = `/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}/practice/${setInfo.id}/review`;
+        router.push(reviewPath);
       } catch (err: any) {
         console.warn("DEMO MODE ERROR:", err.message);
         const mockReview: PracticeReview = {
@@ -144,7 +144,7 @@ export function usePracticeSet({
         };
         sessionStorage.setItem('demoReviewData', JSON.stringify(mockReview));
         setStatus("submitted");
-        router.push(`/practice/${setInfo.id}/review`);
+        router.push(`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}/practice/${setInfo.id}/review`);
         return;
       }
       return;
@@ -180,7 +180,7 @@ export function usePracticeSet({
         throw new Error(data.error || "Submit failed");
       }
       setStatus("submitted");
-      router.push(`/practice/${setInfo.id}/review?attemptId=${idToSubmit}`);
+      router.push(`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}/practice/${setInfo.id}/review?attemptId=${idToSubmit}`);
     } catch (err: any) {
       setIsSubmitting(false);
       setError(err.message || "Submit failed");

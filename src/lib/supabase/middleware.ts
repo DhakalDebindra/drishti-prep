@@ -35,6 +35,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = path.startsWith('/login') || path.startsWith('/signup')
   const isAdminRoute = path.startsWith('/admin')
   const isProtectedRoute = path.startsWith('/dashboard') || path.startsWith('/courses') || path.startsWith('/bookmarks') || path.startsWith('/practice')
+
   const isProtectedApiPost =
     request.method === 'POST' &&
     (path.startsWith('/api/subjects') ||

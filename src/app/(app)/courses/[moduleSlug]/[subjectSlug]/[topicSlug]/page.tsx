@@ -88,7 +88,7 @@ export default async function TopicPage({ params }: PageProps) {
           {sets.map((set) => (
             <Link
               key={set.id}
-              href={`/practice/${set.id}`}
+              href={`/courses/${moduleSlug}/${subjectSlug}/${topicSlug}/practice/${set.id}`}
               className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200"
             >
               <div className="flex justify-between items-start mb-2">
