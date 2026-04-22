@@ -254,7 +254,10 @@ export function TopicTab({ initialData, initialSubjects }: TopicTabProps) {
                         id="t-order" 
                         type="number"
                         value={formData.display_order} 
-                        onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })} 
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            setFormData({ ...formData, display_order: isNaN(val) ? 0 : val });
+                        }} 
                     />
                 </div>
             </div>

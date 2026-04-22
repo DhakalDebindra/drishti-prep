@@ -18,6 +18,7 @@ type TopicPayload = {
   subject_name: string | null;
   syllabus_ref: string | null;
   display_order: number;
+  description: string | null;
 };
 
 const errorResponse = (message: string, status = 500) =>
@@ -33,6 +34,7 @@ const enrichWithSubjectName = (
   subject_name: topic.subject_id ? subjectMap.get(topic.subject_id) ?? null : null,
   syllabus_ref: topic.syllabus_ref,
   display_order: topic.display_order,
+  description: (topic as any).description || null,
 });
 
 const fetchSubjects = async (supabase: SupabaseClient) => {
@@ -109,14 +111,24 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => ({}));
     const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const subjectId = typeof body?.subject_id === "string" ? body.subject_id.trim() : fallbackSubjectId;
 
     if (!name) {
       return NextResponse.json({ error: "Topic name is required" }, { status: 400 });
     }
 
+    if (!subjectId) {
+      return NextResponse.json(
+        { error: "At least one subject must exist before creating a topic" },
+        { status: 400 }
+      );
+    }
+
+    // Scope check to same subject
     const { data: existingTopics, error: searchError } = await supabase
       .from("topics")
-      .select("id, name, subject_id, syllabus_ref, display_order")
+      .select("id, name, subject_id, syllabus_ref, display_order, description")
+      .eq("subject_id", subjectId)
       .ilike("name", name)
       .limit(1);
 
@@ -128,20 +140,9 @@ export async function POST(req: Request) {
       return NextResponse.json(enrichWithSubjectName(existingTopics[0], subjectMap));
     }
 
-    let subjectId = typeof body?.subject_id === "string" ? body.subject_id.trim() : "";
-    if (!subjectId) {
-      subjectId = fallbackSubjectId ?? "";
-    }
-
-    if (!subjectId) {
-      return NextResponse.json(
-        { error: "At least one subject must exist before creating a topic" },
-        { status: 400 }
-      );
-    }
-
     const syllabusRef = typeof body?.syllabus_ref === "string" ? body.syllabus_ref.trim() : null;
-    const displayOrder = typeof body?.display_order === "number" ? body.display_order : 0;
+    const displayOrder = typeof body?.display_order === "number" ? (isNaN(body.display_order) ? 0 : body.display_order) : 0;
+    const description = typeof body?.description === "string" ? body.description.trim() : null;
 
     const { data: insertedTopic, error: insertError } = await supabase
       .from("topics")
@@ -149,9 +150,10 @@ export async function POST(req: Request) {
         name, 
         subject_id: subjectId,
         syllabus_ref: syllabusRef,
-        display_order: displayOrder
+        display_order: displayOrder,
+        description: description
       })
-      .select("id, name, subject_id, syllabus_ref, display_order")
+      .select("id, name, subject_id, syllabus_ref, display_order, description")
       .single();
 
     if (insertError) {
@@ -159,9 +161,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(enrichWithSubjectName(insertedTopic, subjectMap));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating topic:", error);
-    const message = error instanceof Error ? error.message : "Unable to create topic";
+    const message = error?.message || "Unable to create topic";
     return errorResponse(message);
   }
 }
