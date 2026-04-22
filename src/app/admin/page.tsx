@@ -123,13 +123,14 @@ export default async function AdminIndexPage({
               <p className="text-slate-500 mt-2 max-w-sm mx-auto">
                 No sets match your current filters. Try adjusting your search criteria or create a fresh question set.
               </p>
-              <Button 
-                variant="outline" 
-                className="mt-6 border-slate-200 hover:bg-slate-50"
-                asChild
-              >
-                <Link href="/admin">Clear all filters</Link>
-              </Button>
+              <Link href="/admin">
+                <Button 
+                  variant="outline" 
+                  className="mt-6 border-slate-200 hover:bg-slate-50"
+                >
+                  Clear all filters
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="overflow-x-auto text-slate-900">
