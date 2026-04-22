@@ -54,7 +54,7 @@ export function EditQuestionSetDialog({
     reset,
     formState: { errors },
   } = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
+    resolver: zodResolver(editSchema) as any,
   });
 
   const subjectLookupValue = watch("subject_lookup");

@@ -55,7 +55,7 @@ export default function Home() {
     const contrastMq = window.matchMedia?.("(prefers-contrast: more)");
     const handleContrast = () => {
       if (!localStorage.getItem("dristiprep-contrast") && contrastMq?.matches) {
-        setContrast("high-contrast");
+        // setContrast("high-contrast");
       }
     };
     contrastMq?.addEventListener("change", handleContrast);

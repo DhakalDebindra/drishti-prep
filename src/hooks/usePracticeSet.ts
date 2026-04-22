@@ -34,6 +34,7 @@ export function usePracticeSet({
   setInfo,
   attemptId,
   ensureAttempt,
+  setError,
   setStatus,
   setAuthRequired,
 }: SubmissionProps) {

@@ -15,6 +15,7 @@ interface SetInfo {
 interface AttemptWithSet {
   id: string;
   status: string;
+  set_id: string;
   question_sets: SetInfo | null;
 }
 

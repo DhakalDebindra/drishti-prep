@@ -1,6 +1,7 @@
 /**
  * Input: Item in the practice summary sent to the coach
  */
+export type QuestionSummaryItem = {
   question_id: string;
   content: string;
   selected_option: string | "skipped";
