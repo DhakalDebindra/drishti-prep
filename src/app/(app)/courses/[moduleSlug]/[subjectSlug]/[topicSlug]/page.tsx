@@ -14,9 +14,13 @@ export async function generateStaticParams() {
     .from("topics")
     .select("slug, subjects!inner(slug, modules!inner(slug))");
   
-  return (topics || []).map((t) => {
-    const subject = Array.isArray(t.subjects) ? t.subjects[0] : t.subjects;
-    const moduleItem = subject ? (Array.isArray(subject.modules) ? subject.modules[0] : subject.modules) : null;
+  return (topics || []).map((t: any) => {
+    const rawSubject = t.subjects;
+    const subject = Array.isArray(rawSubject) ? rawSubject[0] : rawSubject;
+    
+    const rawModule = subject?.modules;
+    const moduleItem = Array.isArray(rawModule) ? rawModule[0] : rawModule;
+
     return {
       moduleSlug: moduleItem?.slug || "unknown",
       subjectSlug: subject?.slug || "unknown",
@@ -41,8 +45,12 @@ export default async function TopicPage({ params }: PageProps) {
   }
 
   // Double check module routing matches to avoid routing confusion
-  const subject = Array.isArray(topicData.subjects) ? topicData.subjects[0] : topicData.subjects;
-  const moduleItem = subject ? (Array.isArray(subject.modules) ? subject.modules[0] : subject.modules) : null;
+  const rawSubject = (topicData as any).subjects;
+  const subject = Array.isArray(rawSubject) ? rawSubject[0] : rawSubject;
+  
+  const rawModule = subject?.modules;
+  const moduleItem = Array.isArray(rawModule) ? rawModule[0] : rawModule;
+
   if (moduleItem?.slug !== moduleSlug) {
     notFound();
   }

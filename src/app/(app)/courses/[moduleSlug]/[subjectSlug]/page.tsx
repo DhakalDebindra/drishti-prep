@@ -12,12 +12,16 @@ export async function generateStaticParams() {
   const supabase = createStaticClient();
   const { data: subjects } = await supabase
     .from("subjects")
-    .select("slug, module_id, modules(slug)");
+    .select("slug, modules(slug)");
   
-  return (subjects || []).map((s) => ({
-    moduleSlug: Array.isArray(s.modules) ? s.modules[0]?.slug : s.modules?.slug || "unknown",
-    subjectSlug: s.slug,
-  })).filter(p => p.moduleSlug !== "unknown");
+  return (subjects || []).map((s: any) => {
+    const modules = s.modules;
+    const moduleSlug = Array.isArray(modules) ? modules[0]?.slug : modules?.slug;
+    return {
+      moduleSlug: moduleSlug || "unknown",
+      subjectSlug: s.slug,
+    };
+  }).filter(p => p.moduleSlug !== "unknown");
 }
 
 export default async function SubjectPage({ params }: PageProps) {
