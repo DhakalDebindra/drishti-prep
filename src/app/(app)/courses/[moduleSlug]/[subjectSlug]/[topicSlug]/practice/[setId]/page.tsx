@@ -44,11 +44,18 @@ export default async function NestedPracticeSetPage({ params }: PageProps) {
 
   const questions = qsqResponse?.map((row: any) => row.questions) || [];
 
-  const topicRow = setRow.topics;
-  const subjectRow = topicRow 
+  // Normalize joined data
+  const rawTopic = setRow.topics;
+  const topicRow = Array.isArray(rawTopic) ? rawTopic[0] : rawTopic;
+
+  if (!topicRow) {
+    notFound();
+  }
+
+  const subjectRow = topicRow.subjects 
     ? (Array.isArray(topicRow.subjects) ? topicRow.subjects[0] : topicRow.subjects)
     : null;
-  const moduleRow = subjectRow 
+  const moduleRow = subjectRow?.modules 
     ? (Array.isArray(subjectRow.modules) ? subjectRow.modules[0] : subjectRow.modules)
     : null;
 
