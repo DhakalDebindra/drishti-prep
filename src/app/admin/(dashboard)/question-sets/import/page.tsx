@@ -68,7 +68,7 @@ export default function BulkImportPage() {
   };
 
   const processCsv = (text: string) => {
-    const parsedData = [];
+    const parsedData: any[] = [];
     const rowErrors: RowError[] = [];
 
     // Pre-validation: Detect if they are using commas instead of semicolons
