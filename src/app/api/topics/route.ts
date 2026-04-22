@@ -14,6 +14,7 @@ type TopicRecord = {
 type TopicPayload = {
   id: string;
   name: string;
+  slug: string | null;
   subject_id: string | null;
   subject_name: string | null;
   syllabus_ref: string | null;
@@ -30,6 +31,7 @@ const enrichWithSubjectName = (
 ): TopicPayload => ({
   id: topic.id,
   name: topic.name,
+  slug: (topic as any).slug || null,
   subject_id: topic.subject_id,
   subject_name: topic.subject_id ? subjectMap.get(topic.subject_id) ?? null : null,
   syllabus_ref: topic.syllabus_ref,
@@ -54,6 +56,15 @@ const buildSubjectMap = (subjects: SubjectRecord[]) =>
   new Map(subjects.map((subject) => [subject.id, subject.name]));
 
 const getSubjectFallbackId = (subjects: SubjectRecord[]) => subjects[0]?.id ?? null;
+
+const generateSlug = (name: string) => {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  
+  return base || `topic-${Math.random().toString(36).substring(2, 10)}`;
+};
 
 export async function GET() {
   try {
@@ -143,17 +154,19 @@ export async function POST(req: Request) {
     const syllabusRef = typeof body?.syllabus_ref === "string" ? body.syllabus_ref.trim() : null;
     const displayOrder = typeof body?.display_order === "number" ? (isNaN(body.display_order) ? 0 : body.display_order) : 0;
     const description = typeof body?.description === "string" ? body.description.trim() : null;
+    const slug = generateSlug(name);
 
     const { data: insertedTopic, error: insertError } = await supabase
       .from("topics")
       .insert({ 
         name, 
+        slug,
         subject_id: subjectId,
         syllabus_ref: syllabusRef,
         display_order: displayOrder,
         description: description
       })
-      .select("id, name, subject_id, syllabus_ref, display_order, description")
+      .select("id, name, slug, subject_id, syllabus_ref, display_order, description")
       .single();
 
     if (insertError) {
