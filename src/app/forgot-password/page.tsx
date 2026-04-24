@@ -1,16 +1,16 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import SignupForm from './SignupForm';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 export const metadata: Metadata = {
-  title: 'Sign Up - Learning Hub',
-  description: 'Join the Learning Hub to track your progress',
+  title: 'Forgot Password - Learning Hub',
+  description: 'Reset your Learning Hub password',
 };
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">Loading...</div>}>
-      <SignupForm />
+      <ForgotPasswordForm />
     </Suspense>
   );
 }

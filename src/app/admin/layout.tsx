@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "react-hot-toast";
+import { signOutAction } from "@/app/actions/auth";
 
 export default async function AdminLayout({
   children,
@@ -76,7 +77,7 @@ export default async function AdminLayout({
             </div>
           </div>
           
-          <form action="/auth/signout" method="post">
+          <form action={signOutAction}>
              <Button variant="outline" className="w-full" type="submit">
                Sign Out
              </Button>

@@ -42,16 +42,20 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/api/topics') ||
       path.startsWith('/api/question-sets'))
 
-  // Prevent logged-in users from seeing the login page
-  if (isAuthRoute && user) {
+  // Prevent logged-in AND verified users from seeing the login page
+  if (isAuthRoute && user?.email_confirmed_at) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   const needsAdminCheck = isAdminRoute || isProtectedApiPost
 
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && (!user || !user.email_confirmed_at)) {
     const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
+    if (user && !user.email_confirmed_at) {
+      redirectUrl.searchParams.set('error', 'unverified')
+    } else {
+      redirectUrl.searchParams.set('redirect_to', request.nextUrl.pathname)
+    }
     return NextResponse.redirect(redirectUrl)
   }
 

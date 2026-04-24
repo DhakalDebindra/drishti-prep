@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { signOutAction } from "@/app/actions/auth";
 
 interface AppNavbarProps {
   userEmail?: string | null;
@@ -81,7 +82,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
               </div>
             </div>
 
-            <form action="/auth/signout" method="post">
+            <form action={signOutAction}>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -136,7 +137,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
                      <User className="w-5 h-5 text-slate-500" />
                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{userEmail}</span>
                 </div>
-                <form action="/auth/signout" method="post" className="px-2">
+                <form action={signOutAction} className="px-2">
                     <Button variant="destructive" className="w-full justify-start" type="submit">
                         <LogOut className="w-5 h-5 mr-3" />
                         Sign Out
