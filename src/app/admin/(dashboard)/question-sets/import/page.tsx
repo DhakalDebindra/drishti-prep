@@ -26,8 +26,8 @@ export default function BulkImportPage() {
 
   // Metadata Fields
   const [title, setTitle] = useState("");
-  const [subjectLookup, setSubjectLookup] = useState("");
-  const [topicLookup, setTopicLookup] = useState("");
+  const [subjectId, setSubjectId] = useState("");
+  const [topicId, setTopicId] = useState("");
   const [difficulty, setDifficulty] = useState("1");
   const [setType, setSetType] = useState("learning");
 
@@ -48,14 +48,10 @@ export default function BulkImportPage() {
     });
   }, []);
 
-  const matchedSubject = useMemo(() => {
-    return subjects.find(s => s.name.toLowerCase() === subjectLookup.trim().toLowerCase());
-  }, [subjects, subjectLookup]);
-
   const filteredTopics = useMemo(() => {
-    if (!matchedSubject) return topics;
-    return topics.filter(t => t.subject_id === matchedSubject.id);
-  }, [topics, matchedSubject]);
+    if (!subjectId) return [];
+    return topics.filter(t => t.subject_id === subjectId);
+  }, [topics, subjectId]);
 
   const downloadTemplate = () => {
     const blob = new Blob([TEMPLATE_CSV], { type: "text/csv" });
@@ -153,38 +149,10 @@ export default function BulkImportPage() {
     return { parsedData, rowErrors };
   };
 
-  const resolveSubjectId = async (name: string) => {
-    const existing = subjects.find(s => s.name.toLowerCase() === name.trim().toLowerCase());
-    if (existing) return existing.id;
-    
-    // Create new subject
-    const res = await fetch("/api/subjects", {
-        method: "POST",
-        headers: { "Content-Type" : "application/json" },
-        body: JSON.stringify({ name: name.trim() })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create subject");
-    return data.id;
-  };
 
-  const resolveTopicId = async (name: string, subject_id: string) => {
-    const existing = topics.find(t => t.name.toLowerCase() === name.trim().toLowerCase() && t.subject_id === subject_id);
-    if (existing) return existing.id;
-
-    // Create new topic
-    const res = await fetch("/api/topics", {
-        method: "POST",
-        headers: { "Content-Type" : "application/json" },
-        body: JSON.stringify({ name: name.trim(), subject_id })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create topic");
-    return data.id;
-  };
 
   const handleUploadAndImport = async () => {
-    if (!file || !title || !subjectLookup || !topicLookup) {
+    if (!file || !title || !subjectId || !topicId) {
         toast.error("Please fill in all metadata fields (Title, Subject, Topic) and select a file.");
         return;
     }
@@ -209,9 +177,8 @@ export default function BulkImportPage() {
             return;
         }
 
-        // Resolving Meta IDs
-        const sId = await resolveSubjectId(subjectLookup);
-        const tId = await resolveTopicId(topicLookup, sId);
+        // Using selected Topic ID
+        const tId = topicId;
 
         // Map client field 'explanation' back to API-expected 'general_explanation'
         const questionsPayload = parsedData.map(q => ({
@@ -289,30 +256,32 @@ export default function BulkImportPage() {
 
             <div className="space-y-2">
               <Label htmlFor="set-subject">Subject</Label>
-              <Input 
+              <select 
                 id="set-subject" 
-                list={subjectListId} 
-                placeholder="Select or create subject" 
-                value={subjectLookup} 
-                onChange={e => setSubjectLookup(e.target.value)} 
-              />
-              <datalist id={subjectListId}>
-                {subjects.map(s => <option key={s.id} value={s.name} />)}
-              </datalist>
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={subjectId}
+                onChange={e => {
+                  setSubjectId(e.target.value);
+                  setTopicId(""); // Reset topic when subject changes
+                }}
+              >
+                <option value="" disabled>Select a subject</option>
+                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="set-topic">Topic</Label>
-              <Input 
+              <select 
                 id="set-topic" 
-                list={topicListId} 
-                placeholder="Select or create topic" 
-                value={topicLookup} 
-                onChange={e => setTopicLookup(e.target.value)} 
-              />
-              <datalist id={topicListId}>
-                {filteredTopics.map(t => <option key={t.id} value={t.name} />)}
-              </datalist>
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={topicId}
+                onChange={e => setTopicId(e.target.value)}
+                disabled={!subjectId || filteredTopics.length === 0}
+              >
+                <option value="" disabled>Select a topic</option>
+                {filteredTopics.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
             </div>
 
             <div className="space-y-2">

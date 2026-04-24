@@ -33,8 +33,8 @@ const questionSchema = z.object({
 });
 
 const questionSetSchema = z.object({
-  subject_lookup: z.string().min(1, "Subject is required"),
-  topic_lookup: z.string().min(1, "Topic is required"),
+  subject_id: z.string().min(1, "Subject is required"),
+  topic_id: z.string().min(1, "Topic is required"),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
   set_type: z.enum(["learning", "mock_exam", "daily_practice", "revision", "custom"]).default("learning"),
@@ -70,8 +70,8 @@ const createBlankQuestion = (order_number: number) => ({
 });
 
 const createDefaultFormValues = (): QuestionSetFormValues => ({
-  subject_lookup: "",
-  topic_lookup: "",
+  subject_id: "",
+  topic_id: "",
   title: "",
   difficulty_level: 1,
   set_type: "learning",
@@ -117,44 +117,27 @@ export default function CreateQuestionSetPage() {
 
   const topicListId = useId();
   const subjectListId = useId();
-  const topicLookupValue = watch("topic_lookup");
-  const subjectLookupValue = watch("subject_lookup");
-  const subjectRegister = register("subject_lookup");
+  const topicIdValue = watch("topic_id");
+  const subjectIdValue = watch("subject_id");
+  const subjectRegister = register("subject_id");
   const questionsWatch = watch("questions");
   const matchedSubject = useMemo(() => {
-    const normalizedValue = subjectLookupValue?.trim().toLowerCase();
-    if (!normalizedValue) {
-      return undefined;
-    }
-    return subjects.find((subject) => subject.name.toLowerCase() === normalizedValue);
-  }, [subjects, subjectLookupValue]);
+    if (!subjectIdValue) return undefined;
+    return subjects.find((subject) => subject.id === subjectIdValue);
+  }, [subjects, subjectIdValue]);
 
   const filteredTopics = useMemo(() => {
     if (!matchedSubject) {
-      return topics;
+      return [];
     }
     return topics.filter((topic) => topic.subject_id === matchedSubject.id);
   }, [topics, matchedSubject]);
 
   const matchedTopic = useMemo(() => {
-    const normalizedValue = topicLookupValue?.trim().toLowerCase();
-    if (!normalizedValue) {
-      return undefined;
-    }
-    return filteredTopics.find(
-      (topic) => topic.name.toLowerCase() === normalizedValue
-    );
-  }, [filteredTopics, topicLookupValue]);
+    if (!topicIdValue) return undefined;
+    return filteredTopics.find((topic) => topic.id === topicIdValue);
+  }, [filteredTopics, topicIdValue]);
 
-  useEffect(() => {
-    if (
-      matchedTopic?.subject_name &&
-      !subjectTouched &&
-      !subjectLookupValue?.trim()
-    ) {
-      setValue("subject_lookup", matchedTopic.subject_name);
-    }
-  }, [matchedTopic, subjectLookupValue, setValue, subjectTouched]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -179,9 +162,7 @@ export default function CreateQuestionSetPage() {
         if (!isMounted) return;
 
           setTopics(data ?? []);
-        if (!getValues("topic_lookup") && data.length > 0) {
-          setValue("topic_lookup", data[0].name);
-        }
+
       } catch (error) {
         if (!isMounted) return;
         const message = error instanceof Error ? error.message : "Unable to load topics";
@@ -238,95 +219,7 @@ export default function CreateQuestionSetPage() {
     };
   }, []);
 
-  const resolveTopicId = async (inputValue: string, subjectId: string) => {
-    const trimmedValue = inputValue.trim();
-    if (!trimmedValue) {
-      throw new Error("Please select or type a topic name.");
-    }
-    if (!subjectId) {
-      throw new Error("Subject must be selected before choosing a topic.");
-    }
 
-    const matchedTopic = topics.find(
-      (topic) =>
-        topic.name.toLowerCase() === trimmedValue.toLowerCase() &&
-        topic.subject_id === subjectId
-    );
-    if (matchedTopic) {
-      return matchedTopic.id;
-    }
-
-    setIsCreatingTopic(true);
-    try {
-      const response = await fetch("/api/topics", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: trimmedValue, subject_id: subjectId }),
-      });
-
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Failed to create topic");
-      }
-
-      const newTopic: TopicOption = payload;
-      setTopics((prev) => {
-        if (prev.some((topic) => topic.id === newTopic.id)) {
-          return prev;
-        }
-        return [...prev, newTopic].sort((a, b) => a.name.localeCompare(b.name));
-      });
-
-      return newTopic.id;
-    } finally {
-      setIsCreatingTopic(false);
-    }
-  };
-
-  const resolveSubjectId = async (inputValue: string) => {
-    const trimmedValue = inputValue.trim();
-    if (!trimmedValue) {
-      throw new Error("Please select or type a subject name.");
-    }
-
-    const matchedSubject = subjects.find(
-      (subject) => subject.name.toLowerCase() === trimmedValue.toLowerCase()
-    );
-    if (matchedSubject) {
-      return matchedSubject.id;
-    }
-
-    setIsCreatingSubject(true);
-    try {
-      const response = await fetch("/api/subjects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: trimmedValue }),
-      });
-
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Failed to create subject");
-      }
-
-      const newSubject: SubjectOption = payload;
-
-      setSubjects((prev) => {
-        if (prev.some((subject) => subject.id === newSubject.id)) {
-          return prev;
-        }
-        return [...prev, newSubject].sort((a, b) => a.name.localeCompare(b.name));
-      });
-
-      return newSubject.id;
-    } finally {
-      setIsCreatingSubject(false);
-    }
-  };
 
   const isQuestionComplete = (
     question?: QuestionSetFormValues["questions"][number]
@@ -424,37 +317,15 @@ export default function CreateQuestionSetPage() {
     setSubmissionMessage(null);
     setSubmissionError(null);
 
-    let subjectId: string;
-    try {
-      subjectId = await resolveSubjectId(values.subject_lookup);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to resolve subject";
-      setSubjectCreationError(message);
-      console.error("Subject creation error:", error);
-      return;
-    }
-
+    const subjectId = values.subject_id;
     if (!subjectId) {
-      const message = "Unable to resolve the subject ID for this set.";
-      setSubjectCreationError(message);
-      console.error("Subject ID not found for:", values.subject_lookup);
+      setSubjectCreationError("Please select a subject.");
       return;
     }
 
-    let topicId: string;
-    try {
-      topicId = await resolveTopicId(values.topic_lookup, subjectId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to resolve topic";
-      setTopicCreationError(message);
-      console.error("Topic creation error:", error);
-      return;
-    }
-
+    const topicId = values.topic_id;
     if (!topicId) {
-      const message = "Unable to resolve the topic ID for this set.";
-      setTopicCreationError(message);
-      console.error("Topic ID not found for:", values.topic_lookup);
+      setTopicCreationError("Please select a topic.");
       return;
     }
 
@@ -567,6 +438,7 @@ export default function CreateQuestionSetPage() {
             subjectCreationError={subjectCreationError}
             onSubjectChange={(event) => {
                 subjectRegister.onChange(event);
+                setValue("topic_id", "");
                 setSubjectTouched(true);
             }}
             topicsLoading={topicsLoading}

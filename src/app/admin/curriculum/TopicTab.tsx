@@ -53,6 +53,7 @@ export function TopicTab({ initialData, initialSubjects }: TopicTabProps) {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -96,6 +97,7 @@ export function TopicTab({ initialData, initialSubjects }: TopicTabProps) {
     const method = editingItem ? "PUT" : "POST";
 
     try {
+      setIsSubmitting(true);
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -121,6 +123,8 @@ export function TopicTab({ initialData, initialSubjects }: TopicTabProps) {
       router.refresh();
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -269,8 +273,8 @@ export function TopicTab({ initialData, initialSubjects }: TopicTabProps) {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
               />
             </div>
-            <Button type="submit" className="w-full">
-              {editingItem ? "Update Topic" : "Create Topic"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (editingItem ? "Updating..." : "Creating...") : (editingItem ? "Update Topic" : "Create Topic")}
             </Button>
           </form>
         </DialogContent>

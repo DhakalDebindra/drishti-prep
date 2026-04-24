@@ -79,59 +79,39 @@ export function SetMetadataForm({
 
         {/* Subject Lookup */}
         <div className="space-y-2">
-          <Label htmlFor="subject_lookup" className="font-semibold text-slate-700">Subject</Label>
-          <div className="relative">
-            <Input
-              id="subject_lookup"
-              list={subjectListId}
-              placeholder="Search or add subject..."
-              {...register("subject_lookup")}
-              onChange={onSubjectChange}
-              disabled={subjectsLoading || isCreatingSubject}
-              autoComplete="off"
-              className="bg-white"
-            />
-            <datalist id={subjectListId}>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.name} />
-              ))}
-            </datalist>
-          </div>
+          <Label htmlFor="subject_id" className="font-semibold text-slate-700">Subject</Label>
+          <select
+            id="subject_id"
+            {...register("subject_id")}
+            onChange={onSubjectChange}
+            disabled={subjectsLoading}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="" disabled>Select a subject</option>
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>{subject.name}</option>
+            ))}
+          </select>
           {subjectsError && <p className="text-xs text-red-500">{subjectsError}</p>}
-          {subjectCreationError && <p className="text-xs text-red-500">{subjectCreationError}</p>}
-          {matchedSubject && (
-            <p className="text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded inline-block">
-              Existing subject matched
-            </p>
-          )}
+          {errors?.subject_id && <p className="text-xs text-red-500">{errors.subject_id.message}</p>}
         </div>
 
         {/* Topic Lookup */}
         <div className="space-y-2">
-          <Label htmlFor="topic_lookup" className="font-semibold text-slate-700">Topic</Label>
-          <div className="relative">
-            <Input
-              id="topic_lookup"
-              list={topicListId}
-              placeholder="Search or add topic..."
-              {...register("topic_lookup")}
-              disabled={topicsLoading}
-              autoComplete="off"
-              className="bg-white"
-            />
-            <datalist id={topicListId}>
-              {filteredTopics.map((topic) => (
-                <option key={topic.id} value={topic.name} />
-              ))}
-            </datalist>
-          </div>
+          <Label htmlFor="topic_id" className="font-semibold text-slate-700">Topic</Label>
+          <select
+            id="topic_id"
+            {...register("topic_id")}
+            disabled={topicsLoading || filteredTopics.length === 0}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="" disabled>Select a topic</option>
+            {filteredTopics.map((topic) => (
+              <option key={topic.id} value={topic.id}>{topic.name}</option>
+            ))}
+          </select>
           {topicsError && <p className="text-xs text-red-500">{topicsError}</p>}
-          {topicCreationError && <p className="text-xs text-red-500">{topicCreationError}</p>}
-          {matchedTopic && (
-            <p className="text-[10px] text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded inline-block">
-              Under: {matchedTopic.subject_name || 'N/A'}
-            </p>
-          )}
+          {errors?.topic_id && <p className="text-xs text-red-500">{errors.topic_id.message}</p>}
         </div>
 
         {/* Set Type & Order - Phase 1 Enhancements */}
