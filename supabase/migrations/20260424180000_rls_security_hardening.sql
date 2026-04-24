@@ -49,6 +49,7 @@ CREATE POLICY "AI feedback readable by admins"
 -- Reports are per-user, but admins need full control.
 DROP POLICY IF EXISTS "Admins can view all reports" ON public.reports;
 DROP POLICY IF EXISTS "Admins can update reports" ON public.reports;
+DROP POLICY IF EXISTS "Admins manage all reports" ON public.reports;
 
 CREATE POLICY "Admins manage all reports" 
   ON public.reports FOR ALL 
@@ -56,11 +57,22 @@ CREATE POLICY "Admins manage all reports"
 
 -- 5. Content Tables: Ensure DELETE is restricted to admins
 -- Some migrations might have missed DELETE or used true/false incorrectly.
+DROP POLICY IF EXISTS "Admins can delete subjects" ON public.subjects;
 CREATE POLICY "Admins can delete subjects" ON public.subjects FOR DELETE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete topics" ON public.topics;
 CREATE POLICY "Admins can delete topics" ON public.topics FOR DELETE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete question_sets" ON public.question_sets;
 CREATE POLICY "Admins can delete question_sets" ON public.question_sets FOR DELETE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete questions" ON public.questions;
 CREATE POLICY "Admins can delete questions" ON public.questions FOR DELETE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete modules" ON public.modules;
 CREATE POLICY "Admins can delete modules" ON public.modules FOR DELETE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete tags" ON public.tags;
 CREATE POLICY "Admins can delete tags" ON public.tags FOR DELETE USING (public.is_admin());
 
 -- 6. User Progress Isolation
