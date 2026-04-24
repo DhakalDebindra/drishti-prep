@@ -44,16 +44,16 @@ export default function LoginForm() {
         password,
       });
 
-      const timeoutPromise = new Promise<{ data: any, err: any }>((_, reject) => {
+      const timeoutPromise = new Promise<{ data: any, error: any }>((_, reject) => {
         controller.signal.addEventListener("abort", () => reject(new Error("AbortError")));
       });
 
-      const { data, err } = await Promise.race([authPromise, timeoutPromise]);
+      const { data, error } = (await Promise.race([authPromise, timeoutPromise])) as any;
       clearTimeout(timeoutId);
 
-      if (err) {
-        logger.error("Supabase Auth Error Object:", JSON.stringify(err, null, 2));
-        if (err.message.includes("Invalid login credentials") || err.message.includes("Invalid credentials")) {
+      if (error) {
+        logger.error("Supabase Auth Error Object:", JSON.stringify(error, null, 2));
+        if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid credentials")) {
           setError("Incorrect email or password.");
         } else {
           setError("An error occurred during sign in. Please try again.");
