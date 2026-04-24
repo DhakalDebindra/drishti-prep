@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 
@@ -44,7 +44,7 @@ const content = {
 const impact = "Helping more visually impaired candidates enter government service.";
 const pricing = "NGO partnerships available for sponsored access.";
 
-export default function Home() {
+function HomeContent() {
   const [isDark, setIsDark] = useState<boolean>(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -241,5 +241,13 @@ export default function Home() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }
