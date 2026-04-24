@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 
 type ContrastMode = "normal" | "high-contrast";
@@ -45,6 +46,17 @@ const pricing = "NGO partnerships available for sponsored access.";
 
 export default function Home() {
   const [isDark, setIsDark] = useState<boolean>(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (code) {
+      // If we have a code on the homepage, it's likely a password reset or email confirmation
+      // that was redirected here due to Supabase config. Send it to the callback handler.
+      router.push(`/auth/callback?code=${code}&next=/update-password`);
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
