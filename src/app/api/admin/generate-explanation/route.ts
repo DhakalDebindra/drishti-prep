@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { generateExplanation } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Apply rate limit
+    const limitResult = await rateLimitByIp(req, { windowMs: 60_000, max: 10 });
+    if (!limitResult.ok) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     const supabase = await createClient();
     
     // Check if user is admin

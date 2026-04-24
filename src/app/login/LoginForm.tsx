@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { toast } from "react-hot-toast";
 
 const supabase = createClient();
 
@@ -63,15 +64,18 @@ export default function LoginForm() {
         setError("Please verify your email address before signing in. Check your inbox for the confirmation link.");
       } else {
         logger.info("Login successful! Redirecting...");
+        toast.success("Signed in successfully!");
         router.push("/dashboard");
         router.refresh(); // Refresh the router cache to ensure the server component picks up the new session
       }
     } catch (err: any) {
       if (err.message === "AbortError") {
         setError("Connection timed out — please try again");
+        toast.error("Connection timed out.");
       } else {
         logger.error("Caught Exception during Sign In:", err);
         setError("An unexpected error occurred. Please try again.");
+        toast.error("An unexpected error occurred.");
       }
     } finally {
       setIsLoading(false);

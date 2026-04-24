@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { toast } from "react-hot-toast";
 
 const supabase = createClient();
 
@@ -83,15 +84,18 @@ export default function SignupForm() {
         }
       } else {
         if (data.session) {
+           toast.success("Account created successfully!");
            router.push("/dashboard");
            router.refresh();
         } else {
+           toast.success("Registration successful! Check your email.");
            setIsSuccess(true);
         }
       }
     } catch (err: any) {
       logger.error("Caught Exception during Sign Up:", err);
       setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
