@@ -13,8 +13,8 @@ const AIConfig = {
 
 const geminiApiKey =
   process.env.GEMINI_API_KEY ??
-  process.env.DRISTI_API_KEY ??
-  process.env.DristiApiKey ??
+  process.env.DRISHTI_API_KEY ??
+  process.env.DrishtiApiKey ??
   "";
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);

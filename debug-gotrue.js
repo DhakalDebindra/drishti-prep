@@ -13,7 +13,7 @@ async function debugLogin() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email: 'admin@dristiprep.com',
+        email: 'admin@drishtiprep.com',
         password: 'password123'
       })
     });

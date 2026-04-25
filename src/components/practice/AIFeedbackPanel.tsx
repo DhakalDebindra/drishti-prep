@@ -84,7 +84,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
               AI Analysis & Insights
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Powered by DristiPrep AI
+              Powered by DrishtiPrep AI
             </p>
           </div>
         </div>

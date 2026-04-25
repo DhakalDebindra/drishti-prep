@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CurriculumClient } from "./CurriculumClient";
 
 export const metadata = {
-  title: "Curriculum Management | Dristiprep Admin",
+  title: "Curriculum Management | DrishtiPrep Admin",
   description: "Manage modules, subjects, and topics for Loksewa preparation.",
 };
 

@@ -15,7 +15,7 @@ const content = {
   trust: "Content created with blind educators, for blind learners.",
   pricing: "Free demo available — no account needed. NGO partnerships available for sponsored access.",
   impact: "Helping more visually impaired candidates enter government service.",
-  why: "Prep Without Barriers. Why should blind candidates have to piece together their education? While mainstream platforms ignore accessibility, Dristiprep is built from the ground up for screen readers. We move beyond passive audio recordings and unstructured study materials to provide a structured, interactive learning experience that respects your time and your goals.",
+  why: "Prep Without Barriers. Why should blind candidates have to piece together their education? While mainstream platforms ignore accessibility, DrishtiPrep is built from the ground up for screen readers. We move beyond passive audio recordings and unstructured study materials to provide a structured, interactive learning experience that respects your time and your goals.",
   features: [
     {
       title: "Structured notes",
@@ -66,7 +66,7 @@ function HomeContent() {
     mq?.addEventListener("change", updateDark);
     const contrastMq = window.matchMedia?.("(prefers-contrast: more)");
     const handleContrast = () => {
-      if (!localStorage.getItem("dristiprep-contrast") && contrastMq?.matches) {
+      if (!localStorage.getItem("drishtiprep-contrast") && contrastMq?.matches) {
         // setContrast("high-contrast");
       }
     };
@@ -145,7 +145,7 @@ function HomeContent() {
                   href="/signup"
                   className="flex h-12 items-center justify-center rounded-full bg-emerald-400 px-6 text-base font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                 >
-                  Join Dristiprep
+                  Join DrishtiPrep
                 </Link>
                 <Link
                   href="/login"

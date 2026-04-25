@@ -40,7 +40,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
                 DP
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Dristiprep
+                DrishtiPrep
               </span>
             </Link>
 

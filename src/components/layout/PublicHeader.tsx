@@ -12,7 +12,7 @@ export function PublicHeader() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const storedContrast = localStorage.getItem("dristiprep-contrast") as ContrastMode;
+    const storedContrast = localStorage.getItem("drishtiprep-contrast") as ContrastMode;
     if (storedContrast) setContrast(storedContrast);
     
     setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches || document.documentElement.classList.contains("dark"));
@@ -22,7 +22,7 @@ export function PublicHeader() {
     const next = contrast === "high-contrast" ? "normal" : "high-contrast";
     setContrast(next);
     document.documentElement.classList.toggle("hc", next === "high-contrast");
-    localStorage.setItem("dristiprep-contrast", next);
+    localStorage.setItem("drishtiprep-contrast", next);
   };
 
   const navLinks = [
@@ -66,7 +66,7 @@ export function PublicHeader() {
             DP
           </div>
           <div>
-            <p className={cn("text-sm uppercase font-bold tracking-[0.2em]", palette.labelTone)}>Drishtiprep</p>
+            <p className={cn("text-sm uppercase font-bold tracking-[0.2em]", palette.labelTone)}>DrishtiPrep</p>
             <p className={cn("text-xs", palette.subText)}>Accessible exam prep</p>
           </div>
         </Link>

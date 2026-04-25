@@ -35,7 +35,7 @@ export default function RootLayout({
     (function() {
       try {
         const root = document.documentElement;
-        const storedContrast = localStorage.getItem('dristiprep-contrast');
+        const storedContrast = localStorage.getItem('drishtiprep-contrast');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         const prefersMoreContrast = window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches;
         if (prefersDark) root.classList.add('dark');

@@ -58,7 +58,7 @@ export default function BulkImportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "dristiprep_import_template_semicolon.csv";
+    a.download = "drishtiprep_import_template_semicolon.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -75,7 +75,7 @@ export default function BulkImportPage() {
     if (!hasSemicolons && hasCommas) {
         rowErrors.push({ 
             row: 0, 
-            error: "Delimiter mismatch: This file appears to use commas to separate fields. Dristiprep now requires a semicolon (;) as the separator to allow commas within your question content." 
+            error: "Delimiter mismatch: This file appears to use commas to separate fields. DrishtiPrep now requires a semicolon (;) as the separator to allow commas within your question content." 
         });
         return { parsedData, rowErrors };
     }

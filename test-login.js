@@ -9,7 +9,7 @@ const supabase = createClient(
 async function testLogin() {
   console.log('Attempting login...');
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: 'admin@dristiprep.com',
+    email: 'admin@drishtiprep.com',
     password: 'password123',
   });
 
