@@ -20,6 +20,7 @@ import { QuestionFormCard } from "@/components/admin/QuestionFormCard";
 import { QuestionSearchModal } from "@/components/admin/QuestionSearchModal";
 
 const MAX_QUESTIONS = 30;
+
 type TopicOption = {
   id: string;
   name: string;
@@ -30,6 +31,13 @@ type TopicOption = {
 type SubjectOption = {
   id: string;
   name: string;
+};
+
+type SubtopicOption = {
+  id: string;
+  name: string;
+  name_np: string | null;
+  topic_id: string;
 };
 
 const createBlankQuestion = (
@@ -51,6 +59,7 @@ const createBlankQuestion = (
 const createDefaultFormValues = (): QuestionSetFormValues => ({
   subject_id: "",
   topic_id: "",
+  subtopic_id: null,
   title: "",
   difficulty_level: 1,
   set_type: "learning",
@@ -59,27 +68,28 @@ const createDefaultFormValues = (): QuestionSetFormValues => ({
 });
 
 const defaultFormValues = createDefaultFormValues();
-
 const TIMEOUT_MS = 25_000;
-
-
 
 export default function CreateQuestionSetPage() {
   const [isGenerating, setIsGenerating] = useState<number | null>(null);
   const [topics, setTopics] = useState<TopicOption[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(true);
   const [topicsError, setTopicsError] = useState<string | null>(null);
-  const [topicCreationError, setTopicCreationError] = useState<string | null>(null);
-  const [isCreatingTopic, setIsCreatingTopic] = useState(false);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
+  const [subtopics, setSubtopics] = useState<SubtopicOption[]>([]);
+  const [subtopicsLoading, setSubtopicsLoading] = useState(true);
+  const [subtopicsError, setSubtopicsError] = useState<string | null>(null);
+  
   const [subjectCreationError, setSubjectCreationError] = useState<string | null>(null);
-  const [isCreatingSubject, setIsCreatingSubject] = useState(false);
-  const [subjectTouched, setSubjectTouched] = useState(false);
+  const [topicCreationError, setTopicCreationError] = useState<string | null>(null);
+  const [subtopicCreationError, setSubtopicCreationError] = useState<string | null>(null);
+
   const [feedbackErrors, setFeedbackErrors] = useState<Record<number, string>>({});
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+
   const {
     register,
     control,
@@ -98,17 +108,16 @@ export default function CreateQuestionSetPage() {
   const subjectListId = useId();
   const topicIdValue = watch("topic_id");
   const subjectIdValue = watch("subject_id");
+  const subtopicIdValue = watch("subtopic_id");
   const subjectRegister = register("subject_id");
-  const questionsWatch = watch("questions");
+
   const matchedSubject = useMemo(() => {
     if (!subjectIdValue) return undefined;
     return subjects.find((subject) => subject.id === subjectIdValue);
   }, [subjects, subjectIdValue]);
 
   const filteredTopics = useMemo(() => {
-    if (!matchedSubject) {
-      return [];
-    }
+    if (!matchedSubject) return [];
     return topics.filter((topic) => topic.subject_id === matchedSubject.id);
   }, [topics, matchedSubject]);
 
@@ -117,6 +126,15 @@ export default function CreateQuestionSetPage() {
     return filteredTopics.find((topic) => topic.id === topicIdValue);
   }, [filteredTopics, topicIdValue]);
 
+  const filteredSubtopics = useMemo(() => {
+    if (!matchedTopic) return [];
+    return subtopics.filter((st) => st.topic_id === matchedTopic.id);
+  }, [subtopics, matchedTopic]);
+
+  const matchedSubtopic = useMemo(() => {
+    if (!subtopicIdValue) return undefined;
+    return filteredSubtopics.find((st) => st.id === subtopicIdValue);
+  }, [filteredSubtopics, subtopicIdValue]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -125,282 +143,147 @@ export default function CreateQuestionSetPage() {
 
   useEffect(() => {
     let isMounted = true;
-
-    const loadTopics = async () => {
-      setTopicsLoading(true);
-      setTopicsError(null);
-
+    const loadSubjects = async () => {
+      setSubjectsLoading(true);
       try {
-        const response = await fetch("/api/topics");
-        if (!response.ok) {
-          const body = await response.text();
-          throw new Error(body || "Failed to load topics");
-        }
-
-        const data: TopicOption[] = await response.json();
-        if (!isMounted) return;
-
-          setTopics(data ?? []);
-
-      } catch (error) {
-        if (!isMounted) return;
-        const message = error instanceof Error ? error.message : "Unable to load topics";
-        setTopicsError(message);
+        const response = await fetch("/api/subjects");
+        if (!response.ok) throw new Error("Failed to load subjects");
+        const data = await response.json();
+        if (isMounted) setSubjects(data.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+      } catch (err: any) {
+        if (isMounted) setSubjectsError(err.message);
       } finally {
-        if (isMounted) {
-          setTopicsLoading(false);
-        }
+        if (isMounted) setSubjectsLoading(false);
       }
     };
-
-    loadTopics();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [getValues, setValue]);
+    loadSubjects();
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-
-    const loadSubjects = async () => {
-      setSubjectsLoading(true);
-      setSubjectsError(null);
-
+    const loadTopics = async () => {
+      setTopicsLoading(true);
       try {
-        const response = await fetch("/api/subjects");
-        if (!response.ok) {
-          const body = await response.text();
-          throw new Error(body || "Failed to load subjects");
-        }
-
-        const data: SubjectOption[] = await response.json();
-        if (!isMounted) return;
-
-        const sortedSubjects = (data ?? []).sort((a, b) => a.name.localeCompare(b.name));
-        setSubjects(sortedSubjects);
-      } catch (error) {
-        if (!isMounted) return;
-        const message =
-          error instanceof Error ? error.message : "Unable to load subjects";
-        setSubjectsError(message);
+        const response = await fetch("/api/topics");
+        if (!response.ok) throw new Error("Failed to load topics");
+        const data = await response.json();
+        if (isMounted) setTopics(data);
+      } catch (err: any) {
+        if (isMounted) setTopicsError(err.message);
       } finally {
-        if (isMounted) {
-          setSubjectsLoading(false);
-        }
+        if (isMounted) setTopicsLoading(false);
       }
     };
-
-    loadSubjects();
-
-    return () => {
-      isMounted = false;
-    };
+    loadTopics();
+    return () => { isMounted = false; };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    const loadSubtopics = async () => {
+      setSubtopicsLoading(true);
+      try {
+        const response = await fetch("/api/subtopics");
+        if (!response.ok) throw new Error("Failed to load subtopics");
+        const data = await response.json();
+        if (isMounted) setSubtopics(data);
+      } catch (err: any) {
+        if (isMounted) setSubtopicsError(err.message);
+      } finally {
+        if (isMounted) setSubtopicsLoading(false);
+      }
+    };
+    loadSubtopics();
+    return () => { isMounted = false; };
+  }, []);
 
-
-  const isQuestionComplete = (
-    question?: QuestionSetFormValues["questions"][number]
-  ) => {
+  const isQuestionComplete = (question?: any) => {
     if (!question) return false;
-    const requiredText = [
-      question.content,
-      question.option_a,
-      question.option_b,
-      question.option_c,
-      question.option_d,
-    ];
-    const allOptionsFilled = requiredText.every(
-      (value) => typeof value === "string" && value.trim().length > 0
-    );
-    return allOptionsFilled && Boolean(question.correct_option);
+    return [question.content, question.option_a, question.option_b, question.option_c, question.option_d].every(v => v?.trim().length > 0) && Boolean(question.correct_option);
   };
 
   const generateFeedback = async (index: number) => {
     const question = getValues(`questions.${index}`);
     if (!isQuestionComplete(question)) {
-      setFeedbackErrors((prev) => ({
-        ...prev,
-        [index]: "Fill the question and all options before generating.",
-      }));
+      setFeedbackErrors(prev => ({ ...prev, [index]: "Fill all fields first." }));
       return;
     }
-
     setIsGenerating(index);
-    setFeedbackErrors((prev) => ({ ...prev, [index]: "" }));
     try {
-      const payload = {
-        content: question.content,
-        option_a: question.option_a,
-        option_b: question.option_b,
-        option_c: question.option_c,
-        option_d: question.option_d,
-        correct_option: question.correct_option,
-      };
-
-      const prompt = Prompts["loksewa gk facilitator"](payload);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-      
+      const payload = { content: question.content, option_a: question.option_a, option_b: question.option_b, option_c: question.option_c, option_d: question.option_d, correct_option: question.correct_option };
       const response = await fetch("/api/generate-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-        signal: controller.signal,
-      }).catch((err) => {
-        clearTimeout(timeoutId);
-        throw err;
       });
-      clearTimeout(timeoutId);
-
-      const responseText = await response.text();
-      if (!response.ok) {
-        let parsedError: any = null;
-        try {
-          parsedError = JSON.parse(responseText);
-        } catch {
-          parsedError = null;
-        }
-        const message = parsedError?.error ?? responseText ?? "Unknown error";
-        const code = parsedError?.code ? ` (${parsedError.code})` : "";
-        throw new Error(`Failed to generate feedback: ${message}${code}`);
-      }
-
-      const parsed = parseExplanation(responseText);
-      const explanation = parsed.text || "Could not generate explanation.";
-
-      if (!explanation) {
-        throw new Error("Failed to generate feedback: Empty explanation from AI");
-      }
-
-      setValue(`questions.${index}.general_explanation`, explanation);
-      setFeedbackErrors((prev) => {
-        const { [index]: _, ...rest } = prev;
-        return rest;
-      });
-    } catch (error) {
-      console.error(error);
-      const userMessage = error instanceof Error ? error.message : "Unknown error";
-      setFeedbackErrors((prev) => ({ ...prev, [index]: userMessage }));
-      alert(`Error generating feedback: ${userMessage}`);
+      const text = await response.text();
+      if (!response.ok) throw new Error(text);
+      const parsed = parseExplanation(text);
+      setValue(`questions.${index}.general_explanation`, parsed.text || "Generated.");
+    } catch (err: any) {
+      alert(err.message);
     } finally {
       setIsGenerating(null);
     }
   };
 
   const onSubmit: SubmitHandler<QuestionSetFormValues> = async (values) => {
-    setSubjectCreationError(null);
-    setTopicCreationError(null);
     setSubmissionMessage(null);
     setSubmissionError(null);
-
-    const subjectId = values.subject_id;
-    if (!subjectId) {
-      setSubjectCreationError("Please select a subject.");
-      return;
-    }
-
-    const topicId = values.topic_id;
-    if (!topicId) {
-      setTopicCreationError("Please select a topic.");
-      return;
-    }
-
     const payload = {
-      topic_id: topicId,
+      topic_id: values.topic_id,
+      subtopic_id: values.subtopic_id || undefined,
       title: values.title,
       difficulty_level: Number(values.difficulty_level),
       set_type: values.set_type,
       is_verified: values.is_verified,
-      
-      questions: values.questions.map((question, index) => ({
-        id: question.id, // Pass ID for imported questions
-        order_number: Number(question.order_number ?? index + 1),
-        content: question.content,
-        option_a: question.option_a,
-        option_b: question.option_b,
-        option_c: question.option_c,
-        option_d: question.option_d,
-        correct_option: question.correct_option,
-        general_explanation: question.general_explanation?.trim() ? question.general_explanation : undefined,
-        exam_year: question.exam_year,
-        paper_ref: question.paper_ref,
-        language: question.language,
+      questions: values.questions.map((q, i) => ({
+        id: q.id,
+        order_number: i + 1,
+        content: q.content,
+        option_a: q.option_a,
+        option_b: q.option_b,
+        option_c: q.option_c,
+        option_d: q.option_d,
+        correct_option: q.correct_option,
+        general_explanation: q.general_explanation?.trim() || undefined,
+        exam_year: q.exam_year,
+        paper_ref: q.paper_ref,
+        language: q.language,
       })),
     };
 
     try {
       const response = await fetch("/api/question-sets", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const responseBody = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        console.error("Question set API error payload:", response.status, responseBody);
-        const message =
-          responseBody?.error ?? "Failed to save the question set. Please try again.";
-        throw new Error(message);
-      }
-
-      const setId = responseBody?.id ?? "unknown";
-      setSubmissionMessage(`Saved question set "${values.title || "Untitled"}" (ID ${setId}).`);
-      setFeedbackErrors({});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to save");
+      setSubmissionMessage(`Saved set "${values.title}" (ID: ${data.id})`);
       reset(createDefaultFormValues());
-      setSubjectTouched(false);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unable to save the question set";
-      setSubmissionError(message);
-      console.error("Question set submission error:", error);
+    } catch (err: any) {
+      setSubmissionError(err.message);
     }
   };
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
   const handleImportQuestion = (q: any) => {
-    append({
-        id: q.id,
-        order_number: fields.length + 1,
-        content: q.content,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d,
-        correct_option: q.correct_option as any,
-        general_explanation: q.explanation || "",
-        exam_year: q.exam_year || null,
-        paper_ref: q.paper_ref || "",
-        language: (q.language as any) || "nepali",
-    });
+    append({ id: q.id, order_number: fields.length + 1, content: q.content, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d, correct_option: q.correct_option as any, general_explanation: q.explanation || "", exam_year: q.exam_year || null, paper_ref: q.paper_ref || "", language: (q.language as any) || "nepali" });
     setIsSearchOpen(false);
   };
-
-  const existingQuestionIds = useMemo(() => {
-    return (questionsWatch || []).map((q: any) => q.id).filter(Boolean) as string[];
-  }, [questionsWatch]);
 
   return (
     <div className="container mx-auto py-8 max-w-6xl">
       <div className="flex justify-between items-center mb-10">
         <div>
             <h1 className="text-4xl font-black tracking-tight text-slate-900 border-b-4 border-blue-600 pb-2 inline-block">Create Question Set</h1>
-            <p className="text-slate-500 mt-2 font-medium">Build curated learning paths and mock exams.</p>
+            <p className="text-slate-500 mt-2 font-medium">Restructured 5-level hierarchy supported.</p>
         </div>
-        <Button 
-            type="button" 
-            size="lg"
-            variant="outline"
-            className="rounded-full shadow-sm hover:shadow transition-all bg-white border-slate-200"
-            onClick={() => setIsSearchOpen(true)}
-        >
-            <Search className="w-4 h-4 mr-2" />
-            Import Existing
+        <Button type="button" size="lg" variant="outline" className="rounded-full shadow-sm" onClick={() => setIsSearchOpen(true)}>
+            <Search className="w-4 h-4 mr-2" /> Import Existing
         </Button>
       </div>
       
@@ -412,93 +295,50 @@ export default function CreateQuestionSetPage() {
             topicListId={topicListId}
             subjects={subjects}
             subjectsLoading={subjectsLoading}
-            isCreatingSubject={isCreatingSubject}
             subjectsError={subjectsError}
             subjectCreationError={subjectCreationError}
-            onSubjectChange={(event) => {
-                subjectRegister.onChange(event);
-                setValue("topic_id", "");
-                setSubjectTouched(true);
-            }}
+            onSubjectChange={(e) => { subjectRegister.onChange(e); setValue("topic_id", ""); setValue("subtopic_id", null); }}
+            onTopicChange={() => { setValue("subtopic_id", null); }}
             topicsLoading={topicsLoading}
             filteredTopics={filteredTopics}
             topicsError={topicsError}
             topicCreationError={topicCreationError}
+            subtopicsLoading={subtopicsLoading}
+            filteredSubtopics={filteredSubtopics}
+            subtopicsError={subtopicsError}
+            subtopicCreationError={subtopicCreationError}
             matchedTopic={matchedTopic}
             matchedSubject={matchedSubject}
+            matchedSubtopic={matchedSubtopic}
             submissionMessage={submissionMessage}
             submissionError={submissionError}
         />
 
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-               Content Builder
-               <span className="text-sm font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                 {fields.length} {fields.length === 1 ? 'Question' : 'Questions'}
-               </span>
-            </h2>
-          </div>
-          
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+             Content Builder
+             <span className="text-sm font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+               {fields.length} {fields.length === 1 ? 'Question' : 'Questions'}
+             </span>
+          </h2>
           <div className="space-y-8">
             {fields.map((field, index) => (
-              <QuestionFormCard
-                key={field.id}
-                index={index}
-                register={register}
-                setValue={setValue}
-                getValues={getValues}
-                watch={watch}
-                remove={remove}
-                isGenerating={isGenerating}
-                generateFeedback={generateFeedback}
-                feedbackError={feedbackErrors[index]}
-                isQuestionComplete={isQuestionComplete}
-              />
+              <QuestionFormCard key={field.id} index={index} register={register} setValue={setValue} getValues={getValues} watch={watch} remove={remove} isGenerating={isGenerating} generateFeedback={generateFeedback} feedbackError={feedbackErrors[index]} isQuestionComplete={isQuestionComplete} />
             ))}
           </div>
         </div>
 
         <div className="flex gap-4 items-center justify-center py-10 border-t border-dashed border-slate-300">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="rounded-full px-8 shadow-sm hover:shadow-md transition-all h-14 text-base font-bold bg-white"
-              disabled={fields.length >= MAX_QUESTIONS}
-              onClick={() => {
-                if (fields.length >= MAX_QUESTIONS) return;
-                append(createBlankQuestion(fields.length + 1));
-              }}
-            >
-            <Plus className="w-5 h-5 mr-2" />
-            Add New Question
-          </Button>
-
-          <Button
-            type="submit"
-            size="lg"
-            className="rounded-full px-12 h-14 text-base font-bold shadow-lg shadow-blue-200 bg-blue-600 hover:bg-blue-700 transition-all text-white"
-            disabled={
-              topicsLoading || isCreatingTopic || Boolean(topicsError) || isSubmitting
-            }
-          >
-            {isCreatingTopic || isSubmitting ? (
-              <span className="flex items-center gap-2">
-                 <Loader2 className="w-5 h-5 animate-spin" /> Saving…
-              </span>
-            ) : "Submit Question Set"}
-          </Button>
+            <Button type="button" variant="outline" size="lg" className="rounded-full px-8 h-14" disabled={fields.length >= MAX_QUESTIONS} onClick={() => append(createBlankQuestion(fields.length + 1))}>
+              <Plus className="w-5 h-5 mr-2" /> Add New Question
+            </Button>
+            <Button type="submit" size="lg" className="rounded-full px-12 h-14 bg-blue-600 hover:bg-blue-700 text-white" disabled={subjectsLoading || topicsLoading || isSubmitting}>
+              {isSubmitting ? <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Saving…</span> : "Submit Question Set"}
+            </Button>
         </div>
-
       </form>
 
-      <QuestionSearchModal 
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onImport={handleImportQuestion}
-        existingQuestionIds={existingQuestionIds}
-      />
+      <QuestionSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} onImport={handleImportQuestion} existingQuestionIds={[]} />
     </div>
   );
 }

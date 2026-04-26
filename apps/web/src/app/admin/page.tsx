@@ -20,6 +20,7 @@ export default async function AdminIndexPage({
   const perPage = Number(params.perPage) || 10;
   const subjectId = params.subjectId as string | undefined;
   const topicId = params.topicId as string | undefined;
+  const subtopicId = params.subtopicId as string | undefined;
 
   // Calculate Supabase range
   const from = (page - 1) * perPage;
@@ -29,13 +30,14 @@ export default async function AdminIndexPage({
   const [
     { data: subjects },
     { data: topics },
+    { data: subtopics },
   ] = await Promise.all([
     supabase.from("subjects").select("id, name").order("name"),
     supabase.from("topics").select("id, name, subject_id").order("name"),
+    supabase.from("subtopics").select("id, name, name_np, topic_id").order("name"),
   ]);
 
   // Main query with joins for filtering and display
-  // Note: !inner forces an inner join which is required for filtering on joined tables
   let query = supabase
     .from("question_sets")
     .select(`
@@ -45,6 +47,7 @@ export default async function AdminIndexPage({
       is_verified,
       created_at,
       topic_id,
+      subtopic_id,
       topics!inner (
         id,
         name,
@@ -53,11 +56,18 @@ export default async function AdminIndexPage({
           id,
           name
         )
+      ),
+      subtopics (
+        id,
+        name,
+        name_np
       )
     `, { count: "exact" });
 
   // Apply filters
-  if (topicId) {
+  if (subtopicId) {
+    query = query.eq("subtopic_id", subtopicId);
+  } else if (topicId) {
     query = query.eq("topic_id", topicId);
   } else if (subjectId) {
     query = query.eq("topics.subject_id", subjectId);
@@ -96,6 +106,7 @@ export default async function AdminIndexPage({
       <QuestionSetFilter 
         subjects={subjects || []} 
         topics={topics || []} 
+        subtopics={subtopics || []}
       />
 
       <Card className="border-slate-200 shadow-sm overflow-hidden border-none ring-1 ring-slate-200 text-slate-900">
@@ -179,9 +190,14 @@ export default async function AdminIndexPage({
                           <span className="text-xs font-semibold text-slate-600">
                             <Lang>{set.topics?.subjects?.name || "Uncategorized"}</Lang>
                           </span>
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[11px] text-slate-500">
                             <Lang>{set.topics?.name || "General Topic"}</Lang>
                           </span>
+                          {set.subtopics && (
+                            <span className="text-[10px] text-blue-500 font-medium italic">
+                              <Lang>{set.subtopics.name_np || set.subtopics.name}</Lang>
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">

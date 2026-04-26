@@ -36,13 +36,14 @@ export async function POST(req: Request) {
       return errorResponse(issue.message, 400);
     }
 
-    const { topic_id, title, difficulty_level, set_type, is_verified, questions } =
+    const { topic_id, subtopic_id, title, difficulty_level, set_type, is_verified, questions } =
       parseResult.data;
 
     const { data: insertedSet, error: setInsertError } = await supabase
       .from("question_sets")
       .insert({
         topic_id,
+        subtopic_id,
         title,
         difficulty_level,
         set_type,

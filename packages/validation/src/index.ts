@@ -53,6 +53,7 @@ export type QuestionSetQuestionFormValues = z.infer<
 export const questionSetSchema = z.object({
   subject_id: z.string().min(1, "Subject is required"),
   topic_id: z.string().min(1, "Topic is required"),
+  subtopic_id: z.string().optional().nullable(),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
   set_type: z
@@ -74,8 +75,9 @@ export const questionSetPayloadSchema = questionSetSchema.omit({
 export type QuestionSetPayload = z.infer<typeof questionSetPayloadSchema>;
 
 export const questionSetEditSchema = z.object({
-  subject_lookup: z.string().min(1, "Subject is required"),
-  topic_lookup: z.string().min(1, "Topic is required"),
+  subject_id: z.string().min(1, "Subject is required"),
+  topic_id: z.string().min(1, "Topic is required"),
+  subtopic_id: z.string().optional().nullable(),
   title: z.string().min(1, "Title is required"),
   difficulty_level: z.coerce.number().min(1).max(3),
   set_type: z

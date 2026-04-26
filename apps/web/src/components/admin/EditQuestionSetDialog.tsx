@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { SetMetadataForm } from "./SetMetadataForm";
 
 interface EditQuestionSetDialogProps {
@@ -34,6 +34,7 @@ export function EditQuestionSetDialog({
 }: EditQuestionSetDialogProps) {
   const [topics, setTopics] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [subtopics, setSubtopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +50,10 @@ export function EditQuestionSetDialog({
     resolver: zodResolver(questionSetEditSchema as any) as any,
   });
 
-  const subjectLookupValue = watch("subject_lookup");
-  const topicLookupValue = watch("topic_lookup");
+  const subjectIdValue = watch("subject_id");
+  const topicIdValue = watch("topic_id");
+  const subtopicIdValue = watch("subtopic_id");
+
   const topicListId = useId();
   const subjectListId = useId();
 
@@ -61,16 +64,19 @@ export function EditQuestionSetDialog({
     const loadData = async () => {
       setLoading(true);
       try {
-        const [tRes, sRes] = await Promise.all([
+        const [tRes, sRes, stRes] = await Promise.all([
           fetch("/api/topics"),
           fetch("/api/subjects"),
+          fetch("/api/subtopics"),
         ]);
         const topicsData = await tRes.json();
         const subjectsData = await sRes.json();
+        const subtopicsData = await stRes.json();
+
         setTopics(topicsData);
         setSubjects(subjectsData.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+        setSubtopics(subtopicsData);
 
-        // Try to find current topic and subject name
         const currentTopic = topicsData.find((t: any) => t.id === questionSet.topic_id);
         
         reset({
@@ -78,8 +84,9 @@ export function EditQuestionSetDialog({
           difficulty_level: questionSet.difficulty_level,
           set_type: questionSet.set_type,
           is_verified: questionSet.is_verified,
-          topic_lookup: currentTopic?.name || "",
-          subject_lookup: currentTopic?.subject_name || "",
+          subject_id: currentTopic?.subject_id || "",
+          topic_id: questionSet.topic_id || "",
+          subtopic_id: questionSet.subtopic_id || null,
         });
       } catch (e) {
         console.error("Failed to load metadata", e);
@@ -92,56 +99,38 @@ export function EditQuestionSetDialog({
   }, [isOpen, questionSet, reset]);
 
   const matchedSubject = useMemo(() => {
-    const val = subjectLookupValue?.trim().toLowerCase();
-    return subjects.find((s) => s.name.toLowerCase() === val);
-  }, [subjects, subjectLookupValue]);
+    return subjects.find((s) => s.id === subjectIdValue);
+  }, [subjects, subjectIdValue]);
 
   const filteredTopics = useMemo(() => {
-    if (!matchedSubject) return topics;
+    if (!matchedSubject) return [];
     return topics.filter((t) => t.subject_id === matchedSubject.id);
   }, [topics, matchedSubject]);
 
   const matchedTopic = useMemo(() => {
-    const val = topicLookupValue?.trim().toLowerCase();
-    return filteredTopics.find((t) => t.name.toLowerCase() === val);
-  }, [filteredTopics, topicLookupValue]);
+    return filteredTopics.find((t) => t.id === topicIdValue);
+  }, [filteredTopics, topicIdValue]);
+
+  const filteredSubtopics = useMemo(() => {
+    if (!matchedTopic) return [];
+    return subtopics.filter((st: any) => st.topic_id === matchedTopic.id);
+  }, [subtopics, matchedTopic]);
+
+  const matchedSubtopic = useMemo(() => {
+    return filteredSubtopics.find((st: any) => st.id === subtopicIdValue);
+  }, [filteredSubtopics, subtopicIdValue]);
 
   const onSubmit: SubmitHandler<QuestionSetEditFormValues> = async (values) => {
     setIsSubmitting(true);
     setError(null);
     try {
-      let subjectId = matchedSubject?.id;
-      if (!subjectId) {
-        // Create subject if not exists
-        const res = await fetch("/api/subjects", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: values.subject_lookup }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to create subject");
-        subjectId = data.id;
-      }
-
-      let topicId = matchedTopic?.id;
-      if (!topicId) {
-        // Create topic if not exists
-        const res = await fetch("/api/topics", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: values.topic_lookup, subject_id: subjectId }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to create topic");
-        topicId = data.id;
-      }
-
       await onSave({
         title: values.title,
         difficulty_level: values.difficulty_level,
         set_type: values.set_type,
         is_verified: values.is_verified,
-        topic_id: topicId,
+        topic_id: values.topic_id,
+        subtopic_id: values.subtopic_id,
       });
       onClose();
     } catch (e: any) {
@@ -175,16 +164,21 @@ export function EditQuestionSetDialog({
                 topicListId={topicListId}
                 subjects={subjects}
                 subjectsLoading={false}
-                isCreatingSubject={false}
                 subjectsError={null}
                 subjectCreationError={null}
-                onSubjectChange={() => {}}
+                onSubjectChange={() => { setValue("topic_id", ""); setValue("subtopic_id", null); }}
+                onTopicChange={() => { setValue("subtopic_id", null); }}
                 topicsLoading={false}
                 filteredTopics={filteredTopics}
                 topicsError={null}
                 topicCreationError={null}
+                subtopicsLoading={false}
+                filteredSubtopics={filteredSubtopics}
+                subtopicsError={null}
+                subtopicCreationError={null}
                 matchedTopic={matchedTopic}
                 matchedSubject={matchedSubject}
+                matchedSubtopic={matchedSubtopic}
                 submissionMessage={null}
                 submissionError={error}
               />

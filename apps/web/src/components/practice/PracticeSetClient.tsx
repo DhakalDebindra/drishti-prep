@@ -31,6 +31,8 @@ type Props = {
     subjectSlug: string;
     moduleSlug: string;
     is_verified: boolean;
+    subtopicName?: string | null;
+    subtopicSlug?: string | null;
   };
   questions: Question[];
   existingAttempt: AttemptSummary | null;
@@ -43,7 +45,7 @@ type Props = {
 export default function PracticeSetClient(props: Props) {
   return (
     <AttemptProvider
-      setInfo={props.setInfo}
+      setInfo={props.setInfo as any}
       questions={props.questions}
       existingAnswers={props.existingAnswers}
       userEmail={props.userEmail}
@@ -104,12 +106,20 @@ function PracticeSetView() {
         {state.announcementText}
       </div>
       <nav aria-label="Breadcrumb">
-        <ol className="flex items-center gap-2 text-sm text-gray-500">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
           <li><Link href="/courses" className="text-blue-700 hover:text-blue-900">Courses</Link></li>
           <li aria-hidden="true">/</li>
           <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.subjectName}</Lang></Link></li>
           <li aria-hidden="true">/</li>
           <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.topicName}</Lang></Link></li>
+          
+          {(setInfo as any).subtopicSlug && (
+            <>
+              <li aria-hidden="true">/</li>
+              <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}/${(setInfo as any).subtopicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{(setInfo as any).subtopicName}</Lang></Link></li>
+            </>
+          )}
+
           <li aria-hidden="true">/</li>
           <li aria-current="page" className="text-gray-700"><Lang>{setInfo.title}</Lang></li>
         </ol>
@@ -268,8 +278,3 @@ function PracticeSetView() {
     </section>
   );
 }
-
-
-
-
-

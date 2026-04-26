@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
+import { Lang } from "@/components/ui/Lang";
 
 interface SetMetadataFormProps {
   register: any;
@@ -12,16 +13,21 @@ interface SetMetadataFormProps {
   topicListId: string;
   subjects: any[];
   subjectsLoading: boolean;
-  isCreatingSubject: boolean;
   subjectsError: string | null;
   subjectCreationError: string | null;
   onSubjectChange: (e: any) => void;
+  onTopicChange?: (e: any) => void;
   topicsLoading: boolean;
   filteredTopics: any[];
   topicsError: string | null;
   topicCreationError: string | null;
+  subtopicsLoading: boolean;
+  filteredSubtopics: any[];
+  subtopicsError: string | null;
+  subtopicCreationError: string | null;
   matchedTopic: any;
   matchedSubject: any;
+  matchedSubtopic?: any;
   submissionMessage: string | null;
   submissionError: string | null;
 }
@@ -29,23 +35,22 @@ interface SetMetadataFormProps {
 export function SetMetadataForm({
   register,
   errors,
-  subjectListId,
-  topicListId,
   subjects,
   subjectsLoading,
-  isCreatingSubject,
   subjectsError,
-  subjectCreationError,
   onSubjectChange,
+  onTopicChange,
   topicsLoading,
   filteredTopics,
   topicsError,
-  topicCreationError,
-  matchedTopic,
-  matchedSubject,
+  subtopicsLoading,
+  filteredSubtopics,
+  subtopicsError,
   submissionMessage,
   submissionError,
 }: SetMetadataFormProps) {
+  const topicRegister = register("topic_id");
+
   return (
     <Card className="shadow-sm border-slate-200">
       <CardHeader className="border-b bg-slate-50/30">
@@ -103,6 +108,10 @@ export function SetMetadataForm({
           <select
             id="topic_id"
             {...register("topic_id")}
+            onChange={(e) => {
+                topicRegister.onChange(e);
+                onTopicChange?.(e);
+            }}
             disabled={topicsLoading || filteredTopics.length === 0}
             lang="ne"
             className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -116,7 +125,25 @@ export function SetMetadataForm({
           {errors?.topic_id && <p className="text-xs text-red-500">{errors.topic_id.message}</p>}
         </div>
 
-        {/* Set Type & Order - Phase 1 Enhancements */}
+        {/* Subtopic Lookup */}
+        <div className="space-y-2">
+          <Label htmlFor="subtopic_id" className="font-semibold text-slate-700">Sub-topic (Optional)</Label>
+          <select
+            id="subtopic_id"
+            {...register("subtopic_id")}
+            disabled={subtopicsLoading || filteredSubtopics.length === 0}
+            lang="ne"
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">No Sub-topic</option>
+            {filteredSubtopics.map((st) => (
+              <option key={st.id} value={st.id}>{st.name_np || st.name}</option>
+            ))}
+          </select>
+          {subtopicsError && <p className="text-xs text-red-500">{subtopicsError}</p>}
+        </div>
+
+        {/* Set Type */}
         <div className="space-y-2">
           <Label htmlFor="set_type" className="font-semibold text-slate-700">Set Type</Label>
           <select 
