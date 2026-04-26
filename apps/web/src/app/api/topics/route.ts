@@ -10,7 +10,7 @@ type TopicRecord = {
   name: string; 
   subject_id: string | null;
   syllabus_ref: string | null;
-  display_order: number;
+  display_order: number | null;
 };
 type TopicPayload = {
   id: string;
@@ -19,7 +19,7 @@ type TopicPayload = {
   subject_id: string | null;
   subject_name: string | null;
   syllabus_ref: string | null;
-  display_order: number;
+  display_order: number | null;
   description: string | null;
 };
 

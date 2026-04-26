@@ -9,7 +9,7 @@ type SubjectPayload = {
   name_np: string | null;
   slug: string;
   syllabus_ref: string | null;
-  display_order: number;
+  display_order: number | null;
 };
 
 const errorResponse = (message: string, status = 500) =>

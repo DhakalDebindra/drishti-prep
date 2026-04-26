@@ -94,8 +94,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // e. Delete learning path associations (Topic/Module/Subject)
     await supabase.from("topic_learning_paths").delete().eq("question_set_id", id);
-    await supabase.from("module_learning_paths").delete().eq("question_set_id", id);
-    await supabase.from("subject_learning_paths").delete().eq("question_set_id", id);
 
     // f. Delete records from junction table
     const { error: juncDelErr } = await supabase.from("question_set_questions").delete().eq("question_set_id", id);
