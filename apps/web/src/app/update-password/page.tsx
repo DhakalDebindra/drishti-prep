@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import UpdatePasswordForm from './UpdatePasswordForm';
 
 export const metadata: Metadata = {
-  title: 'Update Password - Learning Hub',
+  title: 'Update Password - DrishtiPrep',
   description: 'Set your new password',
 };
 

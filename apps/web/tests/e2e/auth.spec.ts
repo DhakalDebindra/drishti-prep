@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Authentication', () => {
   test('should navigate to login page', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: 'Learning Hub Login' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'DrishtiPrep Login' })).toBeVisible();
   });
 
   test('should show error on invalid login', async ({ page }) => {

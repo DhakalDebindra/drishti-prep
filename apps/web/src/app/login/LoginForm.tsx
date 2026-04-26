@@ -95,7 +95,7 @@ export default function LoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
-            <h1 id="login-heading">Learning Hub Login</h1>
+            <h1 id="login-heading">DrishtiPrep Login</h1>
           </CardTitle>
           <CardDescription className="text-center">Sign in to your learner account</CardDescription>
         </CardHeader>

@@ -38,7 +38,7 @@ export default async function AdminLayout({
           <p className="text-sm text-gray-500 mt-1">Facilitator Dashboard</p>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav aria-label="Admin" className="flex-1 p-4 space-y-2">
           <Link href="/admin">
             <Button variant="ghost" className="w-full justify-start">
               Dashboard Home

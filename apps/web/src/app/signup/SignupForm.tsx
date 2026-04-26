@@ -172,7 +172,7 @@ export default function SignupForm() {
           <CardTitle className="text-2xl text-center">
             <h1 id="signup-heading">Create Account</h1>
           </CardTitle>
-          <CardDescription className="text-center">Join the Learning Hub to track your progress</CardDescription>
+          <CardDescription className="text-center">Join DrishtiPrep to track your progress</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup} aria-labelledby="signup-heading">
           <CardContent className="space-y-4">

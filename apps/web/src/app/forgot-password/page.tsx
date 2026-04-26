@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import ForgotPasswordForm from './ForgotPasswordForm';
 
 export const metadata: Metadata = {
-  title: 'Forgot Password - Learning Hub',
-  description: 'Reset your Learning Hub password',
+  title: 'Forgot Password - DrishtiPrep',
+  description: 'Reset your DrishtiPrep password',
 };
 
 export default function ForgotPasswordPage() {

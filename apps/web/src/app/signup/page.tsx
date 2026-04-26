@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import SignupForm from './SignupForm';
 
 export const metadata: Metadata = {
-  title: 'Sign Up - Learning Hub',
-  description: 'Join the Learning Hub to track your progress',
+  title: 'Sign Up - DrishtiPrep',
+  description: 'Join DrishtiPrep to track your progress',
 };
 
 export default function SignupPage() {

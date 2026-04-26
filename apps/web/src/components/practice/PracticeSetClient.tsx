@@ -103,26 +103,17 @@ function PracticeSetView() {
       <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
         {state.announcementText}
       </div>
-      <div className="flex items-center gap-2 text-sm text-gray-500" aria-label="Breadcrumb">
-        <Link href="/courses" className="text-blue-700 hover:text-blue-900">
-          Courses
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900">
-          <Lang>{setInfo.subjectName}</Lang>
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link
-          href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
-          className="text-blue-700 hover:text-blue-900"
-        >
-          <Lang>{setInfo.topicName}</Lang>
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-gray-700" aria-current="page">
-          {setInfo.title}
-        </span>
-      </div>
+      <nav aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 text-sm text-gray-500">
+          <li><Link href="/courses" className="text-blue-700 hover:text-blue-900">Courses</Link></li>
+          <li aria-hidden="true">/</li>
+          <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.subjectName}</Lang></Link></li>
+          <li aria-hidden="true">/</li>
+          <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.topicName}</Lang></Link></li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="text-gray-700"><Lang>{setInfo.title}</Lang></li>
+        </ol>
+      </nav>
 
       <header className="space-y-2">
         <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">{setInfo.title}</h1>
