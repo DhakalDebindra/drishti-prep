@@ -73,7 +73,8 @@ export default function LoginForm() {
       } else {
         logger.info("Login successful! Redirecting...");
         toast.success("Signed in successfully!");
-        router.push("/dashboard");
+        const next = searchParams.get("next");
+        router.push(next && next.startsWith("/") ? next : "/dashboard");
         router.refresh(); // Refresh the router cache to ensure the server component picks up the new session
       }
     } catch (err: any) {
