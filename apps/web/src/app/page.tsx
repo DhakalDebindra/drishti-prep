@@ -44,8 +44,11 @@ const content = {
 const impact = "Helping more visually impaired candidates enter government service.";
 const pricing = "NGO partnerships available for sponsored access.";
 
+import { useTheme } from "next-themes";
+
 function HomeContent() {
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -57,25 +60,6 @@ function HomeContent() {
       router.push(`/auth/callback?code=${code}&next=/update-password`);
     }
   }, [searchParams, router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const updateDark = () => setIsDark(Boolean(mq?.matches || document.documentElement.classList.contains("dark")));
-    updateDark();
-    mq?.addEventListener("change", updateDark);
-    const contrastMq = window.matchMedia?.("(prefers-contrast: more)");
-    const handleContrast = () => {
-      if (!localStorage.getItem("drishtiprep-contrast") && contrastMq?.matches) {
-        // setContrast("high-contrast");
-      }
-    };
-    contrastMq?.addEventListener("change", handleContrast);
-    return () => {
-      mq?.removeEventListener("change", updateDark);
-      contrastMq?.removeEventListener("change", handleContrast);
-    };
-  }, []);
 
   const themeClass = isDark ? "dark" : "";
 

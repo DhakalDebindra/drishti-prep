@@ -33,16 +33,6 @@ export function QuestionSearchModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const delayDebounceFn = setTimeout(() => {
-      searchQuestions();
-    }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [query, isOpen]);
-
   const searchQuestions = async () => {
     setLoading(true);
     setError(null);
@@ -57,6 +47,16 @@ export function QuestionSearchModal({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const delayDebounceFn = setTimeout(() => {
+      searchQuestions();
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

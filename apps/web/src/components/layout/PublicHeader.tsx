@@ -1,28 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { cn } from "@repo/utils";
-
-type ContrastMode = "normal" | "high-contrast";
+import { useTheme } from "next-themes";
+import { useContrast } from "@/hooks/use-theme";
 
 export function PublicHeader() {
-  const [contrast, setContrast] = useState<ContrastMode>("normal");
-  const [isDark, setIsDark] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storedContrast = localStorage.getItem("drishtiprep-contrast") as ContrastMode;
-    if (storedContrast) setContrast(storedContrast);
-    
-    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches || document.documentElement.classList.contains("dark"));
-  }, []);
+  const [contrast, setContrast] = useContrast();
+  const { resolvedTheme } = useTheme();
+  
+  const isDark = resolvedTheme === "dark";
 
   const toggleContrast = () => {
     const next = contrast === "high-contrast" ? "normal" : "high-contrast";
     setContrast(next);
-    document.documentElement.classList.toggle("hc", next === "high-contrast");
-    localStorage.setItem("drishtiprep-contrast", next);
   };
 
   const navLinks = [

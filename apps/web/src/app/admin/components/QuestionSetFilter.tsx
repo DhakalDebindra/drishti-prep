@@ -46,26 +46,8 @@ export function QuestionSetFilter({ subjects, topics, subtopics }: QuestionSetFi
   const currentSubtopicId = searchParams.get("subtopicId") || "all";
   const currentPerPage = searchParams.get("perPage") || "10";
 
-  const [filteredTopics, setFilteredTopics] = useState<Topic[]>(topics);
-  const [filteredSubtopics, setFilteredSubtopics] = useState<Subtopic[]>(subtopics);
-
-  // Narrow down topics when subject changes
-  useEffect(() => {
-    if (currentSubjectId === "all") {
-      setFilteredTopics(topics);
-    } else {
-      setFilteredTopics(topics.filter(t => t.subject_id === currentSubjectId));
-    }
-  }, [currentSubjectId, topics]);
-
-  // Narrow down subtopics when topic changes
-  useEffect(() => {
-    if (currentTopicId === "all") {
-      setFilteredSubtopics(subtopics);
-    } else {
-      setFilteredSubtopics(subtopics.filter(st => st.topic_id === currentTopicId));
-    }
-  }, [currentTopicId, subtopics]);
+  const filteredTopics = currentSubjectId === "all" ? topics : topics.filter(t => t.subject_id === currentSubjectId);
+  const filteredSubtopics = currentTopicId === "all" ? subtopics : subtopics.filter(st => st.topic_id === currentTopicId);
 
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());

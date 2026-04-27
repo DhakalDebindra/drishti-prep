@@ -16,20 +16,18 @@ import { toast } from "react-hot-toast";
 const supabase = createClient();
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    if (searchParams.get("error") === "unverified") {
-      setError("Please verify your email address before signing in. Check your inbox for the confirmation link.");
-    }
-  }, [searchParams]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(() => {
+    return searchParams.get("error") === "unverified"
+      ? "Please verify your email address before signing in. Check your inbox for the confirmation link."
+      : "";
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
