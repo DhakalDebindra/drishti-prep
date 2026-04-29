@@ -130,32 +130,34 @@ export function QuestionViewer({
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-left text-base font-semibold text-gray-900"
-              aria-expanded={isExplanationExpanded}
-              aria-controls={explanationId}
-              onClick={() => setIsExplanationExpanded((prev) => !prev)}
-            >
-              <span>
-                {isExplanationExpanded
-                  ? <>Hide Detailed Explanation / <Lang>थप जानकारी बन्द गर्नुहोस्</Lang></>
-                  : <>View Detailed Explanation / <Lang>थप जानकारी हेर्नुहोस्</Lang></>}
-              </span>
-              <span className="text-sm text-gray-500">
-                {isExplanationExpanded ? "▲" : "▼"}
-              </span>
-            </button>
-            <div
-              id={explanationId}
-              role="region"
-              aria-live="polite"
-              className={`mt-3 text-sm text-gray-700 ${isExplanationExpanded ? "block" : "hidden"}`}
-            >
-              <p>{question.explanation ? <Lang>{question.explanation}</Lang> : "Explanation will appear here once provided."}</p>
+          {hasSubmitted && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left text-base font-semibold text-gray-900"
+                aria-expanded={isExplanationExpanded}
+                aria-controls={explanationId}
+                onClick={() => setIsExplanationExpanded((prev) => !prev)}
+              >
+                <span>
+                  {isExplanationExpanded
+                    ? <>Hide Detailed Explanation / <Lang>थप जानकारी बन्द गर्नुहोस्</Lang></>
+                    : <>View Detailed Explanation / <Lang>थप जानकारी हेर्नुहोस्</Lang></>}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {isExplanationExpanded ? "▲" : "▼"}
+                </span>
+              </button>
+              <div
+                id={explanationId}
+                role="region"
+                aria-live="polite"
+                className={`mt-3 text-sm text-gray-700 ${isExplanationExpanded ? "block" : "hidden"}`}
+              >
+                <p>{question.explanation ? <Lang>{question.explanation}</Lang> : "Explanation will appear here once provided."}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-between items-center">
             <Button 

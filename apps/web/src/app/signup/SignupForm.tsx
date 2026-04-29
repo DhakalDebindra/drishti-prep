@@ -176,9 +176,9 @@ export default function SignupForm() {
         </CardHeader>
         <form onSubmit={handleSignup} aria-labelledby="signup-heading">
           <CardContent className="space-y-4">
-            {error && (
+            {visibleError && (
               <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
+                {visibleError}
               </div>
             )}
             <div className="space-y-2">

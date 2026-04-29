@@ -27,7 +27,8 @@ test.describe('Authentication', () => {
     await page.fill('input[id="email"]', 'test@example.com');
     await page.fill('input[id="password"]', 'password123');
     await page.fill('input[id="confirmPassword"]', 'password321');
-    await page.locator('input[id="confirmPassword"]').press('Enter');
+    // Click submit button instead of pressing Enter
+    await page.click('button[type="submit"]');
     
     await expect(page.getByText('Passwords do not match.')).toBeVisible({ timeout: 10000 });
   });
