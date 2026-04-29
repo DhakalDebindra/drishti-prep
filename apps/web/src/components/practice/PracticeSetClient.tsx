@@ -176,24 +176,33 @@ function PracticeSetView() {
               </p>
             )}
 
-          <div className="border-t pt-3">
-            <button
-              type="button"
-              className="text-sm font-semibold text-blue-700 hover:text-blue-900"
-              onClick={() => toggleExplanation(currentQuestion.id)}
-            >
-              {state.showExplanation[currentQuestion.id] ? "Hide explanation" : "Show explanation"}
-            </button>
-            {state.showExplanation[currentQuestion.id] && (
-              <div className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-800">
-                <p className="font-semibold text-gray-900">Explanation</p>
-                <p className="text-gray-700">{currentQuestion.explanation ? <Lang>{currentQuestion.explanation}</Lang> : "No explanation available."}</p>
-                <p className="mt-2 text-xs text-gray-600">
-                  Your choice: {state.answers[currentQuestion.id]?.selected_option ?? "—"} | Correct: {currentQuestion.correct_option}
-                </p>
-              </div>
-            )}
-          </div>
+          {(state.status === "submitted" || (state.answers[currentQuestion.id] && state.answers[currentQuestion.id].selected_option !== "skipped")) && (
+            <div className="border-t pt-3">
+              <button
+                type="button"
+                className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+                aria-expanded={state.showExplanation[currentQuestion.id]}
+                aria-controls={`explanation-${currentQuestion.id}`}
+                onClick={() => toggleExplanation(currentQuestion.id)}
+              >
+                {state.showExplanation[currentQuestion.id] ? "Hide explanation" : "Show explanation"}
+              </button>
+              {state.showExplanation[currentQuestion.id] && (
+                <div 
+                  id={`explanation-${currentQuestion.id}`}
+                  className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-800"
+                  role="region"
+                  aria-live="polite"
+                >
+                  <p className="font-semibold text-gray-900">Explanation</p>
+                  <p className="text-gray-700">{currentQuestion.explanation ? <Lang>{currentQuestion.explanation}</Lang> : "No explanation available."}</p>
+                  <p className="mt-2 text-xs text-gray-600">
+                    Your choice: {state.answers[currentQuestion.id]?.selected_option ?? "—"} | Correct: {currentQuestion.correct_option}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mt-auto border-t pt-4 flex items-center justify-between">
             <Button aria-label="Previous question" variant="outline" onClick={goPrev} disabled={currentIndex === 0}>
