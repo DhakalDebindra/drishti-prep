@@ -149,12 +149,14 @@ function PracticeSetView() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 flex-1">
-          <p
+          <div
             id={questionTitleId}
-            className="text-base text-gray-900 outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-base sm:text-lg font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed mb-2"
+            tabIndex={-1}
           >
-            Question {currentIndex + 1}: <Lang>{currentQuestion.content}</Lang>
-          </p>
+            <span className="text-slate-500 text-sm font-semibold uppercase tracking-wider block mb-1">Question {currentIndex + 1}</span>
+            <Lang>{currentQuestion.content}</Lang>
+          </div>
 
           <QuestionOptions
             questionId={currentQuestion.id}
@@ -190,84 +192,92 @@ function PracticeSetView() {
               {state.showExplanation[currentQuestion.id] && (
                 <div 
                   id={`explanation-${currentQuestion.id}`}
-                  className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-800"
+                  className="mt-3 rounded-lg bg-slate-50 border-l-4 border-slate-700 p-4 text-slate-800 shadow-sm"
                   role="region"
                   aria-live="polite"
                 >
-                  <p className="font-semibold text-gray-900">Explanation</p>
-                  <p className="text-gray-700">{currentQuestion.explanation ? <Lang>{currentQuestion.explanation}</Lang> : "No explanation available."}</p>
-                  <p className="mt-2 text-xs text-gray-600">
-                    Your choice: {state.answers[currentQuestion.id]?.selected_option ?? "—"} | Correct: {currentQuestion.correct_option}
+                  <p className="font-bold text-slate-900 mb-2">Explanation</p>
+                  <div className="text-slate-700 text-base leading-relaxed">
+                    {currentQuestion.explanation ? <Lang>{currentQuestion.explanation}</Lang> : "No explanation available."}
+                  </div>
+                  <p className="mt-4 pt-3 border-t border-slate-200 text-sm font-medium text-slate-600">
+                    Your choice: <span className="text-slate-900">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span> | Correct: <span className="text-emerald-700 font-bold">{currentQuestion.correct_option}</span>
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-auto border-t pt-4 flex items-center justify-between">
-            <Button aria-label="Previous question" variant="outline" onClick={goPrev} disabled={currentIndex === 0}>
-              Previous
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Q {currentIndex + 1}</span>
+          <div className="mt-auto border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 order-2 sm:order-1">
+              <Button aria-label="Previous question" variant="outline" size="lg" onClick={goPrev} disabled={currentIndex === 0}>
+                Previous
+              </Button>
+              {currentIndex === questionCount - 1 ? (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={async () => {
+                    if (!currentHandled) {
+                      await handleSkip(currentQuestion.id);
+                    }
+                    setShowConfirmDialog(true);
+                  }}
+                  disabled={
+                    state.status === "submitted" ||
+                    state.isSubmitting ||
+                    state.saving ||
+                    (answeredCount === 0 && !currentHandled)
+                  }
+                >
+                  {state.isSubmitting
+                    ? "Submitting..."
+                    : state.status === "submitted"
+                      ? "Submitted"
+                      : !userEmail
+                        ? !currentHandled
+                          ? "Skip & See Demo Feedback"
+                          : "Submit & Get   Feedback"
+                        : !currentHandled
+                          ? "Skip & Submit"
+                          : "Done"}
+                </Button>
+              ) : (
+                <Button
+                  aria-label="Next question"
+                  variant="outline"
+                  size="lg"
+                  onClick={async () => {
+                    if (!currentHandled) {
+                      await handleSkip(currentQuestion.id);
+                    } else {
+                      goNext();
+                    }
+                  }}
+                  disabled={currentIndex === questionCount - 1}
+                >
+                  Next
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-600 order-1 sm:order-2">
+              <span className="font-medium">Q {currentIndex + 1}</span>
               <span>•</span>
               <span>
                 Answered {answeredCount}, Skipped {skippedCount}/{questionCount}
               </span>
             </div>
-            {currentIndex === questionCount - 1 ? (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if (!currentHandled) {
-                    await handleSkip(currentQuestion.id);
-                  }
-                  setShowConfirmDialog(true);
-                }}
-                disabled={
-                  state.status === "submitted" ||
-                  state.isSubmitting ||
-                  state.saving ||
-                  (answeredCount === 0 && !currentHandled)
-                }
-              >
-                {state.isSubmitting
-                  ? "Submitting..."
-                  : state.status === "submitted"
-                    ? "Submitted"
-                    : !userEmail
-                      ? !currentHandled
-                        ? "Skip & See Demo Feedback"
-                        : "Submit & Get   Feedback"
-                      : !currentHandled
-                        ? "Skip & Submit"
-                        : "Done"}
-              </Button>
-            ) : (
-              <Button
-                aria-label="Next question"
-                variant="outline"
-                onClick={async () => {
-                  if (!currentHandled) {
-                    await handleSkip(currentQuestion.id);
-                  } else {
-                    goNext();
-                  }
-                }}
-                disabled={currentIndex === questionCount - 1}
-              >
-                Next
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
 
       <QuestionNavigator />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 w-full">
         {currentIndex !== questionCount - 1 && (
           <Button
+            size="lg"
+            className="w-full sm:w-auto"
             onClick={() => setShowConfirmDialog(true)}
             disabled={state.status === "submitted" || state.isSubmitting || state.saving || !allHandled}
           >
