@@ -1,4 +1,5 @@
 import { useEffect, useRef, memo } from "react";
+import { CheckCircle2, XCircle, Circle } from "lucide-react";
 import { Lang } from "@/components/ui/Lang";
 
 export const optionKeys = ["A", "B", "C", "D"] as const;
@@ -81,39 +82,47 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
               if (isSubmitted) return;
               onSelect(option.value);
             }}
-            className={`w-full rounded-md border p-3 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-              isSelected
-                ? "border-blue-400 bg-blue-50"
+            className={`w-full rounded-xl border-2 p-4 sm:p-5 text-left transition focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 ${
+              isSelected && selectedAnswer?.is_correct === true
+                ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
+                : isSelected && selectedAnswer?.is_correct === false
+                ? "border-red-600 bg-red-50 text-red-900 shadow-sm"
                 : isCorrectOption && selectedAnswer
-                ? "border-emerald-500 bg-emerald-50"
-                : "border-gray-200 hover:border-blue-200 hover:bg-gray-50"
+                ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
+                : isSelected
+                ? "border-blue-600 bg-blue-50 text-blue-900 shadow-sm"
+                : "border-slate-300 hover:border-slate-500 hover:bg-slate-50 text-slate-900"
             } ${isSubmitted ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
           >
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden="true"
-                className={`mt-1 h-5 w-5 rounded-full border ${
-                  isSelected 
-                    ? "border-blue-500 bg-blue-500" 
-                    : isCorrectOption && selectedAnswer
-                    ? "border-emerald-500 bg-emerald-500"
-                    : "border-gray-300"
-                }`}
-              />
-              <div className="space-y-1">
-                <p id={optionLabelId} className="text-gray-900">
-                  <span className="mr-2 font-semibold">{option.value}.</span>
+            <div className="flex items-start gap-4">
+              <div aria-hidden="true" className="mt-0.5 shrink-0">
+                {isSelected && selectedAnswer?.is_correct === true && (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                )}
+                {isSelected && selectedAnswer?.is_correct === false && (
+                  <XCircle className="h-6 w-6 text-red-600" />
+                )}
+                {!isSelected && isCorrectOption && selectedAnswer && (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                )}
+                {(!selectedAnswer || (isSelected && selectedAnswer?.is_correct === undefined) || (!isSelected && !isCorrectOption)) && (
+                  <Circle className={`h-6 w-6 ${isSelected ? "fill-blue-600 text-blue-600" : "text-slate-400"}`} />
+                )}
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <p id={optionLabelId} className="text-slate-900">
+                  <span className="mr-2 font-bold">{option.value}.</span>
                   <Lang>{option.text}</Lang>
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {isSelected && selectedAnswer?.selected_option !== "skipped" && (
-                    <p className={`text-xs font-semibold ${selectedAnswer?.is_correct ? 'text-emerald-700' : 'text-orange-700'}`}>
-                      <span className="sr-only">{selectedAnswer?.is_correct ? 'correct' : 'incorrect'}</span>
+                    <p className={`text-sm font-bold ${selectedAnswer?.is_correct === false ? 'text-red-700' : selectedAnswer?.is_correct === true ? 'text-emerald-700' : 'text-blue-700'}`}>
+                      <span className="sr-only">{selectedAnswer?.is_correct === false ? 'incorrect' : selectedAnswer?.is_correct === true ? 'correct' : 'selected'}</span>
                       Your choice
                     </p>
                   )}
                   {isCorrectOption && selectedAnswer && (
-                    <p className="text-xs font-semibold text-emerald-700">
+                    <p className="text-sm font-bold text-emerald-700">
                       Correct Answer
                     </p>
                   )}
