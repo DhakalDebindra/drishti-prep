@@ -182,7 +182,7 @@ function PracticeSetView() {
             <div className="border-t pt-3">
               <button
                 type="button"
-                className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+                className="text-sm font-bold text-blue-700 hover:text-blue-900 underline underline-offset-4"
                 aria-expanded={state.showExplanation[currentQuestion.id]}
                 aria-controls={`explanation-${currentQuestion.id}`}
                 onClick={() => toggleExplanation(currentQuestion.id)}
@@ -210,13 +210,13 @@ function PracticeSetView() {
 
           <div className="mt-auto border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 order-2 sm:order-1">
-              <Button aria-label="Previous question" variant="outline" size="lg" onClick={goPrev} disabled={currentIndex === 0}>
+              <Button aria-label="Previous question" variant="outline" size="lg" className="border-2 border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-100 font-medium" onClick={goPrev} disabled={currentIndex === 0}>
                 Previous
               </Button>
               {currentIndex === questionCount - 1 ? (
                 <Button
-                  variant="outline"
                   size="lg"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
                   onClick={async () => {
                     if (!currentHandled) {
                       await handleSkip(currentQuestion.id);
@@ -245,8 +245,8 @@ function PracticeSetView() {
               ) : (
                 <Button
                   aria-label="Next question"
-                  variant="outline"
                   size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
                   onClick={async () => {
                     if (!currentHandled) {
                       await handleSkip(currentQuestion.id);
@@ -277,7 +277,7 @@ function PracticeSetView() {
         {currentIndex !== questionCount - 1 && (
           <Button
             size="lg"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
             onClick={() => setShowConfirmDialog(true)}
             disabled={state.status === "submitted" || state.isSubmitting || state.saving || !allHandled}
           >
