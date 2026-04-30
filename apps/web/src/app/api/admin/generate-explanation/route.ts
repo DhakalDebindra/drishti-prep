@@ -1,14 +1,29 @@
 import { NextResponse } from "next/server";
 import { generateExplanation } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
-import { rateLimitByIp } from "@/lib/rate-limit";
+import { aiRatelimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
     // Apply rate limit
-    const limitResult = await rateLimitByIp(req, { windowMs: 60_000, max: 10 });
-    if (!limitResult.ok) {
-      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      req.headers.get("x-real-ip") ??
+      "anonymous";
+
+    const { success } = await aiRatelimit.limit(ip);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before trying again." },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Remaining": "0",
+          }
+        }
+      );
     }
 
     const supabase = await createClient();
