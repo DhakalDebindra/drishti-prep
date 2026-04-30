@@ -19,15 +19,15 @@ export default async function AdminLayout({
     redirect("/login?next=/admin");
   }
 
-  // const { data: profile } = await supabase
-  //   .from("profiles")
-  //   .select("is_admin, full_name")
-  //   .eq("id", user.id)
-  //   .single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin, full_name")
+    .eq("id", user.id)
+    .single();
 
-  // if (!profile?.is_admin) {
-  //   redirect("/");
-  // }
+  if (!profile?.is_admin) {
+    redirect("/");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
@@ -54,6 +54,11 @@ export default async function AdminLayout({
               Curriculum Manager
             </Button>
           </Link>
+          <Link href="/admin/enrollments">
+            <Button variant="ghost" className="w-full justify-start">
+              Enrollments
+            </Button>
+          </Link>
           <Link href="/admin/disputes">
             <Button variant="ghost" className="w-full justify-start text-red-700 hover:text-red-900 hover:bg-red-50">
               Dispute Inbox
@@ -67,11 +72,10 @@ export default async function AdminLayout({
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-bold">
-              {/* profile.full_name?.charAt(0) ||  */}
-              {user.email?.charAt(0)}
+              {profile?.full_name?.charAt(0) || user.email?.charAt(0)}
             </div>
             <div className="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-              <p className="font-medium text-gray-900">{/* profile.full_name || */ "Admin User"}</p>
+              <p className="font-medium text-gray-900">{profile?.full_name || "Admin User"}</p>
               <p className="text-gray-500">{user.email}</p>
             </div>
           </div>

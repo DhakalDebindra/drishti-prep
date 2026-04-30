@@ -7,13 +7,7 @@ interface PageProps {
   params: Promise<{ moduleSlug: string }>;
 }
 
-export const revalidate = 3600;
 
-export async function generateStaticParams() {
-  const supabase = createStaticClient();
-  const { data: modules } = await supabase.from("modules").select("slug");
-  return (modules || []).map((m) => ({ moduleSlug: m.slug }));
-}
 
 export default async function ModulePage({ params }: PageProps) {
   const { moduleSlug } = await params;

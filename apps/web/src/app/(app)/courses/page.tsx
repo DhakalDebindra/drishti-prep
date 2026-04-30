@@ -6,9 +6,9 @@ export const revalidate = 3600;
 
 export default async function CoursesIndexPage() {
   const supabase = createStaticClient();
-  const { data: modules, error } = await supabase
+  const { data: modules, error } = await (supabase as any)
     .from("modules")
-    .select("id, name, description, slug")
+    .select("id, name, description, slug, price_paisa")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
@@ -34,15 +34,26 @@ export default async function CoursesIndexPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((module) => (
+          {modules.map((module: any) => (
             <Link
               key={module.id}
               href={`/courses/${module.slug}`}
               className="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md hover:border-blue-200"
             >
-              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                <Lang>{module.name}</Lang>
-              </h2>
+              <div className="flex items-start justify-between gap-4">
+                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                  <Lang>{module.name}</Lang>
+                </h2>
+                {module.price_paisa ? (
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                    NPR {module.price_paisa / 100}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                    Free
+                  </span>
+                )}
+              </div>
               <p className="mt-2 text-sm text-gray-600 flex-grow">
                 {module.description ? <Lang>{module.description}</Lang> : "Explore subjects and topics within this module."}
               </p>
