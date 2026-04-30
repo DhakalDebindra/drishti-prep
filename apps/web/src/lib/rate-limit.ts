@@ -1,26 +1,46 @@
-type RateLimitOptions = {
-  windowMs: number
-  max: number
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+if (!redis) {
+  console.warn(
+    "[rate-limit] Upstash env vars not set — rate limiting disabled. " +
+      "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production."
+  );
 }
 
-// Very small in-memory token bucket keyed by IP for quick mitigation.
-// Not production-grade but stops immediate abuse.
-const buckets = new Map<string, { tokens: number; resetAt: number }>()
-
-export async function rateLimitByIp(req: Request, opts: RateLimitOptions) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const now = Date.now()
-
-  const bucket = buckets.get(ip)
-  if (!bucket || now > bucket.resetAt) {
-    buckets.set(ip, { tokens: opts.max - 1, resetAt: now + opts.windowMs })
-    return { ok: true, remaining: opts.max - 1 }
+function createLimiter(requests: number, window: string, prefix: string) {
+  if (!redis) {
+    return {
+      limit: async (_id: string) => ({
+        success: true,
+        limit: requests,
+        remaining: requests,
+        reset: Date.now(),
+        pending: Promise.resolve(),
+      }),
+    };
   }
-
-  if (bucket.tokens <= 0) {
-    return { ok: false, remaining: 0 }
-  }
-
-  bucket.tokens -= 1
-  return { ok: true, remaining: bucket.tokens }
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(requests, window as Parameters<typeof Ratelimit.slidingWindow>[1]),
+    analytics: true,
+    prefix: `drishtiprep:${prefix}`,
+  });
 }
+
+/** Auth endpoints (login, signup, password reset): 5 requests per 15 minutes */
+export const authRatelimit = createLimiter(5, "15 m", "auth");
+
+/** AI feedback endpoint: 20 requests per minute per user */
+export const aiRatelimit = createLimiter(20, "1 m", "ai");
+
+/** General API endpoints: 60 requests per minute */
+export const apiRatelimit = createLimiter(60, "1 m", "api");

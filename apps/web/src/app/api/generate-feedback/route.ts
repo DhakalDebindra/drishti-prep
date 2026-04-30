@@ -2,9 +2,30 @@ import { NextResponse } from "next/server";
 import { Prompts, safeParseGKExplanation } from "@/config/prompts/index";
 import { generateAiContentJSON } from "@/lib/ai-service";
 import { createClient } from "@/lib/supabase/server";
+import { aiRatelimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      req.headers.get("x-real-ip") ??
+      "anonymous";
+
+    const { success } = await aiRatelimit.limit(ip);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before trying again." },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Remaining": "0",
+          }
+        }
+      );
+    }
+
     const { content, option_a, option_b, option_c, option_d, correct_option } = await req.json();
 
     // Require authentication

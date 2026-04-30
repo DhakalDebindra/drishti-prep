@@ -1,7 +1,28 @@
 import { NextResponse } from 'next/server';
 import { createClient } from "../../../../lib/supabase/server";
+import { apiRatelimit } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "anonymous";
+
+  const { success } = await apiRatelimit.limit(ip);
+
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait before trying again." },
+      { 
+        status: 429,
+        headers: {
+          "Retry-After": "60",
+          "X-RateLimit-Remaining": "0",
+        }
+      }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(req.url);
