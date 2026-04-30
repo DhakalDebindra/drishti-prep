@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { createStaticClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Lang } from "@/components/ui/Lang";
+import { SeeMoreText } from "@/components/ui/SeeMoreText";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function CoursesIndexPage() {
-  const supabase = createStaticClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: modules, error } = await (supabase as any)
     .from("modules")
     .select("id, name, description, slug, price_paisa")
@@ -14,6 +17,19 @@ export default async function CoursesIndexPage() {
 
   if (error) {
     console.error("Error fetching courses:", error);
+  }
+
+  let enrolledModuleIds = new Set<string>();
+  if (user && modules) {
+    const { data: enrollments } = await (supabase as any)
+      .from("enrollments")
+      .select("module_id")
+      .eq("user_id", user.id)
+      .eq("status", "approved");
+    
+    if (enrollments) {
+      enrolledModuleIds = new Set(enrollments.map((e: any) => e.module_id));
+    }
   }
 
   return (
@@ -55,10 +71,10 @@ export default async function CoursesIndexPage() {
                 )}
               </div>
               <p className="mt-2 text-sm text-gray-600 flex-grow">
-                {module.description ? <Lang>{module.description}</Lang> : "Explore subjects and topics within this module."}
+                {module.description ? <SeeMoreText text={module.description} maxLength={120} /> : "Explore subjects and topics within this module."}
               </p>
               <div className="mt-4 flex items-center text-sm font-medium text-blue-600">
-                View subjects <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
+                {enrolledModuleIds.has(module.id) || !module.price_paisa ? "Access Course" : "Enroll"} <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
           ))}
