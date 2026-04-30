@@ -65,30 +65,19 @@ function HomeContent() {
 
   const containerClass = useMemo(
     () =>
-      `min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50 ${themeClass}`,
+      `min-h-screen bg-background text-foreground ${themeClass}`,
     [isDark]
   );
 
   const palette = useMemo(() => {
-    if (isDark) {
-      return {
-        panel: "border-white/10 bg-white/5 shadow-emerald-500/10",
-        panelStrong: "border-white/10 bg-slate-900/60",
-        labelTone: "text-emerald-200",
-        subText: "text-slate-200",
-        mutedText: "text-slate-300",
-        headingText: "text-white",
-        buttonBorder: "border-white/25 text-slate-50",
-      };
-    }
     return {
-      panel: "border-slate-200 bg-white shadow-emerald-600/5",
-      panelStrong: "border-slate-200 bg-white shadow-inner shadow-black/5",
-      labelTone: "text-emerald-700",
-      subText: "text-slate-700",
-      mutedText: "text-slate-600",
-      headingText: "text-slate-900",
-      buttonBorder: "border-slate-300 text-slate-900",
+      panel: "border-border bg-card shadow-sm",
+      panelStrong: "border-border bg-muted shadow-inner",
+      labelTone: "text-primary",
+      subText: "text-muted-foreground",
+      mutedText: "text-muted-foreground",
+      headingText: "text-foreground",
+      buttonBorder: "border-border text-foreground",
     };
   }, [isDark]);
 
@@ -127,13 +116,13 @@ function HomeContent() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className="flex h-12 items-center justify-center rounded-full bg-emerald-400 px-6 text-base font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                  className="flex h-12 items-center justify-center rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground shadow-lg transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   Join DrishtiPrep
                 </Link>
                 <Link
                   href="/login"
-                  className="flex h-12 items-center justify-center rounded-full border border-white/20 px-6 text-base font-semibold text-slate-50 transition hover:border-emerald-200 hover:text-emerald-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+                  className="flex h-12 items-center justify-center rounded-full border border-border px-6 text-base font-semibold text-foreground transition hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   Login
                 </Link>

@@ -31,7 +31,7 @@ export default async function SubjectPage({ params }: PageProps) {
 
   const { data: subjectData } = await supabase
     .from("subjects")
-    .select("id, name, description, module_id, modules!inner(slug)")
+    .select("id, name, description, module_id, syllabus_ref, modules!inner(slug)")
     .eq("slug", subjectSlug)
     .eq("modules.slug", moduleSlug)
     .single();
@@ -42,7 +42,7 @@ export default async function SubjectPage({ params }: PageProps) {
 
   const { data: topics, error } = await supabase
     .from("topics")
-    .select("id, name, slug, description, display_order")
+    .select("id, name, slug, description, display_order, syllabus_ref")
     .eq("subject_id", subjectData.id)
     .order("display_order", { ascending: true });
 
@@ -60,7 +60,10 @@ export default async function SubjectPage({ params }: PageProps) {
           <span className="mx-2 text-gray-300">|</span>
           <Lang>{subjectData.name}</Lang>
         </div>
-        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">Topics in <Lang>{subjectData.name}</Lang></h1>
+        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">
+          {subjectData.syllabus_ref && <span className="text-gray-500 font-normal mr-2">{subjectData.syllabus_ref}</span>}
+          Topics in <Lang>{subjectData.name}</Lang>
+        </h1>
         <p className="text-gray-600">
           {subjectData.description ? <Lang>{subjectData.description}</Lang> : "Select a topic to view its question sets."}
         </p>
@@ -78,7 +81,10 @@ export default async function SubjectPage({ params }: PageProps) {
               href={`/courses/${moduleSlug}/${subjectSlug}/${topic.slug}`}
               className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200"
             >
-              <h2 className="text-lg font-semibold text-gray-900"><Lang>{topic.name}</Lang></h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {topic.syllabus_ref && <span className="text-gray-500 font-normal mr-2">{topic.syllabus_ref}</span>}
+                <Lang>{topic.name}</Lang>
+              </h2>
               <p className="text-sm text-gray-600 mt-1">
                 {topic.description ? <Lang>{topic.description}</Lang> : "Explore question sets for this topic."}
               </p>

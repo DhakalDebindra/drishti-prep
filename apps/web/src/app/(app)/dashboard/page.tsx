@@ -48,7 +48,15 @@ export default async function DashboardPage() {
     console.error("Error fetching dashboard attempts: ", error);
   }
 
+  // Fetch active enrollments
+  const { data: enrollments } = await (supabase as any)
+    .from("enrollments")
+    .select("module_id, modules(name, slug, description)")
+    .eq("user_id", user.id)
+    .eq("status", "approved");
+
   const safeAttempts = attempts as any[] || [];
+  const activeCourses = enrollments?.map((e: any) => e.modules).filter(Boolean) || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -61,6 +69,28 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {activeCourses.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Your Active Courses</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {activeCourses.map((course: any) => (
+              <a
+                key={course.slug}
+                href={`/courses/${course.slug}`}
+                className="block p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <h3 className="font-semibold text-lg text-slate-900 dark:text-white">{course.name}</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                  {course.description || "Continue your preparation"}
+                </p>
+                <div className="mt-4 flex items-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                  Access Course <span className="ml-1">→</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div id="analytics">
         <MacroAnalytics attempts={safeAttempts} />

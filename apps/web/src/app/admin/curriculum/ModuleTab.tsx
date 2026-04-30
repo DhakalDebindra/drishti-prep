@@ -53,6 +53,7 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
     name_np: "",
     description: "",
     display_order: 0,
+    price: 0,
   });
 
   const handleOpenForm = (item: any = null) => {
@@ -64,6 +65,7 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
         name_np: item.name_np || "",
         description: item.description || "",
         display_order: item.display_order || 0,
+        price: item.price_paisa ? item.price_paisa / 100 : 0,
       });
     } else {
       setEditingItem(null);
@@ -73,6 +75,7 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
         name_np: "",
         description: "",
         display_order: 0,
+        price: 0,
       });
     }
     setIsFormOpen(true);
@@ -84,10 +87,15 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
     const method = editingItem ? "PUT" : "POST";
 
     try {
+      const submitData = {
+        ...formData,
+        price_paisa: formData.price ? formData.price * 100 : null,
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const result = await res.json();
@@ -144,6 +152,7 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
               <TableHead>Display Name</TableHead>
               <TableHead>Nepali Name</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead>Price</TableHead>
               <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -160,6 +169,7 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
                   <TableCell className="font-medium">{module.name}</TableCell>
                   <TableCell><Lang>{module.name_np || "-"}</Lang></TableCell>
                   <TableCell className="font-mono text-xs">{module.slug}</TableCell>
+                  <TableCell>{module.price_paisa ? `Rs. ${module.price_paisa / 100}` : "Free"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button 
                       variant="ghost" 
@@ -237,6 +247,16 @@ export function ModuleTab({ initialData }: ModuleTabProps) {
                 type="number"
                 value={formData.display_order} 
                 onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (Rs.) - Leave 0 for Free</Label>
+              <Input 
+                id="price" 
+                type="number"
+                min="0"
+                value={formData.price} 
+                onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })} 
               />
             </div>
             <Button type="submit" className="w-full">
