@@ -32,9 +32,10 @@ export async function PUT(
   try {
     const supabase = await createClient();
     const body = await req.json();
-    const { name, slug, name_np, description, is_active, display_order } = body;
+    const { name, slug, name_np, description, is_active, display_order, price_paisa } = body;
 
-    const { data, error } = await supabase
+    // (supabase as any): generated types don't yet include price_paisa.
+    const { data, error } = await (supabase as any)
       .from("modules")
       .update({
         name,
@@ -43,6 +44,7 @@ export async function PUT(
         description,
         is_active,
         display_order,
+        price_paisa,
       })
       .eq("id", id)
       .select()
