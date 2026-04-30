@@ -74,7 +74,7 @@ export default async function DashboardPage() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Your Active Courses</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {activeCourses.map((course: any) => (
-              <a
+              <Link
                 key={course.slug}
                 href={`/courses/${course.slug}`}
                 className="block p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
                 <div className="mt-4 flex items-center text-sm font-medium text-blue-600 dark:text-blue-400">
                   Access Course <span className="ml-1">→</span>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
