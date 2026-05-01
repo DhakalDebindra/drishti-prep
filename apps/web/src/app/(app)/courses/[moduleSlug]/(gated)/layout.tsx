@@ -9,7 +9,10 @@ interface GatedLayoutProps {
   params: Promise<{ moduleSlug: string }>;
 }
 
-export default async function GatedModuleLayout({ children, params }: GatedLayoutProps) {
+export default async function GatedModuleLayout({
+  children,
+  params,
+}: GatedLayoutProps) {
   const { moduleSlug } = await params;
   const supabase = await createClient();
 
@@ -23,16 +26,11 @@ export default async function GatedModuleLayout({ children, params }: GatedLayou
     return <>{children}</>;
   }
 
-  const { hasAccess, enrollment } = await getModuleAccess(moduleData.id);
+  const { hasAccess } = await getModuleAccess(moduleData.id);
 
   if (!hasAccess) {
-    if (enrollment?.status === "pending") {
-      redirect(`/courses/${moduleSlug}/enroll?status=pending`);
-    } else if (enrollment?.status === "rejected") {
-      redirect(`/courses/${moduleSlug}/enroll?status=rejected&reason=${encodeURIComponent(enrollment.rejection_reason || "")}`);
-    } else {
-      redirect(`/courses/${moduleSlug}/enroll`);
-    }
+    // /enroll handles all states: identity not_submitted | pending | rejected | approved-but-no-payment-yet
+    redirect(`/courses/${moduleSlug}/enroll`);
   }
 
   return <>{children}</>;
