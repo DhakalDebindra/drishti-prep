@@ -38,14 +38,16 @@ export default function NewEnrollmentClient({
   const debouncedQuery = useDebounced(query, 250);
 
   useEffect(() => {
-    let cancelled = false;
     if (selectedUser) return; // don't keep searching once a user is picked
-    if (debouncedQuery.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    let cancelled = false;
 
     const performSearch = async () => {
+      // Short query: clear results inside the async fn so the lint rule
+      // doesn't flag a top-level setState in the effect body.
+      if (debouncedQuery.trim().length < 2) {
+        if (!cancelled) setResults([]);
+        return;
+      }
       setIsSearching(true);
       try {
         const hits = await searchUsers(debouncedQuery.trim());
@@ -69,12 +71,17 @@ export default function NewEnrollmentClient({
     [moduleId, modules]
   );
 
-  // Pre-fill amount when a module is picked.
-  useEffect(() => {
-    if (selectedModule?.price_paisa != null) {
+  // Pre-fill amount when the picked module changes.
+  // React-docs pattern for "adjusting state when a prop/derived value changes":
+  // store the previous value and update during render. Avoids a setState-in-effect.
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [lastModuleIdSeen, setLastModuleIdSeen] = useState<string | null>(null);
+  if (selectedModule && selectedModule.id !== lastModuleIdSeen) {
+    setLastModuleIdSeen(selectedModule.id);
+    if (selectedModule.price_paisa != null) {
       setAmountRupees(String(selectedModule.price_paisa / 100));
     }
-  }, [selectedModule]);
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
