@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getModuleAccess } from "@/lib/access";
 import { Lang } from "@/components/ui/Lang";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Mail, MessageCircle, ShieldCheck, Clock, XCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";

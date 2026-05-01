@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, ShieldCheck, XCircle } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 type Status = "not_submitted" | "pending" | "approved" | "rejected";
 
