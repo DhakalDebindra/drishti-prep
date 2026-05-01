@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  GraduationCap, 
-  Bookmark, 
+import {
+  LayoutDashboard,
+  GraduationCap,
+  Bookmark,
   LogOut,
   User,
   Menu,
-  X
+  X,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@repo/utils";
@@ -28,6 +29,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/courses", label: "Courses", icon: GraduationCap },
     { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+    { href: "/profile/verify-identity", label: "Identity", icon: ShieldCheck },
   ];
 
   return (

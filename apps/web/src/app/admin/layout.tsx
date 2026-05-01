@@ -54,6 +54,11 @@ export default async function AdminLayout({
               Curriculum Manager
             </Button>
           </Link>
+          <Link href="/admin/identity-verifications">
+            <Button variant="ghost" className="w-full justify-start">
+              Identity Verifications
+            </Button>
+          </Link>
           <Link href="/admin/enrollments">
             <Button variant="ghost" className="w-full justify-start">
               Enrollments

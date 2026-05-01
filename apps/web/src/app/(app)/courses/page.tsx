@@ -60,15 +60,21 @@ export default async function CoursesIndexPage() {
                 <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                   <Lang>{module.name}</Lang>
                 </h2>
-                {module.price_paisa ? (
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                    NPR {module.price_paisa / 100}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                    Free
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {enrolledModuleIds.has(module.id) ? (
+                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                      Enrolled ✓
+                    </span>
+                  ) : module.price_paisa ? (
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                      NPR {module.price_paisa / 100}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                      Free
+                    </span>
+                  )}
+                </div>
               </div>
               <p className="mt-2 text-sm text-gray-600 flex-grow">
                 {module.description ? <SeeMoreText text={module.description} maxLength={120} /> : "Explore subjects and topics within this module."}
