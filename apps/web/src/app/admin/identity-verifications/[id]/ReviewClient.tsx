@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { approveEnrollment, rejectEnrollment } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  approveIdentityVerification,
+  rejectIdentityVerification,
+} from "../actions";
 
-export default function ReviewClient({ enrollmentId }: { enrollmentId: string }) {
+export default function ReviewClient({
+  verificationId,
+}: {
+  verificationId: string;
+}) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [reason, setReason] = useState("");
@@ -15,7 +22,7 @@ export default function ReviewClient({ enrollmentId }: { enrollmentId: string })
     setError(null);
     setIsApproving(true);
     try {
-      await approveEnrollment(enrollmentId);
+      await approveIdentityVerification(verificationId);
     } catch (e) {
       console.error(e);
       setError("Could not approve. Please try again.");
@@ -25,13 +32,13 @@ export default function ReviewClient({ enrollmentId }: { enrollmentId: string })
 
   const handleReject = async () => {
     if (!reason.trim()) {
-      setError("Please provide a rejection reason before rejecting.");
+      setError("Please provide a rejection reason — it will be emailed to the user.");
       return;
     }
     setError(null);
     setIsRejecting(true);
     try {
-      await rejectEnrollment(enrollmentId, reason);
+      await rejectIdentityVerification(verificationId, reason);
     } catch (e) {
       console.error(e);
       setError("Could not reject. Please try again.");
@@ -49,22 +56,30 @@ export default function ReviewClient({ enrollmentId }: { enrollmentId: string })
         </div>
       )}
 
+      <p className="text-sm text-gray-600">
+        Approving sends an email with payment instructions. Rejecting sends an
+        email with the reason so the user can re-submit.
+      </p>
+
       <div className="space-y-4">
         <Button
           className="w-full bg-green-600 hover:bg-green-700 text-white"
           onClick={handleApprove}
           disabled={isApproving || isRejecting}
         >
-          {isApproving ? "Approving..." : "Approve Enrollment"}
+          {isApproving ? "Approving..." : "Approve identity"}
         </Button>
 
         <div className="pt-4 border-t">
-          <label htmlFor="reject-reason" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="reject-reason"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Rejection reason
           </label>
           <Textarea
             id="reject-reason"
-            placeholder="Required when rejecting. Shown to the user verbatim."
+            placeholder="Required. Will be shown to the user verbatim."
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             className="mb-2"
@@ -75,7 +90,7 @@ export default function ReviewClient({ enrollmentId }: { enrollmentId: string })
             onClick={handleReject}
             disabled={isApproving || isRejecting}
           >
-            {isRejecting ? "Rejecting..." : "Reject Enrollment"}
+            {isRejecting ? "Rejecting..." : "Reject identity"}
           </Button>
         </div>
       </div>

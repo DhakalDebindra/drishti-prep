@@ -1,134 +1,156 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import ReviewClient from "./ReviewClient";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import RevokeClient from "./RevokeClient";
 
-interface ReviewPageProps {
+interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EnrollmentReviewPage({ params }: ReviewPageProps) {
+export default async function EnrollmentDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: enrollment, error } = await (supabase as any)
+  const { data: enrollment } = await (supabase as any)
     .from("enrollments")
-    .select(`
+    .select(
+      `
       id,
-      short_code,
       status,
       amount_quoted_paisa,
       payment_reference,
+      admin_notes,
       rejection_reason,
       created_at,
-      user_id,
-      profiles!user_id ( full_name, disability_card_path ),
-      modules ( name, price_paisa )
-    `)
+      reviewed_at,
+      profiles!user_id ( id, full_name, email, disability_status ),
+      modules ( name, slug )
+    `
+    )
     .eq("id", id)
     .single();
 
-  if (error || !enrollment) {
-    notFound();
-  }
-
-  let cardUrl: string | null = null;
-  let cardIsPdf = false;
-  if (enrollment.profiles?.disability_card_path) {
-    const path: string = enrollment.profiles.disability_card_path;
-    cardIsPdf = path.toLowerCase().endsWith(".pdf");
-    const { data } = await (supabase as any).storage
-      .from("disability-cards")
-      .createSignedUrl(path, 60 * 5); // 5 mins
-    cardUrl = data?.signedUrl ?? null;
-  }
+  if (!enrollment) notFound();
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/enrollments" className="text-gray-500 hover:text-gray-900">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/admin/enrollments"
+          className="text-gray-500 hover:text-gray-900"
+          aria-label="Back to enrollments"
+        >
           <ChevronLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Review Enrollment</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Enrollment</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">Details</h2>
-            <dl className="space-y-3 text-sm">
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Short Code</dt>
-                <dd className="col-span-2 font-mono font-bold text-blue-900 text-lg">{enrollment.short_code}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Status</dt>
-                <dd className="col-span-2 capitalize font-medium">{enrollment.status}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">User</dt>
-                <dd className="col-span-2">{enrollment.profiles?.full_name}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Module</dt>
-                <dd className="col-span-2">{enrollment.modules?.name}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Amount</dt>
-                <dd className="col-span-2">NPR {enrollment.amount_quoted_paisa / 100}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Reference</dt>
-                <dd className="col-span-2">{enrollment.payment_reference || "N/A"}</dd>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <dt className="text-gray-500">Date</dt>
-                <dd className="col-span-2">{new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(enrollment.created_at))}</dd>
-              </div>
-            </dl>
-          </div>
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <h2 className="text-lg font-semibold border-b pb-2">Details</h2>
+          <dl className="space-y-3 text-sm">
+            <Row label="User" value={enrollment.profiles?.full_name || "—"} />
+            <Row
+              label="Email"
+              value={enrollment.profiles?.email || "—"}
+              mono
+            />
+            <Row
+              label="Identity"
+              value={
+                <span
+                  className={
+                    enrollment.profiles?.disability_status === "approved"
+                      ? "text-green-700"
+                      : "text-amber-700"
+                  }
+                >
+                  {enrollment.profiles?.disability_status || "—"}
+                </span>
+              }
+            />
+            <Row label="Course" value={enrollment.modules?.name || "—"} />
+            <Row
+              label="Status"
+              value={
+                <span
+                  className={`capitalize font-medium ${
+                    enrollment.status === "approved"
+                      ? "text-green-700"
+                      : enrollment.status === "revoked"
+                        ? "text-amber-700"
+                        : "text-gray-700"
+                  }`}
+                >
+                  {enrollment.status}
+                </span>
+              }
+            />
+            <Row
+              label="Amount"
+              value={`NPR ${(enrollment.amount_quoted_paisa / 100).toLocaleString()}`}
+            />
+            <Row
+              label="Reference"
+              value={enrollment.payment_reference || "—"}
+            />
+            {enrollment.admin_notes && (
+              <Row label="Notes" value={enrollment.admin_notes} />
+            )}
+            {enrollment.rejection_reason && (
+              <Row
+                label="Revoke reason"
+                value={enrollment.rejection_reason}
+              />
+            )}
+            <Row
+              label="Created"
+              value={new Date(enrollment.created_at).toLocaleString()}
+            />
+            {enrollment.reviewed_at && (
+              <Row
+                label="Reviewed"
+                value={new Date(enrollment.reviewed_at).toLocaleString()}
+              />
+            )}
+          </dl>
 
-          {enrollment.status === "pending" && (
-            <ReviewClient enrollmentId={enrollment.id} />
+          {enrollment.profiles?.id && (
+            <div className="pt-3 border-t text-xs text-gray-500">
+              <Link
+                href={`/admin/identity-verifications?status=approved`}
+                className="text-blue-600 hover:underline"
+              >
+                View this user's identity history →
+              </Link>
+            </div>
           )}
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">Disability Card</h2>
-            {cardUrl ? (
-              <div className="mt-2">
-                <a
-                  href={cardUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm mb-2 inline-block"
-                >
-                  Open in new tab
-                </a>
-                <div className="border rounded bg-gray-50 p-2">
-                  {cardIsPdf ? (
-                    <embed
-                      src={cardUrl}
-                      type="application/pdf"
-                      className="w-full h-[60vh]"
-                    />
-                  ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={cardUrl} alt="Disability Card" className="max-w-full h-auto" />
-                  )}
-                </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Signed URL expires in 5 minutes; reload the page to refresh.
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No card uploaded or access denied.</p>
-            )}
-          </div>
-        </div>
+        {enrollment.status === "approved" && (
+          <RevokeClient enrollmentId={enrollment.id} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <dt className="text-gray-500">{label}</dt>
+      <dd className={`col-span-2 ${mono ? "font-mono text-xs" : ""}`}>
+        {value}
+      </dd>
     </div>
   );
 }

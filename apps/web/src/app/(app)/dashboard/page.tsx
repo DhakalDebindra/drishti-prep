@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MacroAnalytics } from "@/components/dashboard/MacroAnalytics";
 import { PracticeBanners } from "@/components/dashboard/PracticeBanners";
 import { AttemptHistoryList } from "@/components/dashboard/AttemptHistoryList";
+import { IdentityStatusBanner } from "@/components/dashboard/IdentityStatusBanner";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -56,8 +57,20 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .eq("status", "approved");
 
+  // Fetch profile for identity status banner
+  const { data: profile } = await (supabase as any)
+    .from("profiles")
+    .select("disability_status, disability_rejection_reason")
+    .eq("id", user.id)
+    .single();
+
   const safeAttempts = attempts as any[] || [];
   const activeCourses = enrollments?.map((e: any) => e.modules).filter(Boolean) || [];
+  const disabilityStatus = (profile?.disability_status ?? "not_submitted") as
+    | "not_submitted"
+    | "pending"
+    | "approved"
+    | "rejected";
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -69,6 +82,11 @@ export default async function DashboardPage() {
           Track your progress, review your mistakes, and continue learning.
         </p>
       </div>
+
+      <IdentityStatusBanner
+        status={disabilityStatus}
+        rejectionReason={profile?.disability_rejection_reason ?? null}
+      />
 
       {activeCourses.length > 0 && (
         <div className="space-y-4">
