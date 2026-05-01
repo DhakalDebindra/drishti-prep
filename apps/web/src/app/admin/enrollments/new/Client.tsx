@@ -44,18 +44,21 @@ export default function NewEnrollmentClient({
       setResults([]);
       return;
     }
-    setIsSearching(true);
-    searchUsers(debouncedQuery.trim())
-      .then((hits) => {
+
+    const performSearch = async () => {
+      setIsSearching(true);
+      try {
+        const hits = await searchUsers(debouncedQuery.trim());
         if (!cancelled) setResults(hits);
-      })
-      .catch((e) => {
+      } catch (e) {
         console.error(e);
         if (!cancelled) setResults([]);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setIsSearching(false);
-      });
+      }
+    };
+
+    performSearch();
     return () => {
       cancelled = true;
     };
