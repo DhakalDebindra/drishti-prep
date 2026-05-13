@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles } from "lucide-react";
+import { RichText } from "@/components/ui/RichText";
+import { Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
 export function InlineQuestionForm({ 
@@ -22,6 +23,8 @@ export function InlineQuestionForm({
   highlightCorrect?: boolean
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [explanationText, setExplanationText] = useState<string>(q.explanation || "");
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleAiGenerate = async () => {
     try {
@@ -47,10 +50,8 @@ export function InlineQuestionForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate explanation");
 
-      const explanationEl = document.getElementById(`edit-explanation-${q.id}`) as HTMLTextAreaElement;
-      if (explanationEl) {
-        explanationEl.value = data.explanation;
-      }
+      setExplanationText(data.explanation);
+      setShowPreview(true);
       toast.success("Explanation generated!");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
@@ -90,28 +91,56 @@ export function InlineQuestionForm({
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <label htmlFor={`edit-explanation-${q.id}`} className="text-sm font-medium">General Explanation</label>
-            <Button 
-              type="button"
-              variant="outline" 
-              size="sm" 
-              className="h-7 text-[10px] gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
-              onClick={handleAiGenerate}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3 h-3" />
-                  AI Generate
-                </>
+            <div className="flex gap-2">
+              {explanationText && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[10px] gap-1.5 text-slate-600 hover:text-slate-900"
+                  onClick={() => setShowPreview((p) => !p)}
+                >
+                  {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {showPreview ? "Edit" : "Preview"}
+                </Button>
               )}
-            </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={handleAiGenerate}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3" />
+                    AI Generate
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-          <Textarea lang="ne" defaultValue={q.explanation} id={`edit-explanation-${q.id}`} rows={3} />
+
+          {showPreview && explanationText ? (
+            <div className="min-h-[76px] rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 leading-relaxed [&_ul]:mt-1 [&_li]:ml-3">
+              <RichText>{explanationText}</RichText>
+            </div>
+          ) : (
+            <Textarea
+              lang="ne"
+              id={`edit-explanation-${q.id}`}
+              value={explanationText}
+              onChange={(e) => setExplanationText(e.target.value)}
+              rows={4}
+              placeholder="Generate with AI or type manually…"
+            />
+          )}
         </div>
         <div className="flex gap-2 justify-end mt-4 pt-4 border-t">
           <Button variant="ghost" onClick={onCancel}>Cancel</Button>
@@ -125,8 +154,7 @@ export function InlineQuestionForm({
               const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
               const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
               const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
-              const explanation = (document.getElementById(`edit-explanation-${q.id}`) as HTMLTextAreaElement).value;
-              onSave({ content, option_a, option_b, option_c, option_d, correct_option, explanation });
+              onSave({ content, option_a, option_b, option_c, option_d, correct_option, explanation: explanationText });
             }}>
             {(savingKey === q.id || savingKey === 'question') ? 'Saving...' : 'Save Changes'}
           </Button>

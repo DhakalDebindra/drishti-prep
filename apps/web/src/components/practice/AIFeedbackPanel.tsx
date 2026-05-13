@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles, BrainCircuit, AlertTriangle, Lightbulb } from "lucide-react";
 import type { AIFeedback } from "@repo/types";
-import { Lang } from "@/components/ui/Lang";
+import { RichText } from "@/components/ui/RichText";
 
 export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
   const [feedback, setFeedback] = useState<AIFeedback | null>(null);
@@ -98,9 +98,9 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
               <Lightbulb className="w-5 h-5" />
               <h3 className="text-lg font-bold">Overall Performance</h3>
             </div>
-            <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
-              <Lang>{feedback.strengths}</Lang>
-            </p>
+            <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+              <RichText>{feedback.strengths}</RichText>
+            </div>
           </div>
         )}
  
@@ -119,7 +119,9 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
                   <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-orange-200 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full">
                     {idx + 1}
                   </span>
-                  <span><Lang>{typeof zone === "string" ? zone : JSON.stringify(zone)}</Lang></span>
+                  <div className="flex-1">
+                    <RichText>{typeof zone === "string" ? zone : JSON.stringify(zone)}</RichText>
+                  </div>
                 </div>
               ))}
             </div>

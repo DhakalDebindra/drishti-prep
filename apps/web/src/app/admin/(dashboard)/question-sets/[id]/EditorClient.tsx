@@ -7,17 +7,18 @@ import { useManageQuestionSet } from "@/hooks/admin/useManageQuestionSet";
 import { useManageQuestions } from "@/hooks/admin/useManageQuestions";
 import { InlineQuestionForm } from "@/components/admin/InlineQuestionForm";
 import { EditQuestionSetDialog } from "@/components/admin/EditQuestionSetDialog";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import { RichText } from "@/components/ui/RichText";
 import { Settings, Trash2, Loader2, Globe, Lock } from "lucide-react";
 
 export default function EditorClient({ initialSet, initialQuestions }: { initialSet: any, initialQuestions: any[] }) {
@@ -234,9 +235,9 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
                     </div>
                   </div>
                   {q.explanation && (
-                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-xs text-blue-800 italic flex gap-2">
-                      <span className="font-bold shrink-0">Explanation:</span>
-                      <span>{q.explanation}</span>
+                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-xs text-blue-800">
+                      <span className="font-bold block mb-1">Explanation:</span>
+                      <RichText className="leading-relaxed [&_ul]:mt-1 [&_li]:ml-3">{q.explanation}</RichText>
                     </div>
                   )}
                   {isDeprecated && (

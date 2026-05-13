@@ -4,7 +4,8 @@ import { SystemInstructions } from "@/config/prompts/index";
 const AIConfig = {
   providers: {
     gemini: {
-      model: "gemini-2.5-flash",
+      flash: "gemini-2.5-flash",
+      pro: "gemini-2.5-pro",
       responseMimeType: "application/json",
       temperature: 0.2,
     },
@@ -37,7 +38,8 @@ export const withTimeout = <T>(promise: Promise<T>, ms: number) => {
 
 export async function generateAiContentJSON(
   prompt: string,
-  useStrictNepali: boolean = false
+  useStrictNepali: boolean = false,
+  tier: "flash" | "pro" = "flash"
 ): Promise<{ data: string; provider: string; model: string; latency_ms: number }> {
   if (!geminiApiKey) {
     throw new Error("Missing GEMINI_API_KEY");
@@ -49,8 +51,9 @@ export async function generateAiContentJSON(
     ? `${prompt}\n\n${SystemInstructions.strictNepaliJson}`
     : `${prompt}\n\n${SystemInstructions.defaultJson}`;
 
+  const modelId = AIConfig.providers.gemini[tier];
   const model = genAI.getGenerativeModel({
-    model: AIConfig.providers.gemini.model,
+    model: modelId,
     generationConfig: {
       responseMimeType: AIConfig.providers.gemini.responseMimeType,
       temperature: AIConfig.providers.gemini.temperature,
@@ -64,7 +67,7 @@ export async function generateAiContentJSON(
   return {
     data: text,
     provider: "google",
-    model: AIConfig.providers.gemini.model,
+    model: modelId,
     latency_ms: latencyMs,
   };
 }

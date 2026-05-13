@@ -39,7 +39,7 @@ export async function generateExplanation(
   const prompt = Prompts["loksewa gk facilitator"](q);
 
   try {
-    const result = await generateAiContentJSON(prompt);
+    const result = await generateAiContentJSON(prompt, true, "pro");
     const parsed = safeParseGKExplanation(result.data);
     
     return {

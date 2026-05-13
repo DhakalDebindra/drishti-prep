@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lang } from "@/components/ui/Lang";
+import { RichText } from "@/components/ui/RichText";
 import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
 import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
@@ -198,7 +199,9 @@ function PracticeSetView() {
                 >
                   <p className="font-bold text-slate-900 mb-2">Explanation</p>
                   <div className="text-slate-700 text-base leading-relaxed">
-                    {currentQuestion.explanation ? <Lang>{currentQuestion.explanation}</Lang> : "No explanation available."}
+                    {currentQuestion.explanation
+                      ? <RichText className="space-y-1">{currentQuestion.explanation}</RichText>
+                      : "No explanation available."}
                   </div>
                   <p className="mt-4 pt-3 border-t border-slate-200 text-sm font-medium text-slate-600">
                     Your choice: <span className="text-slate-900">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span> | Correct: <span className="text-emerald-700 font-bold">{currentQuestion.correct_option}</span>
