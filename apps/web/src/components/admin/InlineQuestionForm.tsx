@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RichText } from "@/components/ui/RichText";
 import { Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import { GenerateAudioButton } from "./GenerateAudioButton";
 
 export function InlineQuestionForm({ 
   q, 
@@ -142,22 +143,34 @@ export function InlineQuestionForm({
             />
           )}
         </div>
-        <div className="flex gap-2 justify-end mt-4 pt-4 border-t">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button 
-            disabled={savingKey === q.id || savingKey === 'question' || isGenerating}
-            aria-live="polite"
-            onClick={() => {
-              const content = (document.getElementById(`edit-content-${q.id}`) as HTMLTextAreaElement).value;
-              const option_a = (document.getElementById(`edit-a-${q.id}`) as HTMLInputElement).value;
-              const option_b = (document.getElementById(`edit-b-${q.id}`) as HTMLInputElement).value;
-              const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
-              const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
-              const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
-              onSave({ content, option_a, option_b, option_c, option_d, correct_option, explanation: explanationText });
-            }}>
-            {(savingKey === q.id || savingKey === 'question') ? 'Saving...' : 'Save Changes'}
-          </Button>
+        <div className="mt-4 pt-4 border-t space-y-3">
+          <GenerateAudioButton
+            questionId={q.id}
+            initialReady={q.audio_ready ?? null}
+            initialVoice={q.audio_voice ?? null}
+          />
+          <p className="text-xs text-slate-500">
+            Audio is generated from the saved version. If you&apos;ve edited the
+            text above, save first — the trigger will mark audio as outdated
+            and you can regenerate.
+          </p>
+          <div className="flex gap-2 justify-end pt-2 border-t">
+            <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+            <Button
+              disabled={savingKey === q.id || savingKey === 'question' || isGenerating}
+              aria-live="polite"
+              onClick={() => {
+                const content = (document.getElementById(`edit-content-${q.id}`) as HTMLTextAreaElement).value;
+                const option_a = (document.getElementById(`edit-a-${q.id}`) as HTMLInputElement).value;
+                const option_b = (document.getElementById(`edit-b-${q.id}`) as HTMLInputElement).value;
+                const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
+                const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
+                const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
+                onSave({ content, option_a, option_b, option_c, option_d, correct_option, explanation: explanationText });
+              }}>
+              {(savingKey === q.id || savingKey === 'question') ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
