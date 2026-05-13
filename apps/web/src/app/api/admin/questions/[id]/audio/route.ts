@@ -81,17 +81,17 @@ export async function POST(req: Request, ctx: Ctx) {
     }> = [];
 
     for (const segment of SEGMENTS) {
-      const filename = `${segment}.wav`;
+      const filename = `${segment}.mp3`;
       if (existingNames.has(filename)) continue;
 
       const text = scriptFor(segment, q);
-      const { wav, durationMs, latencyMs, approxTokens } = await synthesizeNepali(text, voice);
+      const { mp3, durationMs, latencyMs, approxTokens } = await synthesizeNepali(text, voice);
 
       const path = storagePathFor(id, version, segment);
       const { error: upErr } = await (supabase as any).storage
         .from(BUCKET)
-        .upload(path, wav, {
-          contentType: "audio/wav",
+        .upload(path, mp3, {
+          contentType: "audio/mpeg",
           upsert: true,
           cacheControl: "public, max-age=31536000, immutable",
         });
@@ -105,7 +105,7 @@ export async function POST(req: Request, ctx: Ctx) {
 
       generated.push({
         segment,
-        bytes: wav.length,
+        bytes: mp3.length,
         durationMs,
         latencyMs,
         tokens: approxTokens,

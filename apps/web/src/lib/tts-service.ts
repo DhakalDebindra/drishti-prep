@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
+import { Mp3Encoder } from "@breezystack/lamejs";
 
 const MODEL = "gemini-2.5-flash-preview-tts";
 const REQUEST_TIMEOUT_MS = 30_000;
 
 // PCM L16 24kHz mono — the only format Gemini TTS currently emits.
 const SAMPLE_RATE = 24_000;
-const NUM_CHANNELS = 1;
 const BITS_PER_SAMPLE = 16;
+const MP3_BITRATE = 64; // kbps — ~400KB per question vs ~2.5MB WAV
 
 export const TUTOR_VOICES = ["Kore", "Orus", "Sulafat"] as const;
 export type TutorVoice = (typeof TUTOR_VOICES)[number];
@@ -15,31 +16,33 @@ export type Segment = "stem" | "opt_a" | "opt_b" | "opt_c" | "opt_d" | "explanat
 export const SEGMENTS: Segment[] = ["stem", "opt_a", "opt_b", "opt_c", "opt_d", "explanation"];
 
 export type SynthesizeResult = {
-  wav: Buffer;
+  mp3: Buffer;
   durationMs: number;
   latencyMs: number;
   // Approximate token usage (Gemini bills audio output by tokens; ~32 tokens/sec at 24kHz).
   approxTokens: number;
 };
 
-function wavHeader(dataLen: number): Buffer {
-  const byteRate = (SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
-  const blockAlign = (NUM_CHANNELS * BITS_PER_SAMPLE) / 8;
-  const b = Buffer.alloc(44);
-  b.write("RIFF", 0);
-  b.writeUInt32LE(36 + dataLen, 4);
-  b.write("WAVE", 8);
-  b.write("fmt ", 12);
-  b.writeUInt32LE(16, 16);
-  b.writeUInt16LE(1, 20);
-  b.writeUInt16LE(NUM_CHANNELS, 22);
-  b.writeUInt32LE(SAMPLE_RATE, 24);
-  b.writeUInt32LE(byteRate, 28);
-  b.writeUInt16LE(blockAlign, 32);
-  b.writeUInt16LE(BITS_PER_SAMPLE, 34);
-  b.write("data", 36);
-  b.writeUInt32LE(dataLen, 40);
-  return b;
+function pcmToMp3(pcm: Buffer): Buffer {
+  const encoder = new Mp3Encoder(1, SAMPLE_RATE, MP3_BITRATE);
+  const samples = new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length / 2);
+  const chunks: Buffer[] = [];
+  const frameSize = 1152; // MPEG standard samples-per-frame for layer III
+
+  for (let i = 0; i < samples.length; i += frameSize) {
+    const slice = samples.subarray(i, i + frameSize);
+    const encoded = encoder.encodeBuffer(slice);
+    if (encoded.length > 0) {
+      chunks.push(Buffer.from(encoded.buffer, encoded.byteOffset, encoded.byteLength));
+    }
+  }
+
+  const tail = encoder.flush();
+  if (tail.length > 0) {
+    chunks.push(Buffer.from(tail.buffer, tail.byteOffset, tail.byteLength));
+  }
+
+  return Buffer.concat(chunks);
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -59,7 +62,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 }
 
 /**
- * Synthesize a chunk of Nepali text to a WAV buffer using Gemini TTS.
+ * Synthesize a chunk of Nepali text to an MP3 buffer using Gemini TTS.
  *
  * Uses the REST API directly because the legacy `@google/generative-ai` SDK
  * (v0.24, still installed) does not expose the `responseModalities: ['AUDIO']`
@@ -112,13 +115,13 @@ export async function synthesizeNepali(
   }
 
   const pcm = Buffer.from(b64, "base64");
-  const wav = Buffer.concat([wavHeader(pcm.length), pcm]);
   const durationMs = Math.round(
-    (pcm.length / ((SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE) / 8)) * 1000
+    (pcm.length / ((SAMPLE_RATE * BITS_PER_SAMPLE) / 8)) * 1000
   );
   const approxTokens = Math.round((durationMs / 1000) * 32);
+  const mp3 = pcmToMp3(pcm);
 
-  return { wav, durationMs, latencyMs, approxTokens };
+  return { mp3, durationMs, latencyMs, approxTokens };
 }
 
 /**
@@ -182,5 +185,5 @@ export function storagePathFor(
   audioVersion: number,
   segment: Segment
 ): string {
-  return `q/${questionId}/v${audioVersion}/${segment}.wav`;
+  return `q/${questionId}/v${audioVersion}/${segment}.mp3`;
 }
