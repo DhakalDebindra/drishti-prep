@@ -59,6 +59,11 @@ export default async function AdminLayout({
               Identity Verifications
             </Button>
           </Link>
+          <Link href="/admin/audio-batch">
+            <Button variant="ghost" className="w-full justify-start">
+              Audio Library
+            </Button>
+          </Link>
           <Link href="/admin/enrollments">
             <Button variant="ghost" className="w-full justify-start">
               Enrollments

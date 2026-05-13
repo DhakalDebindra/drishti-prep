@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,11 @@ import { RichText } from "@/components/ui/RichText";
 import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
 import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
+import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
+import { useTutorAudio } from "@/hooks/useTutorAudio";
+import { useTutorPlayer } from "@/hooks/useTutorPlayer";
+import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
 import type {
   AttemptSummary,
   DecoratedAnswer,
@@ -71,6 +75,42 @@ function PracticeSetView() {
 
   const currentHandled = currentQuestion ? Boolean(state.answers[currentQuestion.id]) : false;
 
+  // ── Tutor voice integration ────────────────────────────────────────────
+  // The preference is loaded once on mount. If guest or off, all tutor paths
+  // are short-circuited and the original SR-driven experience runs unchanged.
+  const [tutorEnabled, setTutorEnabled] = useState(false);
+  const [awaitingGesture, setAwaitingGesture] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/me/preferences")
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        setTutorEnabled(Boolean(j.tutor_voice_enabled));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const audio = useTutorAudio(
+    tutorEnabled ? currentQuestion?.id ?? null : null
+  );
+  const audioUrls = audio.status === "ready" ? audio.urls : null;
+  const player = useTutorPlayer(audioUrls);
+  const tutorActive =
+    tutorEnabled && audio.status === "ready" && !awaitingGesture;
+
+  // Auto-play stem + options on each new question, but only after the user
+  // has explicitly started tutor mode (browser autoplay policy + sanity).
+  useEffect(() => {
+    if (!tutorActive) return;
+    if (!currentQuestion) return;
+    player.playFullSequence();
+  }, [tutorActive, currentQuestion, player]);
+
   const optionsList = useMemo(
     () =>
       currentQuestion
@@ -86,12 +126,32 @@ function PracticeSetView() {
 
   const handleOptionSelect = useCallback(
     (option: (typeof optionKeys)[number]) => {
-      if (currentQuestion) {
-        handleSelect(currentQuestion.id, option);
+      if (!currentQuestion) return;
+      handleSelect(currentQuestion.id, option);
+      // After answering, play the explanation aloud.
+      if (tutorActive) {
+        // Small delay so state updates settle (correctness display, etc.)
+        window.setTimeout(() => player.playExplanation(), 250);
       }
     },
-    [currentQuestion, handleSelect]
+    [currentQuestion, handleSelect, tutorActive, player]
   );
+
+  // Hotkey bindings: only active when tutor mode is genuinely playing audio.
+  useTutorHotkeys(player, tutorActive, {
+    onSelectOption: (letter) => {
+      if (currentQuestion) {
+        handleSelect(currentQuestion.id, letter);
+        window.setTimeout(() => player.playExplanation(), 250);
+      }
+    },
+    onNext: goNext,
+    onPrev: goPrev,
+  });
+
+  const handleStartTutor = useCallback(() => {
+    setAwaitingGesture(false);
+  }, []);
 
   if (!currentQuestion) {
     return (
@@ -103,8 +163,18 @@ function PracticeSetView() {
 
   return (
     <section className="space-y-6">
-      <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
-        {state.announcementText}
+      {/*
+        Screen-reader announcement region for selection feedback. Suppressed
+        when tutor mode is active because the spoken explanation already
+        covers correctness — keeping it would cause double narration.
+      */}
+      <div
+        aria-live={tutorActive ? "off" : "polite"}
+        aria-atomic="true"
+        role="status"
+        className="sr-only"
+      >
+        {tutorActive ? "" : state.announcementText}
       </div>
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
@@ -143,6 +213,21 @@ function PracticeSetView() {
         {!userEmail && !state.authRequired && <p className="text-sm text-gray-600"></p>}
       </header>
 
+      {tutorEnabled && audio.status === "ready" && (
+        <TutorVoicePanel
+          player={player}
+          voice={audio.voice}
+          awaitingFirstGesture={awaitingGesture}
+          onStart={handleStartTutor}
+        />
+      )}
+      {tutorEnabled && audio.status === "not_generated" && (
+        <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          Tutor voice isn&apos;t available for this question yet. Using your screen
+          reader instead.
+        </p>
+      )}
+
       <Card className={`flex flex-col ${state.status === "submitted" ? "opacity-90" : ""}`}>
         <CardHeader>
           <CardTitle className="text-lg">
@@ -154,6 +239,11 @@ function PracticeSetView() {
             id={questionTitleId}
             className="text-base sm:text-lg font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed mb-2"
             tabIndex={-1}
+            // When tutor mode is actively reading aloud, hide the stem from
+            // screen readers to prevent simultaneous English-SR + Nepali-TTS
+            // narration. The visible text is unchanged so sighted users and
+            // anyone with tutor muted keep their full UX.
+            aria-hidden={tutorActive ? "true" : undefined}
           >
             <span className="text-slate-500 text-sm font-semibold uppercase tracking-wider block mb-1">Question {currentIndex + 1}</span>
             <Lang>{currentQuestion.content}</Lang>

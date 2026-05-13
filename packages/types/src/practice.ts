@@ -42,6 +42,18 @@ export type Question = {
   correct_option: string;
   order_number: number;
   explanation: string | null;
+  audio_version?: number;
+  audio_ready?: boolean;
+  audio_voice?: "Kore" | "Orus" | "Sulafat" | null;
+};
+
+export type TutorAudioUrls = {
+  stem: string;
+  opt_a: string;
+  opt_b: string;
+  opt_c: string;
+  opt_d: string;
+  explanation: string;
 };
 
 export type AttemptSummary = {

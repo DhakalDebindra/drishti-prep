@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@repo/utils";
@@ -30,6 +31,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
     { href: "/courses", label: "Courses", icon: GraduationCap },
     { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { href: "/profile/verify-identity", label: "Identity", icon: ShieldCheck },
+    { href: "/profile/preferences", label: "Preferences", icon: Settings },
   ];
 
   return (
