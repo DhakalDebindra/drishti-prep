@@ -1,7 +1,17 @@
-// v1 — Updated April 2026. Update this example when prompt style changes
-// to keep few-shot guidance aligned with current expectations.
-export const GK_EXPLANATION_EXAMPLE = `
+// v3 — Updated May 2026. Mode A / Mode B format aligned with DrishtiPrep CSV skill output.
+// Mode A: distractor-led (distinct real-world entities). Mode B: context-narrative (value variants).
+// Update both examples when format changes to keep few-shot guidance aligned.
+
+export const GK_EXPLANATION_EXAMPLE_MODE_A = `
 {
-  "general_explanation": "यो सम्मेलन भारतको नयाँ दिल्लीमा सन् २०२६ फेब्रुअरी १६ देखि २१ सम्म आयोजना गरिएको थियो। यसमा १०० भन्दा बढी देशका प्रतिनिधिहरु सहभागी भएका थिए। यस सम्मेलनको मुख्य उद्देश्य कृत्रिम बुद्धिमत्ता (AI) को सुरक्षित र जिम्मेवार प्रयोगका लागि विश्वव्यापी मापदण्ड तय गर्नु थियो। धेरै परीक्षार्थीहरु 'जापान' सँग झुक्किने गरे पनि यो सम्मेलन भारतमा भएको थियो।"
+  "general_explanation": "सही उत्तर (B) कस्मोलोजी हो।\nकस्मोलोजी भौतिकशास्त्रको एक शाखा हो जसले ब्रह्माण्डको उत्पत्ति, विकास र संरचनाको अध्ययन गर्दछ।\n- विकल्प (A): खगोलशास्त्र (Astronomy) ताराहरू, ग्रहहरू र आकाशगंगाहरूको अध्ययन हो।\n- विकल्प (C): भूगर्भशास्त्र (Geology) पृथ्वीको आन्तरिक संरचना र चट्टानहरूको अध्ययन हो।\n- विकल्प (D): मौसमविज्ञान (Meteorology) वायुमण्डल र मौसम परिवर्तनको अध्ययन हो।"
 }
 `.trim();
+
+export const GK_EXPLANATION_EXAMPLE_MODE_B = `
+{
+  "general_explanation": "सन् १९५३ मे २९ मा एडमन्ड हिलारी र तेन्जिङ नोर्गे शेर्पाले पहिलो पटक सगरमाथाको शिखर आरोहण गरे। यही ऐतिहासिक उपलब्धिको सम्मानमा नेपालले मे २९ लाई सगरमाथा दिवसका रूपमा मनाउन थालेको हो।\nनोट: एडमन्ड हिलारीको सन् २००८ मा निधन भएपछि यो दिवस आधिकारिक रूपमा स्थापना गरियो।"
+}
+`.trim();
+
+export const GK_EXPLANATION_EXAMPLE = GK_EXPLANATION_EXAMPLE_MODE_A;

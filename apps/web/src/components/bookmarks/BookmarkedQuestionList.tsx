@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Lang } from "@/components/ui/Lang";
+import { RichText } from "@/components/ui/RichText";
 import { toggleBookmark } from "@/app/actions/practice-actions";
 
 export type BookmarkedQuestion = {
@@ -194,9 +195,11 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
 
                     <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Explanation</span>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {q.explanation ? <Lang>{q.explanation}</Lang> : "No specific database explanation provided."}
-                      </p>
+                      <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {q.explanation
+                          ? <RichText>{q.explanation}</RichText>
+                          : "No specific database explanation provided."}
+                      </div>
                     </div>
                   </div>
                 )}

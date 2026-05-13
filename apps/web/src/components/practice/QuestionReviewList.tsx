@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CheckCircle2, XCircle, MinusCircle, Bookmark, Flag, ChevronDown, ChevronUp } from "lucide-react";
 import { Lang } from "@/components/ui/Lang";
+import { RichText } from "@/components/ui/RichText";
 import { toggleBookmark } from "@/app/actions/practice-actions";
 import { ReportIssueModal } from "./ReportIssueModal";
 
@@ -212,9 +213,11 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
 
                     <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Explanation</span>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {q.explanation ? <Lang>{q.explanation}</Lang> : "No specific database explanation provided. Check the AI feedback for insights."}
-                      </p>
+                      <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {q.explanation
+                          ? <RichText>{q.explanation}</RichText>
+                          : "No specific database explanation provided. Check the AI feedback for insights."}
+                      </div>
                     </div>
 
                     <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
