@@ -15,9 +15,10 @@ env:
   PNPM_VERSION: 10.33.2
   NODE_VERSION: 22
 
-# Minimum permissions — jobs that need more declare their own
+# Minimum permissions needed across all jobs
 permissions:
   contents: read
+  actions: write   # required for upload-artifact / download-artifact
 
 jobs:
   # ───────────────────────────────────────────────
