@@ -15,10 +15,8 @@ env:
   PNPM_VERSION: 10.33.2
   NODE_VERSION: 22
 
-# Minimum permissions needed across all jobs
 permissions:
   contents: read
-  actions: write   # required for upload-artifact / download-artifact
 
 jobs:
   # ───────────────────────────────────────────────
@@ -61,46 +59,13 @@ jobs:
       - run: pnpm lint
 
   # ───────────────────────────────────────────────
-  # Web build — shared artifact for e2e + lighthouse
-  # ───────────────────────────────────────────────
-  build-web:
-    name: Build web
-    needs: [typecheck, lint]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: false
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Build
-        run: pnpm --filter @repo/web build
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: apps/web/.next
-          retention-days: 1
-
-  # ───────────────────────────────────────────────
-  # Heavy checks — only run after build passes
+  # Heavy checks — only run after fast checks pass
   # ───────────────────────────────────────────────
   e2e:
     name: E2E Tests
-    needs: build-web
+    needs: [typecheck, lint]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -117,11 +82,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: apps/web/.next
+      - name: Build web
+        run: pnpm --filter @repo/web build
       - name: Install Playwright browsers
         run: pnpm --filter @repo/web exec playwright install --with-deps
       - name: Run Playwright tests
@@ -136,9 +98,9 @@ jobs:
 
   lighthouse:
     name: Lighthouse CI
-    needs: build-web
+    needs: [typecheck, lint]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -155,11 +117,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: apps/web/.next
+      - name: Build web
+        run: pnpm --filter @repo/web build
       - name: Start server
         run: pnpm --filter @repo/web start &
       - name: Wait for server
