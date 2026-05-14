@@ -1,0 +1,14 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": ["node"],
+    "paths": {
+      "@repo/supabase": ["../../packages/supabase/src/index.ts"],
+      "@repo/supabase/mobile": ["../../packages/supabase/src/mobile.ts"],
+      "@repo/validation": ["../../packages/validation/src/index.ts"],
+      "@repo/types": ["../../packages/types/src/index.ts"],
+      "@repo/utils": ["../../packages/utils/src/index.ts"]
+    }
+  }
+}
