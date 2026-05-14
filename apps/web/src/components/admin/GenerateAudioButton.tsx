@@ -59,28 +59,44 @@ export function GenerateAudioButton({
   );
   const [busy, setBusy] = useState<"all" | Segment | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  // Fetch is split into a pure async loader and a state-updating wrapper.
+  // The wrapper sets `loading`, so it must NOT be called synchronously from
+  // an effect (react-hooks/set-state-in-effect). The effect inlines its own
+  // load, while explicit refreshes after generate() use the wrapper.
+  const fetchStatus = useCallback(async (): Promise<AudioStatus | null> => {
     try {
       const res = await fetch(`/api/questions/${questionId}/audio`);
       const json = await res.json();
-      setStatus({
+      return {
         ready: !!json.ready,
         voice: json.voice ?? null,
         version: json.version ?? null,
         urls: json.urls ?? {},
         segments_present: json.segments_present ?? [],
-      });
+      };
     } catch {
-      setStatus(null);
-    } finally {
-      setLoading(false);
+      return null;
     }
   }, [questionId]);
 
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const next = await fetchStatus();
+    setStatus(next);
+    setLoading(false);
+  }, [fetchStatus]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    let cancelled = false;
+    fetchStatus().then((next) => {
+      if (cancelled) return;
+      setStatus(next);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchStatus]);
 
   async function generate(segments: Segment[] | null, force: boolean) {
     const key: "all" | Segment = segments && segments.length === 1 ? segments[0] : "all";
