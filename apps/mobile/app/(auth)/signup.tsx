@@ -36,7 +36,7 @@ export default function SignUpScreen() {
     const result = signupSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: typeof errors = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         const field = err.path[0] as keyof SignupFormValues;
         if (!fieldErrors[field]) fieldErrors[field] = err.message;
       });
