@@ -1,6 +1,22 @@
 import { Mp3Encoder } from "@breezystack/lamejs";
 
-const MODEL = "gemini-2.5-flash-preview-tts";
+const MODEL = "gemini-2.5-pro-preview-tts";
+
+// Gemini 2.5 Pro TTS paid tier allows ~30 RPM; 2 s between calls keeps us safely under.
+const TTS_MIN_INTERVAL_MS = 2_000;
+let _nextAllowedAt = 0;
+let _ttsQueue = Promise.resolve();
+
+function ttsThrottle(): Promise<void> {
+  // Chain onto the existing queue so concurrent callers serialize rather than race.
+  _ttsQueue = _ttsQueue.then(() => {
+    const wait = _nextAllowedAt - Date.now();
+    _nextAllowedAt = Math.max(Date.now(), _nextAllowedAt) + TTS_MIN_INTERVAL_MS;
+    return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
+  });
+  return _ttsQueue;
+}
+
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [1000, 3000, 8000];
@@ -125,6 +141,8 @@ export async function synthesizeNepali(
       },
     },
   };
+
+  await ttsThrottle();
 
   let lastErr: unknown;
   const t0 = performance.now();

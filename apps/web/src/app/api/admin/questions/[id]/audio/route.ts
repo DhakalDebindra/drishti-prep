@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 export const maxDuration = 300; // 5 min — generating 6 segments takes ~90s
 
 const BUCKET = "question-audio";
-const MODEL = "gemini-2.5-flash-preview-tts";
+const MODEL = "gemini-2.5-pro-preview-tts";
 
 type Ctx = { params: Promise<{ id: string }> };
 
