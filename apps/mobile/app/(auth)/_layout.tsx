@@ -1,0 +1,21 @@
+import { Redirect, Stack } from "expo-router";
+import { useSession } from "../../src/providers/SessionProvider";
+
+export default function AuthLayout() {
+  const { session } = useSession();
+
+  // Already authenticated — send to app
+  if (session) {
+    return <Redirect href="/(app)/dashboard" />;
+  }
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#0f172a' },
+        animation: 'slide_from_right',
+      }}
+    />
+  );
+}
