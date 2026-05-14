@@ -1,16 +1,27 @@
-import { createHash } from "node:crypto";
 import { Mp3Encoder } from "@breezystack/lamejs";
 
 const MODEL = "gemini-2.5-flash-preview-tts";
 const REQUEST_TIMEOUT_MS = 30_000;
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAYS_MS = [1000, 3000, 8000];
 
 // PCM L16 24kHz mono — the only format Gemini TTS currently emits.
 const SAMPLE_RATE = 24_000;
 const BITS_PER_SAMPLE = 16;
 const MP3_BITRATE = 64; // kbps — ~400KB per question vs ~2.5MB WAV
 
-export const TUTOR_VOICES = ["Kore", "Orus", "Sulafat"] as const;
+// Empirical thresholds: a usable Nepali utterance is at least ~300ms with
+// non-trivial signal. Anything below has caused silent MP3 uploads in prod.
+const MIN_PCM_BYTES = 4_000; // ~83ms at 24kHz/16bit mono
+const MIN_RMS = 80; // out of 32767; pure silence is 0, room tone ~5–20
+
+// Single voice for the whole platform — Kore was chosen for the most natural
+// Nepali pronunciation and to keep students hearing one consistent tutor.
+// Kept as a one-element union so the type still narrows and a future expansion
+// (rotation, per-subject voices) only needs to add entries here.
+export const TUTOR_VOICES = ["Kore"] as const;
 export type TutorVoice = (typeof TUTOR_VOICES)[number];
+export const DEFAULT_VOICE: TutorVoice = "Kore";
 
 export type Segment = "stem" | "opt_a" | "opt_b" | "opt_c" | "opt_d" | "explanation";
 export const SEGMENTS: Segment[] = ["stem", "opt_a", "opt_b", "opt_c", "opt_d", "explanation"];
@@ -43,6 +54,31 @@ function pcmToMp3(pcm: Buffer): Buffer {
   }
 
   return Buffer.concat(chunks);
+}
+
+function pcmRms(pcm: Buffer): number {
+  const samples = new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length / 2);
+  if (samples.length === 0) return 0;
+  // Sample up to 4096 evenly-spaced samples — enough for a stable RMS,
+  // avoids walking ~2M samples per segment.
+  const stride = Math.max(1, Math.floor(samples.length / 4096));
+  let sumSq = 0;
+  let n = 0;
+  for (let i = 0; i < samples.length; i += stride) {
+    sumSq += samples[i] * samples[i];
+    n++;
+  }
+  return Math.sqrt(sumSq / n);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// Errors that should NOT be retried — auth/quota won't recover within the retry window.
+function isFatal(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /\b(401|403|429)\b|API key|quota|PERMISSION_DENIED|INVALID_ARGUMENT/i.test(msg);
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -90,50 +126,78 @@ export async function synthesizeNepali(
     },
   };
 
+  let lastErr: unknown;
   const t0 = performance.now();
-  const res = await withTimeout(
-    fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }),
-    REQUEST_TIMEOUT_MS
-  );
-  const latencyMs = Math.round(performance.now() - t0);
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`Gemini TTS HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await withTimeout(
+        fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+        REQUEST_TIMEOUT_MS
+      );
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`Gemini TTS HTTP ${res.status}: ${errText.slice(0, 500)}`);
+      }
+
+      const json = (await res.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }>;
+      };
+      const b64 = json.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!b64) {
+        throw new Error("Gemini TTS response missing inlineData (empty payload)");
+      }
+
+      const pcm = Buffer.from(b64, "base64");
+      if (pcm.length < MIN_PCM_BYTES) {
+        throw new Error(
+          `Gemini TTS returned ${pcm.length}B PCM (< ${MIN_PCM_BYTES}B floor) — likely silent`
+        );
+      }
+      const rms = pcmRms(pcm);
+      if (rms < MIN_RMS) {
+        throw new Error(
+          `Gemini TTS PCM looks silent (RMS ${rms.toFixed(1)} < ${MIN_RMS})`
+        );
+      }
+
+      const durationMs = Math.round(
+        (pcm.length / ((SAMPLE_RATE * BITS_PER_SAMPLE) / 8)) * 1000
+      );
+      const approxTokens = Math.round((durationMs / 1000) * 32);
+      const mp3 = pcmToMp3(pcm);
+
+      // An MP3 frame is at least ~100 bytes; a 300ms 64kbps file is ≥2KB.
+      if (mp3.length < 2_000) {
+        throw new Error(`MP3 encoded to ${mp3.length}B — refusing to upload`);
+      }
+
+      const latencyMs = Math.round(performance.now() - t0);
+      return { mp3, durationMs, latencyMs, approxTokens };
+    } catch (err) {
+      lastErr = err;
+      if (isFatal(err) || attempt === MAX_ATTEMPTS - 1) break;
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
   }
 
-  const json = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }>;
-  };
-  const b64 = json.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!b64) {
-    throw new Error("Gemini TTS response missing inlineData");
-  }
-
-  const pcm = Buffer.from(b64, "base64");
-  const durationMs = Math.round(
-    (pcm.length / ((SAMPLE_RATE * BITS_PER_SAMPLE) / 8)) * 1000
-  );
-  const approxTokens = Math.round((durationMs / 1000) * 32);
-  const mp3 = pcmToMp3(pcm);
-
-  return { mp3, durationMs, latencyMs, approxTokens };
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+  throw new Error(`Gemini TTS failed after ${MAX_ATTEMPTS} attempts: ${msg}`);
 }
 
 /**
- * Deterministic voice assignment from question.id.
- * Same question → same voice forever, so users build familiarity with each
- * tutor across attempts. Hash distribution across 3 voices should be ~even
- * over thousands of questions.
+ * Voice assignment for a question. Currently constant (single platform voice),
+ * but kept as a function so future rotation logic plugs in here without
+ * touching callers.
  */
-export function voiceFor(questionId: string): TutorVoice {
-  const h = createHash("sha1").update(questionId).digest();
-  const idx = h[0] % TUTOR_VOICES.length;
-  return TUTOR_VOICES[idx];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function voiceFor(_questionId: string): TutorVoice {
+  return DEFAULT_VOICE;
 }
 
 /**

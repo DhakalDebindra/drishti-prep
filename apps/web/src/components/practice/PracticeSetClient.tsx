@@ -10,6 +10,7 @@ import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
 import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
 import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
+import { TutorHotkeyHelp } from "@/components/practice/TutorHotkeyHelp";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
 import { useTutorAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
@@ -80,6 +81,7 @@ function PracticeSetView() {
   // are short-circuited and the original SR-driven experience runs unchanged.
   const [tutorEnabled, setTutorEnabled] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(true);
+  const [showHotkeyHelp, setShowHotkeyHelp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +149,7 @@ function PracticeSetView() {
     },
     onNext: goNext,
     onPrev: goPrev,
+    onShowHelp: () => setShowHotkeyHelp(true),
   });
 
   const handleStartTutor = useCallback(() => {
@@ -219,8 +222,10 @@ function PracticeSetView() {
           voice={audio.voice}
           awaitingFirstGesture={awaitingGesture}
           onStart={handleStartTutor}
+          onShowHelp={() => setShowHotkeyHelp(true)}
         />
       )}
+      <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
       {tutorEnabled && audio.status === "not_generated" && (
         <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           Tutor voice isn&apos;t available for this question yet. Using your screen
