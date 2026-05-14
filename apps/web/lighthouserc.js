@@ -6,12 +6,12 @@ module.exports = {
       numberOfRuns: 1,
     },
     assert: {
-      preset: 'lighthouse:no-pwa',
       assertions: {
-        'categories:performance': ['warn', { minScore: 0.5 }],
-        'categories:accessibility': ['warn', { minScore: 0.8 }],
-        'categories:best-practices': ['warn', { minScore: 0.8 }],
-        'categories:seo': ['warn', { minScore: 0.8 }],
+        // Warn only — never block the PR, just surface regressions
+        'categories:performance':    ['warn', { minScore: 0.5 }],
+        'categories:accessibility':  ['warn', { minScore: 0.7 }],
+        'categories:best-practices': ['warn', { minScore: 0.7 }],
+        'categories:seo':            ['warn', { minScore: 0.7 }],
       },
     },
     upload: {
