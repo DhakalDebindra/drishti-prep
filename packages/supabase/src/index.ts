@@ -27,11 +27,22 @@ export type SupabaseCookieAdapter = {
   ) => void;
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+function getSupabaseConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error(
+      "Supabase URL and Anon Key are required. Please check your environment variables."
+    );
+  }
+
+  return { url, anonKey };
+}
 
 export function createClient(storage: SupabaseStorageAdapter) {
-  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseConfig();
+  return createSupabaseClient<Database>(url, anonKey, {
     auth: {
       storage,
       persistSession: true,
@@ -42,17 +53,20 @@ export function createClient(storage: SupabaseStorageAdapter) {
 }
 
 export function createBrowserClient() {
-  return createSupabaseBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  const { url, anonKey } = getSupabaseConfig();
+  return createSupabaseBrowserClient<Database>(url, anonKey);
 }
 
 export function createServerClient(cookieAdapter: SupabaseCookieAdapter) {
-  return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseConfig();
+  return createSupabaseServerClient<Database>(url, anonKey, {
     cookies: cookieAdapter,
   });
 }
 
 export function createStaticClient() {
-  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  const { url, anonKey } = getSupabaseConfig();
+  return createSupabaseClient<Database>(url, anonKey);
 }
 
 export type { Database, Json, Tables, TablesInsert, TablesUpdate } from "./database.types";

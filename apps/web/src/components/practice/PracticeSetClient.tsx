@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
 import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
 import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
+import { TutorHotkeyHelp } from "@/components/practice/TutorHotkeyHelp";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
 import { useTutorAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
@@ -80,6 +81,7 @@ function PracticeSetView() {
   // are short-circuited and the original SR-driven experience runs unchanged.
   const [tutorEnabled, setTutorEnabled] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(true);
+  const [showHotkeyHelp, setShowHotkeyHelp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,9 +107,15 @@ function PracticeSetView() {
 
   // Auto-play stem + options on each new question, but only after the user
   // has explicitly started tutor mode (browser autoplay policy + sanity).
+  // `lastAutoPlayedRef` is shared with `handleStartTutor`: the click handler
+  // plays directly (preserving the user-gesture context) and marks the
+  // current question as already-played so this effect doesn't double-fire.
+  const lastAutoPlayedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!tutorActive) return;
     if (!currentQuestion) return;
+    if (lastAutoPlayedRef.current === currentQuestion.id) return;
+    lastAutoPlayedRef.current = currentQuestion.id;
     player.playFullSequence();
   }, [tutorActive, currentQuestion, player]);
 
@@ -147,11 +155,18 @@ function PracticeSetView() {
     },
     onNext: goNext,
     onPrev: goPrev,
+    onShowHelp: () => setShowHotkeyHelp(true),
   });
 
+  // Kick off the first play() INSIDE the click handler so the browser sees
+  // it as user-initiated. Deferring to a useEffect after `setAwaitingGesture`
+  // commits loses that gesture context in Safari and (intermittently) Chrome,
+  // and audio.play() rejects with "Playback blocked".
   const handleStartTutor = useCallback(() => {
     setAwaitingGesture(false);
-  }, []);
+    if (currentQuestion) lastAutoPlayedRef.current = currentQuestion.id;
+    player.playFullSequence();
+  }, [player, currentQuestion]);
 
   if (!currentQuestion) {
     return (
@@ -219,8 +234,10 @@ function PracticeSetView() {
           voice={audio.voice}
           awaitingFirstGesture={awaitingGesture}
           onStart={handleStartTutor}
+          onShowHelp={() => setShowHotkeyHelp(true)}
         />
       )}
+      <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
       {tutorEnabled && audio.status === "not_generated" && (
         <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           Tutor voice isn&apos;t available for this question yet. Using your screen

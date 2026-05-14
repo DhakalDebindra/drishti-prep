@@ -8,6 +8,8 @@ import {
   synthesizeNepali,
   tokensToMicroUsd,
   voiceFor,
+  TUTOR_VOICES,
+  type Segment,
   type TutorVoice,
 } from "@/lib/tts-service";
 
@@ -24,6 +26,42 @@ export async function POST(req: Request, ctx: Ctx) {
     const { id } = await ctx.params;
     if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
       return NextResponse.json({ error: "Invalid question id" }, { status: 400 });
+    }
+
+    // Optional body: { segments?: Segment[], force?: boolean, voice?: TutorVoice }
+    // - segments: regenerate only this subset (default: all 6).
+    // - force: re-encode even if the file already exists at the current version.
+    // - voice: override the deterministic voice assignment for this question.
+    let bodySegments: Segment[] | null = null;
+    let force = false;
+    let voiceOverride: TutorVoice | null = null;
+    try {
+      const body = (await req.json().catch(() => null)) as
+        | { segments?: string[]; force?: boolean; voice?: string }
+        | null;
+      if (body) {
+        if (Array.isArray(body.segments) && body.segments.length > 0) {
+          const valid = body.segments.filter((s): s is Segment =>
+            (SEGMENTS as readonly string[]).includes(s)
+          );
+          if (valid.length === 0) {
+            return NextResponse.json(
+              { error: "No valid segments specified" },
+              { status: 400 }
+            );
+          }
+          bodySegments = valid;
+        }
+        if (body.force === true) force = true;
+        if (
+          typeof body.voice === "string" &&
+          (TUTOR_VOICES as readonly string[]).includes(body.voice)
+        ) {
+          voiceOverride = body.voice as TutorVoice;
+        }
+      }
+    } catch {
+      // Empty body is fine — treat as "generate all missing".
     }
 
     const ip =
@@ -64,8 +102,10 @@ export async function POST(req: Request, ctx: Ctx) {
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    const voice: TutorVoice = (q.audio_voice as TutorVoice | null) ?? voiceFor(id);
+    const voice: TutorVoice =
+      voiceOverride ?? (q.audio_voice as TutorVoice | null) ?? voiceFor(id);
     const version = q.audio_version as number;
+    const targetSegments: readonly Segment[] = bodySegments ?? SEGMENTS;
 
     // Find which segments already exist at the current version.
     const prefix = `q/${id}/v${version}`;
@@ -80,9 +120,9 @@ export async function POST(req: Request, ctx: Ctx) {
       tokens: number;
     }> = [];
 
-    for (const segment of SEGMENTS) {
+    for (const segment of targetSegments) {
       const filename = `${segment}.mp3`;
-      if (existingNames.has(filename)) continue;
+      if (!force && existingNames.has(filename)) continue;
 
       const text = scriptFor(segment, q);
       const { mp3, durationMs, latencyMs, approxTokens } = await synthesizeNepali(text, voice);
@@ -131,9 +171,17 @@ export async function POST(req: Request, ctx: Ctx) {
       if (logErr) console.error("[audio] Log insert failed (non-fatal):", logErr);
     }
 
+    // Only mark audio_ready when all 6 segments are present at this version —
+    // partial regeneration must not flip the flag true based on a subset.
+    const { data: finalList } = await (supabase as any).storage
+      .from(BUCKET)
+      .list(prefix);
+    const finalNames = new Set<string>((finalList ?? []).map((f: any) => f.name));
+    const allReady = SEGMENTS.every((s) => finalNames.has(`${s}.mp3`));
+
     const { error: updErr } = await (supabase as any)
       .from("questions")
-      .update({ audio_ready: true, audio_voice: voice })
+      .update({ audio_ready: allReady, audio_voice: voice })
       .eq("id", id);
     if (updErr) {
       console.error("[audio] Failed to mark audio_ready:", updErr);
@@ -150,12 +198,13 @@ export async function POST(req: Request, ctx: Ctx) {
     );
 
     return NextResponse.json({
-      ready: true,
+      ready: allReady,
       voice,
       version,
       urls,
       generated_count: generated.length,
-      skipped_count: SEGMENTS.length - generated.length,
+      skipped_count: targetSegments.length - generated.length,
+      segments_present: SEGMENTS.filter((s) => finalNames.has(`${s}.mp3`)),
     });
   } catch (e: any) {
     console.error("[audio] generation error:", e);

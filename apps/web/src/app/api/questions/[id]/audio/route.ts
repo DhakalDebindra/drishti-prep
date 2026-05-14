@@ -30,7 +30,21 @@ export async function GET(_req: Request, ctx: Ctx) {
       .eq("id", id)
       .single();
 
-    if (!q || !q.audio_ready) {
+    if (!q) return NextResponse.json({ ready: false });
+
+    // List what actually exists in storage at this version. This is the
+    // source of truth for which segments can play; `audio_ready` on the row
+    // is a derived flag that may lag after partial regenerations.
+    const prefix = `q/${id}/v${q.audio_version}`;
+    const { data: files } = await (supabase as any).storage
+      .from(BUCKET)
+      .list(prefix);
+    const present = new Set<string>(
+      (files ?? []).map((f: any) => f.name as string)
+    );
+    const segments_present = SEGMENTS.filter((s) => present.has(`${s}.mp3`));
+
+    if (segments_present.length === 0) {
       return NextResponse.json({ ready: false });
     }
 
@@ -44,10 +58,11 @@ export async function GET(_req: Request, ctx: Ctx) {
     );
 
     return NextResponse.json({
-      ready: true,
+      ready: segments_present.length === SEGMENTS.length,
       voice: q.audio_voice,
       version: q.audio_version,
       urls,
+      segments_present,
     });
   } catch (e: any) {
     console.error("[audio] read error:", e);
