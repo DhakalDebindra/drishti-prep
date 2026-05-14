@@ -1,7 +1,22 @@
-import { createHash } from "node:crypto";
 import { Mp3Encoder } from "@breezystack/lamejs";
 
-const MODEL = "gemini-2.5-flash-preview-tts";
+const MODEL = "gemini-2.5-pro-preview-tts";
+
+// Gemini 2.5 Pro TTS paid tier allows ~30 RPM; 2 s between calls keeps us safely under.
+const TTS_MIN_INTERVAL_MS = 2_000;
+let _nextAllowedAt = 0;
+let _ttsQueue = Promise.resolve();
+
+function ttsThrottle(): Promise<void> {
+  // Chain onto the existing queue so concurrent callers serialize rather than race.
+  _ttsQueue = _ttsQueue.then(() => {
+    const wait = _nextAllowedAt - Date.now();
+    _nextAllowedAt = Math.max(Date.now(), _nextAllowedAt) + TTS_MIN_INTERVAL_MS;
+    return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
+  });
+  return _ttsQueue;
+}
+
 const REQUEST_TIMEOUT_MS = 30_000;
 
 // PCM L16 24kHz mono — the only format Gemini TTS currently emits.
@@ -9,7 +24,8 @@ const SAMPLE_RATE = 24_000;
 const BITS_PER_SAMPLE = 16;
 const MP3_BITRATE = 64; // kbps — ~400KB per question vs ~2.5MB WAV
 
-export const TUTOR_VOICES = ["Kore", "Orus", "Sulafat"] as const;
+// Kore is the only voice used — consistent Nepali accent, avoids Hindi drift from other voices.
+export const TUTOR_VOICES = ["Kore"] as const;
 export type TutorVoice = (typeof TUTOR_VOICES)[number];
 
 export type Segment = "stem" | "opt_a" | "opt_b" | "opt_c" | "opt_d" | "explanation";
@@ -90,6 +106,8 @@ export async function synthesizeNepali(
     },
   };
 
+  await ttsThrottle();
+
   const t0 = performance.now();
   const res = await withTimeout(
     fetch(endpoint, {
@@ -124,16 +142,8 @@ export async function synthesizeNepali(
   return { mp3, durationMs, latencyMs, approxTokens };
 }
 
-/**
- * Deterministic voice assignment from question.id.
- * Same question → same voice forever, so users build familiarity with each
- * tutor across attempts. Hash distribution across 3 voices should be ~even
- * over thousands of questions.
- */
-export function voiceFor(questionId: string): TutorVoice {
-  const h = createHash("sha1").update(questionId).digest();
-  const idx = h[0] % TUTOR_VOICES.length;
-  return TUTOR_VOICES[idx];
+export function voiceFor(_questionId: string): TutorVoice {
+  return "Kore";
 }
 
 /**
