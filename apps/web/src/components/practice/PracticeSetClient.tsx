@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,9 +107,15 @@ function PracticeSetView() {
 
   // Auto-play stem + options on each new question, but only after the user
   // has explicitly started tutor mode (browser autoplay policy + sanity).
+  // `lastAutoPlayedRef` is shared with `handleStartTutor`: the click handler
+  // plays directly (preserving the user-gesture context) and marks the
+  // current question as already-played so this effect doesn't double-fire.
+  const lastAutoPlayedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!tutorActive) return;
     if (!currentQuestion) return;
+    if (lastAutoPlayedRef.current === currentQuestion.id) return;
+    lastAutoPlayedRef.current = currentQuestion.id;
     player.playFullSequence();
   }, [tutorActive, currentQuestion, player]);
 
@@ -152,9 +158,15 @@ function PracticeSetView() {
     onShowHelp: () => setShowHotkeyHelp(true),
   });
 
+  // Kick off the first play() INSIDE the click handler so the browser sees
+  // it as user-initiated. Deferring to a useEffect after `setAwaitingGesture`
+  // commits loses that gesture context in Safari and (intermittently) Chrome,
+  // and audio.play() rejects with "Playback blocked".
   const handleStartTutor = useCallback(() => {
     setAwaitingGesture(false);
-  }, []);
+    if (currentQuestion) lastAutoPlayedRef.current = currentQuestion.id;
+    player.playFullSequence();
+  }, [player, currentQuestion]);
 
   if (!currentQuestion) {
     return (
