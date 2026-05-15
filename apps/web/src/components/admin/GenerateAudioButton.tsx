@@ -98,7 +98,7 @@ export function GenerateAudioButton({
     <div className="flex flex-wrap items-center gap-3 text-sm">
       <div className="flex items-center gap-2 text-slate-600">
         <Headphones className="w-4 h-4" aria-hidden="true" />
-        <span className="font-medium">Tutor audio:</span>
+        <span className="font-medium">Shruti audio:</span>
         {status.kind === "loading" && (
           <span className="text-slate-400">checking…</span>
         )}

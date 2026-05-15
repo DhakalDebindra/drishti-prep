@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lang } from "@/components/ui/Lang";
@@ -56,7 +57,9 @@ export default function PracticeSetClient(props: Props) {
       userEmail={props.userEmail}
       existingAttempt={props.existingAttempt}
     >
-      <PracticeSetView />
+      <Suspense fallback={null}>
+        <PracticeSetView />
+      </Suspense>
     </AttemptProvider>
   );
 }
@@ -70,10 +73,18 @@ function PracticeSetView() {
   const currentIndex = state.currentIndex;
   const answeredCount = derived.answeredCount;
   const skippedCount = derived.skippedCount;
-  const allHandled = derived.allHandled;
+  const canSubmit = derived.canSubmit;
+  const minToSubmit = derived.minToSubmit;
   const questionTitleId = `question-${currentQuestion?.id}-title`;
 
   const currentHandled = currentQuestion ? Boolean(state.answers[currentQuestion.id]) : false;
+
+  // Listening mode: an audio-first, decluttered layout reachable at
+  // ?view=listen. It can be opened in its own tab for a focused, accessible
+  // session, and shares the same attempt state and Shruti hooks.
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const listenMode = searchParams.get("view") === "listen";
 
   // ── Tutor voice integration ────────────────────────────────────────────
   // The preference is loaded once on mount. If guest or off, all tutor paths
@@ -105,9 +116,17 @@ function PracticeSetView() {
 
   // Auto-play stem + options on each new question, but only after the user
   // has explicitly started tutor mode (browser autoplay policy + sanity).
+  //
+  // The ref guard ensures playFullSequence fires exactly ONCE per question.
+  // Without it, `player` changing identity on re-render would re-trigger this
+  // effect, reassigning `audio.src` mid-play and aborting playback — which
+  // surfaced as the question reading out "silent" on the first attempt.
+  const lastAutoPlayedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!tutorActive) return;
     if (!currentQuestion) return;
+    if (lastAutoPlayedRef.current === currentQuestion.id) return;
+    lastAutoPlayedRef.current = currentQuestion.id;
     player.playFullSequence();
   }, [tutorActive, currentQuestion, player]);
 
@@ -137,26 +156,179 @@ function PracticeSetView() {
     [currentQuestion, handleSelect, tutorActive, player]
   );
 
-  // Hotkey bindings: only active when tutor mode is genuinely playing audio.
-  useTutorHotkeys(player, tutorActive, {
-    onSelectOption: (letter) => {
-      if (currentQuestion) {
-        handleSelect(currentQuestion.id, letter);
-        window.setTimeout(() => player.playExplanation(), 250);
-      }
-    },
-    onNext: goNext,
-    onPrev: goPrev,
-  });
-
+  // Start playback synchronously inside the click handler so the browser
+  // grants the audio element its autoplay unlock from this user gesture.
+  // Deferring the first play to the effect above can be blocked by Safari/
+  // Chrome autoplay policy.
   const handleStartTutor = useCallback(() => {
     setAwaitingGesture(false);
-  }, []);
+    if (currentQuestion) {
+      lastAutoPlayedRef.current = currentQuestion.id;
+      player.playFullSequence();
+    }
+  }, [currentQuestion, player]);
+
+  // Keyboard shortcuts. Bound whenever audio is ready: Alt+S works while
+  // awaiting the first gesture, the playback shortcuts work once started.
+  useTutorHotkeys(
+    player,
+    { enabled: tutorEnabled && audio.status === "ready", awaitingGesture },
+    {
+      onStart: handleStartTutor,
+      onSelectOption: (letter) => {
+        if (currentQuestion) {
+          handleSelect(currentQuestion.id, letter);
+          window.setTimeout(() => player.playExplanation(), 250);
+        }
+      },
+      onNext: goNext,
+      onPrev: goPrev,
+    }
+  );
 
   if (!currentQuestion) {
     return (
       <section className="space-y-4">
         <p className="text-gray-700">No questions available for this practice set.</p>
+      </section>
+    );
+  }
+
+  // ── Listening mode ─────────────────────────────────────────────────────
+  // An audio-first layout: minimal visuals, large controls, keyboard-driven.
+  if (listenMode) {
+    return (
+      <section className="max-w-2xl mx-auto space-y-6">
+        <div
+          aria-live={tutorActive ? "off" : "polite"}
+          aria-atomic="true"
+          role="status"
+          className="sr-only"
+        >
+          {tutorActive ? "" : state.announcementText}
+        </div>
+
+        <header className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+            Shruti · Listening mode
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            <Lang>{setInfo.title}</Lang>
+          </h1>
+          <Link
+            href={pathname}
+            className="inline-block text-sm text-blue-700 hover:text-blue-900 underline underline-offset-4"
+          >
+            Switch to standard view
+          </Link>
+        </header>
+
+        {!tutorEnabled && (
+          <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            Listening mode needs Shruti. Enable it in{" "}
+            <Link href="/profile/preferences" className="underline font-medium">
+              your preferences
+            </Link>
+            , then return here.
+          </p>
+        )}
+
+        {tutorEnabled && audio.status === "ready" && (
+          <TutorVoicePanel
+            player={player}
+            voice={audio.voice}
+            awaitingFirstGesture={awaitingGesture}
+            onStart={handleStartTutor}
+          />
+        )}
+        {tutorEnabled && audio.status === "not_generated" && (
+          <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            Shruti audio isn&apos;t available for this question yet.
+          </p>
+        )}
+
+        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <p className="text-sm font-semibold text-slate-500">
+            Question {currentIndex + 1} of {questionCount}
+          </p>
+          <div
+            className="text-lg font-medium text-slate-900 leading-relaxed"
+            aria-hidden={tutorActive ? "true" : undefined}
+          >
+            <Lang>{currentQuestion.content}</Lang>
+          </div>
+          <QuestionOptions
+            questionId={currentQuestion.id}
+            options={optionsList}
+            selectedAnswer={selectedAnswer}
+            onSelect={handleOptionSelect}
+            isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
+            correctAnswer={selectedAnswer && selectedAnswer.selected_option !== "skipped" ? currentQuestion.correct_option : null}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            aria-label="Previous question"
+            variant="outline"
+            size="lg"
+            onClick={goPrev}
+            disabled={currentIndex === 0}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-slate-600">
+            Answered {answeredCount}/{questionCount}
+          </span>
+          <Button
+            aria-label="Next question"
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={goNext}
+            disabled={currentIndex === questionCount - 1}
+          >
+            Next
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Button
+            size="lg"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+            onClick={() => setShowConfirmDialog(true)}
+            disabled={state.status === "submitted" || state.isSubmitting || !canSubmit}
+          >
+            {state.isSubmitting
+              ? "Submitting..."
+              : state.status === "submitted"
+                ? "Submitted"
+                : "Submit"}
+          </Button>
+          {!canSubmit && state.status !== "submitted" && (
+            <p className="text-sm text-slate-600">
+              Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
+              Any unanswered questions will be marked as skipped.
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-600">
+          <p className="font-semibold mb-1 text-slate-700">Keyboard shortcuts</p>
+          <p className="leading-relaxed">
+            <kbd className="font-mono">Alt+S</kbd> start ·{" "}
+            <kbd className="font-mono">Alt+Q</kbd> question ·{" "}
+            <kbd className="font-mono">Alt+O</kbd> options ·{" "}
+            <kbd className="font-mono">Alt+E</kbd> explanation ·{" "}
+            <kbd className="font-mono">1-4</kbd> answer ·{" "}
+            <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
+            <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
+            <kbd className="font-mono">Alt+N</kbd>/<kbd className="font-mono">Alt+B</kbd> next/prev ·{" "}
+            <kbd className="font-mono">Esc</kbd> stop
+          </p>
+        </div>
+
+        <ConfirmSubmitDialog />
+        <SubmitLoader />
       </section>
     );
   }
@@ -223,9 +395,17 @@ function PracticeSetView() {
       )}
       {tutorEnabled && audio.status === "not_generated" && (
         <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Tutor voice isn&apos;t available for this question yet. Using your screen
+          Shruti isn&apos;t available for this question yet. Using your screen
           reader instead.
         </p>
+      )}
+      {tutorEnabled && (
+        <Link
+          href={`${pathname}?view=listen`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900 underline underline-offset-4"
+        >
+          🎧 Open Listening mode — an audio-first, distraction-free view
+        </Link>
       )}
 
       <Card className={`flex flex-col ${state.status === "submitted" ? "opacity-90" : ""}`}>
@@ -320,7 +500,7 @@ function PracticeSetView() {
                     state.status === "submitted" ||
                     state.isSubmitting ||
                     state.saving ||
-                    (answeredCount === 0 && !currentHandled)
+                    !canSubmit
                   }
                 >
                   {state.isSubmitting
@@ -366,22 +546,30 @@ function PracticeSetView() {
 
       <QuestionNavigator />
 
-      <div className="flex flex-wrap gap-3 w-full">
+      <div className="flex flex-col gap-2 w-full">
         {currentIndex !== questionCount - 1 && (
-          <Button
-            size="lg"
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={state.status === "submitted" || state.isSubmitting || state.saving || !allHandled}
-          >
-            {state.isSubmitting
-              ? "Submitting..."
-              : state.status === "submitted"
-                ? "Submitted"
-                : !userEmail
-                  ? "Submit & See Demo Feedback"
-                  : "Done"}
-          </Button>
+          <>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
+            >
+              {state.isSubmitting
+                ? "Submitting..."
+                : state.status === "submitted"
+                  ? "Submitted"
+                  : !userEmail
+                    ? "Submit & See Demo Feedback"
+                    : "Done"}
+            </Button>
+            {!canSubmit && state.status !== "submitted" && (
+              <p className="text-sm text-slate-600">
+                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
+                Any unanswered questions will be marked as skipped.
+              </p>
+            )}
+          </>
         )}
       </div>
 

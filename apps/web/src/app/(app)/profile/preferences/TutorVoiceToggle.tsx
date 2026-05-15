@@ -27,8 +27,8 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       } else {
         setMessage(
           next
-            ? "Tutor voice enabled. It will activate on your next practice session."
-            : "Tutor voice disabled."
+            ? "Shruti enabled. It will activate on your next practice session."
+            : "Shruti disabled."
         );
       }
     });
@@ -39,12 +39,12 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       <div className="flex items-start justify-between gap-6">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            AI tutor voice (नेपाली)
+            Shruti — AI voice tutor (नेपाली)
           </h2>
           <p className="mt-1 text-sm text-slate-600 max-w-prose">
-            Read questions, options, and explanations aloud in natural Nepali.
-            When enabled, you can control playback with your keyboard during
-            practice. Disable to keep using your screen reader as before.
+            Shruti reads questions, options, and explanations aloud in natural
+            Nepali. When enabled, you can control playback with your keyboard
+            during practice. Disable to keep using your screen reader as before.
           </p>
         </div>
         <Button
@@ -61,28 +61,31 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
           <p className="font-semibold mb-2">Keyboard shortcuts during practice:</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-6 list-none">
             <li>
-              <kbd className="font-mono">Q</kbd> — replay the question
+              <kbd className="font-mono">Alt+S</kbd> — start Shruti
             </li>
             <li>
-              <kbd className="font-mono">O</kbd> — replay all four options
+              <kbd className="font-mono">Alt+Q</kbd> — replay the question
+            </li>
+            <li>
+              <kbd className="font-mono">Alt+O</kbd> — replay all four options
+            </li>
+            <li>
+              <kbd className="font-mono">Alt+E</kbd> — replay explanation
             </li>
             <li>
               <kbd className="font-mono">1–4</kbd> — select option A–D
             </li>
             <li>
-              <kbd className="font-mono">E</kbd> — replay explanation
+              <kbd className="font-mono">Alt+P</kbd> — pause / resume
             </li>
             <li>
-              <kbd className="font-mono">Space</kbd> — pause / resume
+              <kbd className="font-mono">Alt+R</kbd> — replay current part
             </li>
             <li>
-              <kbd className="font-mono">R</kbd> — replay current part
+              <kbd className="font-mono">Alt+N</kbd> / <kbd className="font-mono">Alt+B</kbd> — next / previous question
             </li>
             <li>
-              <kbd className="font-mono">→</kbd> — next question
-            </li>
-            <li>
-              <kbd className="font-mono">Esc</kbd> — mute
+              <kbd className="font-mono">Esc</kbd> — stop audio
             </li>
           </ul>
         </div>

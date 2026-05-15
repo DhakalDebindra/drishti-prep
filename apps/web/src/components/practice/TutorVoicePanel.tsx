@@ -37,11 +37,11 @@ export function TutorVoicePanel({
     <div
       className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 p-4 flex flex-wrap items-center gap-3"
       role="region"
-      aria-label="Tutor voice controls"
+      aria-label="Shruti voice controls"
     >
       <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
         <Headphones className="w-5 h-5" aria-hidden="true" />
-        <span className="font-semibold text-sm">Tutor voice</span>
+        <span className="font-semibold text-sm">Shruti</span>
         <span className="text-xs text-blue-700 dark:text-blue-400">({voice})</span>
       </div>
 
@@ -60,14 +60,14 @@ export function TutorVoicePanel({
           className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
         >
           <Volume2 className="w-4 h-4" aria-hidden="true" />
-          Start tutor (Q)
+          Start Shruti (Alt+S)
         </button>
       ) : (
         <button
           type="button"
           onClick={player.mute}
           className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-sm font-medium px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
-          aria-label="Mute tutor voice"
+          aria-label="Mute Shruti"
         >
           <VolumeX className="w-4 h-4" aria-hidden="true" />
           Mute
@@ -75,11 +75,13 @@ export function TutorVoicePanel({
       )}
 
       <p className="basis-full text-xs text-blue-800 dark:text-blue-300">
-        Press <kbd className="font-mono">Q</kbd> to replay,{" "}
-        <kbd className="font-mono">O</kbd> for options,{" "}
-        <kbd className="font-mono">1-4</kbd> to answer,{" "}
-        <kbd className="font-mono">E</kbd> for explanation,{" "}
-        <kbd className="font-mono">Space</kbd> to pause.
+        <kbd className="font-mono">Alt+Q</kbd> question,{" "}
+        <kbd className="font-mono">Alt+O</kbd> options,{" "}
+        <kbd className="font-mono">Alt+E</kbd> explanation,{" "}
+        <kbd className="font-mono">1-4</kbd> answer,{" "}
+        <kbd className="font-mono">Alt+P</kbd> pause,{" "}
+        <kbd className="font-mono">Alt+R</kbd> replay,{" "}
+        <kbd className="font-mono">Alt+N</kbd>/<kbd className="font-mono">Alt+B</kbd> next/prev.
       </p>
     </div>
   );
