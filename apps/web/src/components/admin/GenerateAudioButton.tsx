@@ -207,6 +207,7 @@ export function GenerateAudioButton({
               <span role="cell" className="flex-1">
                 {has && url ? (
                   <audio
+                    key={url}
                     controls
                     preload="none"
                     src={url}

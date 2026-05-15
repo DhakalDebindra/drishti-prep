@@ -176,7 +176,12 @@ export async function POST(req: Request, ctx: Ctx) {
     const { data: finalList } = await (supabase as any).storage
       .from(BUCKET)
       .list(prefix);
-    const finalNames = new Set<string>((finalList ?? []).map((f: any) => f.name));
+    const finalFiles: Array<{ name: string; updated_at?: string }> =
+      finalList ?? [];
+    const finalNames = new Set<string>(finalFiles.map((f) => f.name));
+    const finalUpdatedByName = new Map<string, string>(
+      finalFiles.map((f) => [f.name, f.updated_at ?? ""])
+    );
     const allReady = SEGMENTS.every((s) => finalNames.has(`${s}.mp3`));
 
     const { error: updErr } = await (supabase as any)
@@ -188,12 +193,17 @@ export async function POST(req: Request, ctx: Ctx) {
       return NextResponse.json({ error: "Failed to finalize" }, { status: 500 });
     }
 
+    // Cache-bust per file using its storage `updated_at`. Without this, the
+    // admin preview <audio> would replay the cached old MP3 after a per-
+    // segment regenerate (same URL, immutable cache header).
     const urls = Object.fromEntries(
       SEGMENTS.map((s) => {
         const { data } = (supabase as any).storage
           .from(BUCKET)
           .getPublicUrl(storagePathFor(id, version, s));
-        return [s, data.publicUrl as string];
+        const updated = finalUpdatedByName.get(`${s}.mp3`);
+        const buster = updated ? `?t=${Date.parse(updated) || encodeURIComponent(updated)}` : "";
+        return [s, `${data.publicUrl as string}${buster}`];
       })
     );
 
