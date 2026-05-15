@@ -4,9 +4,8 @@
  * Why Alt+ prefix: screen readers (NVDA, JAWS, VoiceOver) reserve unmodified
  * single-letter keys (Q, O, E, R, Space) for their own quick-navigation. Using
  * Alt as a modifier sidesteps those conflicts while staying easy to chord
- * one-handed. The number keys 1-4 stay unmodified because they have no SR
- * binding and matching the visual "A/B/C/D" with "1/2/3/4" is the most
- * frequent action.
+ * one-handed. Numbers 1-4 also take Alt — bare digits would be swallowed by
+ * any focused form field and silently fail for keyboard-only users.
  *
  * `aria-keyshortcuts` consumes this list, and the on-screen help modal renders
  * from it too — keep the two in lockstep by importing rather than duplicating.
@@ -36,7 +35,7 @@ export const TUTOR_HOTKEYS: Hotkey[] = [
   { action: "stem", combo: "Alt+S", label: "Alt + S", description: "Replay question" },
   { action: "options", combo: "Alt+O", label: "Alt + O", description: "Replay all options" },
   { action: "explanation", combo: "Alt+E", label: "Alt + E", description: "Play explanation" },
-  { action: "answer", combo: "1 2 3 4", label: "1–4", description: "Select option A/B/C/D" },
+  { action: "answer", combo: "Alt+1 Alt+2 Alt+3 Alt+4", label: "Alt + 1–4", description: "Select option A/B/C/D" },
   { action: "pause", combo: "Alt+P", label: "Alt + P", description: "Pause / resume" },
   { action: "replay", combo: "Alt+R", label: "Alt + R", description: "Replay current segment" },
   { action: "mute", combo: "Escape", label: "Esc", description: "Stop audio" },
@@ -57,13 +56,13 @@ export function getHotkey(action: TutorAction): Hotkey {
  * any future tests share one parser.
  */
 export function matchTutorAction(e: KeyboardEvent): TutorAction | null {
-  // Numeric answer: 1-4 with no modifiers.
-  if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-4]$/.test(e.key)) {
-    return "answer";
-  }
   if (e.key === "Escape") return "mute";
 
   if (!e.altKey || e.ctrlKey || e.metaKey) return null;
+  // Alt + 1-4 selects an option. Alt-prefixed so a focused form field can't
+  // swallow the digit, and so it stays free of the bare-number bindings some
+  // page-level shortcut libraries grab.
+  if (/^[1-4]$/.test(e.key)) return "answer";
   switch (e.key.toLowerCase()) {
     case "s":
       return "stem";

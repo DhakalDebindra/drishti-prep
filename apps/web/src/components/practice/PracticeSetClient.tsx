@@ -15,6 +15,7 @@ import { AttemptProvider, useAttemptStore } from "@/features/practice/store/atte
 import { useTutorAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
 import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
+import { useAnswerHotkeys } from "@/hooks/useAnswerHotkeys";
 import type {
   AttemptSummary,
   DecoratedAnswer,
@@ -145,17 +146,18 @@ function PracticeSetView() {
     [currentQuestion, handleSelect, tutorActive, player]
   );
 
-  // Hotkey bindings: only active when tutor mode is genuinely playing audio.
+  // Player-control hotkeys are only active when tutor audio is actually
+  // playing. Option-selection (Alt+1-4) is always-on so keyboard users can
+  // answer regardless of tutor mode — that's the more common path.
   useTutorHotkeys(player, tutorActive, {
-    onSelectOption: (letter) => {
-      if (currentQuestion) {
-        handleSelect(currentQuestion.id, letter);
-        window.setTimeout(() => player.playExplanation(), 250);
-      }
-    },
     onNext: goNext,
     onPrev: goPrev,
     onShowHelp: () => setShowHotkeyHelp(true),
+  });
+  useAnswerHotkeys(Boolean(currentQuestion), (letter) => {
+    if (!currentQuestion) return;
+    if (tutorActive) player.mute();
+    handleOptionSelect(letter);
   });
 
   // Kick off the first play() INSIDE the click handler so the browser sees

@@ -5,7 +5,6 @@ import type { TutorPlayer } from "./useTutorPlayer";
 import { matchTutorAction } from "@/lib/tutor-hotkeys";
 
 type Callbacks = {
-  onSelectOption: (letter: "A" | "B" | "C" | "D") => void;
   onNext: () => void;
   onPrev: () => void;
   onShowHelp: () => void;
@@ -39,17 +38,10 @@ export function useTutorHotkeys(
       const action = matchTutorAction(e);
       if (!action) return;
 
+      // "answer" is handled by useAnswerHotkeys (always-on, not gated by
+      // tutor playback). Anything tutor-player-specific stays here.
+      if (action === "answer") return;
       switch (action) {
-        case "answer": {
-          const letter = ["A", "B", "C", "D"][Number(e.key) - 1] as
-            | "A"
-            | "B"
-            | "C"
-            | "D";
-          player.mute();
-          cb.onSelectOption(letter);
-          break;
-        }
         case "stem":
           player.playStem();
           break;
