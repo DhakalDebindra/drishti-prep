@@ -75,6 +75,25 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * Style-prompt preface that locks Gemini to native Nepali phonemes.
+ *
+ * Without this, short Devanagari strings (especially option readings like
+ * "विकल्प ख। पानी।") get rendered with Hindi vowel quality — Gemini's
+ * multilingual training tilts toward hi-IN on the shared script. Wrapping
+ * the spoken text in a "Say:" frame both pins the locale and signals to
+ * Gemini that the preface is meta, not content to read.
+ */
+function buildNepaliPrompt(text: string): string {
+  return (
+    "Read the following aloud as a fluent native Nepali speaker from Kathmandu, " +
+    "using authentic Nepali (ne-NP) pronunciation. Do not use Hindi (hi-IN) " +
+    "phonemes, intonation, or vowel quality. Maintain a calm, friendly teacher " +
+    "tone at a moderate pace.\n" +
+    `Say: ${text}`
+  );
+}
+
 // Errors that should NOT be retried — auth/quota won't recover within the retry window.
 function isFatal(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
@@ -115,9 +134,17 @@ export async function synthesizeNepali(
     process.env.DrishtiApiKey;
   if (!key) throw new Error("Missing GEMINI_API_KEY");
 
+  // Gemini's multilingual voice drifts into Hindi phonemes on short
+  // Devanagari inputs because Hindi dominates its training data for that
+  // script. The "Say:" pattern is documented as a style-prompt convention
+  // — Gemini speaks only the text after "Say:" while the preface conditions
+  // the accent. Anchoring to native Nepali pronunciation here eliminates the
+  // hi-IN-flavoured option readings reported in prod.
+  const styled = buildNepaliPrompt(text);
+
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
   const body = {
-    contents: [{ parts: [{ text }] }],
+    contents: [{ parts: [{ text: styled }] }],
     generationConfig: {
       responseModalities: ["AUDIO"],
       speechConfig: {
