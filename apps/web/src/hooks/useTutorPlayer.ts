@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAudioUrls } from "@repo/types";
 
 export type Segment = keyof TutorAudioUrls; // 'stem'|'opt_a'|'opt_b'|'opt_c'|'opt_d'|'explanation'
 export type PlayerState =
   | { kind: "idle" }
-  | { kind: "playing"; segment: Segment; paused: boolean };
+  | { kind: "playing"; segment: Segment; paused: boolean }
+  | { kind: "error"; segment: Segment | null; message: string };
+
+// If a segment loads but its decoded duration is below this, treat it as
+// a broken / silent MP3 (the bug that made students hear nothing).
+const MIN_AUDIO_DURATION_S = 0.25;
 
 export type TutorPlayer = {
   state: PlayerState;
@@ -20,8 +25,6 @@ export type TutorPlayer = {
   mute: () => void;
 };
 
-const FULL_SEQUENCE: Segment[] = ["stem", "opt_a", "opt_b", "opt_c", "opt_d"];
-
 /**
  * Headless audio orchestrator for tutor-voice playback.
  *
@@ -30,16 +33,12 @@ const FULL_SEQUENCE: Segment[] = ["stem", "opt_a", "opt_b", "opt_c", "opt_d"];
  * (`playStem`, `playOption`, …) replaces the current queue, so users can
  * interrupt mid-sentence by pressing a number key.
  *
- * Every method is stable across renders (`useCallback`), and the returned
- * object only changes identity when `state` changes. Callers can therefore
- * depend on `player` in effects without triggering a render loop.
+ * `playFullSequence` is the default flow after question entry: it plays the
+ * stem followed by all four options, then falls silent so the user can answer.
  */
 export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const queueRef = useRef<Segment[]>([]);
-  // The last queue that was played in full — used by `replayCurrent` so that
-  // replay still works after the sequence has finished and state is idle.
-  const lastQueueRef = useRef<Segment[]>([]);
   const [state, setState] = useState<PlayerState>({ kind: "idle" });
 
   // Lazily create the audio element (avoids SSR pitfalls)
@@ -55,30 +54,74 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
     };
   }, []);
 
+  const currentSegRef = useRef<Segment | null>(null);
+
   const playNext = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !urls) return;
     const next = queueRef.current.shift();
     if (!next) {
+      currentSegRef.current = null;
       setState({ kind: "idle" });
       return;
     }
+    currentSegRef.current = next;
     audio.src = urls[next];
     setState({ kind: "playing", segment: next, paused: false });
-    audio.play().catch(() => {
-      // Autoplay was blocked (no user gesture yet). Reset to idle; the first
-      // play must originate from a user interaction (see `handleStartTutor`).
-      setState({ kind: "idle" });
+    audio.play().catch((err) => {
+      // Autoplay blocked (no user gesture) vs real decode failure — both end
+      // up here. Surface as error so the UI can prompt the user to interact.
+      setState({
+        kind: "error",
+        segment: next,
+        message: err?.message?.includes("user") ? "Tap Start to enable audio" : "Playback blocked",
+      });
     });
   }, [urls]);
 
-  // Wire 'ended' once the audio element is created
+  // Wire ended / error / metadata listeners once the audio element is created.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onEnded = () => playNext();
+    const onError = () => {
+      const code = audio.error?.code;
+      const map: Record<number, string> = {
+        1: "Playback aborted",
+        2: "Network error fetching audio",
+        3: "Audio decode failed",
+        4: "Audio format not supported",
+      };
+      setState({
+        kind: "error",
+        segment: currentSegRef.current,
+        message: map[code ?? 0] ?? "Audio failed to load",
+      });
+    };
+    const onLoadedMeta = () => {
+      // Detects 0-byte / header-only MP3s that "play successfully" but emit
+      // no sound. Bail out so the UI can show a real error.
+      if (
+        isFinite(audio.duration) &&
+        audio.duration > 0 &&
+        audio.duration < MIN_AUDIO_DURATION_S
+      ) {
+        audio.pause();
+        setState({
+          kind: "error",
+          segment: currentSegRef.current,
+          message: `Audio is empty (${audio.duration.toFixed(2)}s)`,
+        });
+      }
+    };
     audio.addEventListener("ended", onEnded);
-    return () => audio.removeEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
+    audio.addEventListener("loadedmetadata", onLoadedMeta);
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
+      audio.removeEventListener("loadedmetadata", onLoadedMeta);
+    };
   }, [playNext]);
 
   // Reset queue and state whenever the question's URLs change
@@ -88,101 +131,59 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
     audio.pause();
     audio.currentTime = 0;
     queueRef.current = [];
-    lastQueueRef.current = [];
     setState({ kind: "idle" });
   }, [urls]);
 
   const playQueue = useCallback(
     (segments: Segment[]) => {
-      if (!urls || segments.length === 0) return;
+      if (!urls) return;
       queueRef.current = [...segments];
-      lastQueueRef.current = [...segments];
       playNext();
     },
     [urls, playNext]
   );
 
-  const playFullSequence = useCallback(
-    () => playQueue(FULL_SEQUENCE),
-    [playQueue]
-  );
-  const playStem = useCallback(() => playQueue(["stem"]), [playQueue]);
-  const playOptions = useCallback(
-    () => playQueue(["opt_a", "opt_b", "opt_c", "opt_d"]),
-    [playQueue]
-  );
-  const playOption = useCallback(
-    (letter: "A" | "B" | "C" | "D") =>
+  return {
+    state,
+    playFullSequence: () =>
+      playQueue(["stem", "opt_a", "opt_b", "opt_c", "opt_d"]),
+    playStem: () => playQueue(["stem"]),
+    playOptions: () => playQueue(["opt_a", "opt_b", "opt_c", "opt_d"]),
+    playOption: (letter) =>
       playQueue([`opt_${letter.toLowerCase()}` as Segment]),
-    [playQueue]
-  );
-  const playExplanation = useCallback(
-    () => playQueue(["explanation"]),
-    [playQueue]
-  );
-
-  const togglePause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play().catch(() => {});
-      setState((s) => (s.kind === "playing" ? { ...s, paused: false } : s));
-    } else {
+    playExplanation: () => playQueue(["explanation"]),
+    togglePause: () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (audio.paused) {
+        audio.play().catch(() => {});
+        setState((s) =>
+          s.kind === "playing" ? { ...s, paused: false } : s
+        );
+      } else {
+        audio.pause();
+        setState((s) => (s.kind === "playing" ? { ...s, paused: true } : s));
+      }
+    },
+    replayCurrent: () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (state.kind === "playing") {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } else if (state.kind === "error" && state.segment) {
+        // Re-attempt after a transient failure.
+        queueRef.current = [state.segment];
+        playNext();
+      }
+    },
+    mute: () => {
+      const audio = audioRef.current;
+      if (!audio) return;
       audio.pause();
-      setState((s) => (s.kind === "playing" ? { ...s, paused: true } : s));
-    }
-  }, []);
-
-  const replayCurrent = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio || !urls) return;
-    // While a segment is still playing, restart it from the beginning.
-    if (state.kind === "playing") {
       audio.currentTime = 0;
-      audio.play().catch(() => {});
-      return;
-    }
-    // Once playback has finished (state is idle), replay the last queue. This
-    // is what makes the replay shortcut work consistently after the question
-    // has finished reading. Cold start falls back to the full sequence.
-    const replay =
-      lastQueueRef.current.length > 0 ? lastQueueRef.current : FULL_SEQUENCE;
-    queueRef.current = [...replay];
-    lastQueueRef.current = [...replay];
-    playNext();
-  }, [urls, state.kind, playNext]);
-
-  const mute = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
-    audio.currentTime = 0;
-    queueRef.current = [];
-    setState({ kind: "idle" });
-  }, []);
-
-  return useMemo(
-    () => ({
-      state,
-      playFullSequence,
-      playStem,
-      playOptions,
-      playOption,
-      playExplanation,
-      togglePause,
-      replayCurrent,
-      mute,
-    }),
-    [
-      state,
-      playFullSequence,
-      playStem,
-      playOptions,
-      playOption,
-      playExplanation,
-      togglePause,
-      replayCurrent,
-      mute,
-    ]
-  );
+      queueRef.current = [];
+      setState({ kind: "idle" });
+    },
+  };
 }

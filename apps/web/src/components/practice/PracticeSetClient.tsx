@@ -11,10 +11,12 @@ import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
 import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
 import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
+import { TutorHotkeyHelp } from "@/components/practice/TutorHotkeyHelp";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
 import { useTutorAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
 import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
+import { useAnswerHotkeys } from "@/hooks/useAnswerHotkeys";
 import type {
   AttemptSummary,
   DecoratedAnswer,
@@ -57,6 +59,7 @@ export default function PracticeSetClient(props: Props) {
       userEmail={props.userEmail}
       existingAttempt={props.existingAttempt}
     >
+      {/* Suspense boundary required because PracticeSetView reads useSearchParams. */}
       <Suspense fallback={null}>
         <PracticeSetView />
       </Suspense>
@@ -86,11 +89,12 @@ function PracticeSetView() {
   const pathname = usePathname();
   const listenMode = searchParams.get("view") === "listen";
 
-  // ── Tutor voice integration ────────────────────────────────────────────
+  // ── Tutor voice (Shruti) integration ───────────────────────────────────
   // The preference is loaded once on mount. If guest or off, all tutor paths
   // are short-circuited and the original SR-driven experience runs unchanged.
   const [tutorEnabled, setTutorEnabled] = useState(false);
   const [awaitingGesture, setAwaitingGesture] = useState(true);
+  const [showHotkeyHelp, setShowHotkeyHelp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,11 +120,9 @@ function PracticeSetView() {
 
   // Auto-play stem + options on each new question, but only after the user
   // has explicitly started tutor mode (browser autoplay policy + sanity).
-  //
-  // The ref guard ensures playFullSequence fires exactly ONCE per question.
-  // Without it, `player` changing identity on re-render would re-trigger this
-  // effect, reassigning `audio.src` mid-play and aborting playback — which
-  // surfaced as the question reading out "silent" on the first attempt.
+  // `lastAutoPlayedRef` is shared with `handleStartTutor`: the click handler
+  // plays directly (preserving the user-gesture context) and marks the
+  // current question as already-played so this effect doesn't double-fire.
   const lastAutoPlayedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!tutorActive) return;
@@ -156,35 +158,29 @@ function PracticeSetView() {
     [currentQuestion, handleSelect, tutorActive, player]
   );
 
-  // Start playback synchronously inside the click handler so the browser
-  // grants the audio element its autoplay unlock from this user gesture.
-  // Deferring the first play to the effect above can be blocked by Safari/
-  // Chrome autoplay policy.
+  // Player-control hotkeys are only active when tutor audio is actually
+  // playing. Option-selection (Alt+1-4) is always-on so keyboard users can
+  // answer regardless of tutor mode — that's the more common path.
+  useTutorHotkeys(player, tutorActive, {
+    onNext: goNext,
+    onPrev: goPrev,
+    onShowHelp: () => setShowHotkeyHelp(true),
+  });
+  useAnswerHotkeys(Boolean(currentQuestion), (letter) => {
+    if (!currentQuestion) return;
+    if (tutorActive) player.mute();
+    handleOptionSelect(letter);
+  });
+
+  // Kick off the first play() INSIDE the click handler so the browser sees
+  // it as user-initiated. Deferring to a useEffect after `setAwaitingGesture`
+  // commits loses that gesture context in Safari and (intermittently) Chrome,
+  // and audio.play() rejects with "Playback blocked".
   const handleStartTutor = useCallback(() => {
     setAwaitingGesture(false);
-    if (currentQuestion) {
-      lastAutoPlayedRef.current = currentQuestion.id;
-      player.playFullSequence();
-    }
-  }, [currentQuestion, player]);
-
-  // Keyboard shortcuts. Bound whenever audio is ready: Alt+S works while
-  // awaiting the first gesture, the playback shortcuts work once started.
-  useTutorHotkeys(
-    player,
-    { enabled: tutorEnabled && audio.status === "ready", awaitingGesture },
-    {
-      onStart: handleStartTutor,
-      onSelectOption: (letter) => {
-        if (currentQuestion) {
-          handleSelect(currentQuestion.id, letter);
-          window.setTimeout(() => player.playExplanation(), 250);
-        }
-      },
-      onNext: goNext,
-      onPrev: goPrev,
-    }
-  );
+    if (currentQuestion) lastAutoPlayedRef.current = currentQuestion.id;
+    player.playFullSequence();
+  }, [player, currentQuestion]);
 
   if (!currentQuestion) {
     return (
@@ -200,12 +196,12 @@ function PracticeSetView() {
     return (
       <section className="max-w-2xl mx-auto space-y-6">
         <div
-          aria-live={tutorActive ? "off" : "polite"}
+          aria-live="polite"
           aria-atomic="true"
           role="status"
           className="sr-only"
         >
-          {tutorActive ? "" : state.announcementText}
+          {state.announcementText}
         </div>
 
         <header className="space-y-1">
@@ -239,8 +235,10 @@ function PracticeSetView() {
             voice={audio.voice}
             awaitingFirstGesture={awaitingGesture}
             onStart={handleStartTutor}
+            onShowHelp={() => setShowHotkeyHelp(true)}
           />
         )}
+        <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
         {tutorEnabled && audio.status === "not_generated" && (
           <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
             Shruti audio isn&apos;t available for this question yet.
@@ -322,8 +320,7 @@ function PracticeSetView() {
             <kbd className="font-mono">1-4</kbd> answer ·{" "}
             <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
             <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
-            <kbd className="font-mono">Alt+N</kbd>/<kbd className="font-mono">Alt+B</kbd> next/prev ·{" "}
-            <kbd className="font-mono">Esc</kbd> stop
+            <kbd className="font-mono">Alt+/</kbd> all shortcuts
           </p>
         </div>
 
@@ -336,17 +333,17 @@ function PracticeSetView() {
   return (
     <section className="space-y-6">
       {/*
-        Screen-reader announcement region for selection feedback. Suppressed
-        when tutor mode is active because the spoken explanation already
-        covers correctness — keeping it would cause double narration.
+        Screen-reader announcement region for selection feedback. Stays polite
+        even in tutor mode — without it, blind users who select an answer get
+        no correctness verdict before the explanation audio begins.
       */}
       <div
-        aria-live={tutorActive ? "off" : "polite"}
+        aria-live="polite"
         aria-atomic="true"
         role="status"
         className="sr-only"
       >
-        {tutorActive ? "" : state.announcementText}
+        {state.announcementText}
       </div>
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
@@ -355,7 +352,7 @@ function PracticeSetView() {
           <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.subjectName}</Lang></Link></li>
           <li aria-hidden="true">/</li>
           <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.topicName}</Lang></Link></li>
-          
+
           {(setInfo as any).subtopicSlug && (
             <>
               <li aria-hidden="true">/</li>
@@ -391,8 +388,10 @@ function PracticeSetView() {
           voice={audio.voice}
           awaitingFirstGesture={awaitingGesture}
           onStart={handleStartTutor}
+          onShowHelp={() => setShowHotkeyHelp(true)}
         />
       )}
+      <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
       {tutorEnabled && audio.status === "not_generated" && (
         <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           Shruti isn&apos;t available for this question yet. Using your screen
@@ -461,7 +460,7 @@ function PracticeSetView() {
                 {state.showExplanation[currentQuestion.id] ? "Hide explanation" : "Show explanation"}
               </button>
               {state.showExplanation[currentQuestion.id] && (
-                <div 
+                <div
                   id={`explanation-${currentQuestion.id}`}
                   className="mt-3 rounded-lg bg-slate-50 border-l-4 border-slate-700 p-4 text-slate-800 shadow-sm"
                   role="region"

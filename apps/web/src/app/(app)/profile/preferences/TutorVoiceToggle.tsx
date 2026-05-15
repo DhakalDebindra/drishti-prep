@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { setTutorVoiceEnabled } from "./actions";
+import { TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
 
 type Props = {
   initialEnabled: boolean;
@@ -60,33 +61,11 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
         <div className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-700">
           <p className="font-semibold mb-2">Keyboard shortcuts during practice:</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-6 list-none">
-            <li>
-              <kbd className="font-mono">Alt+S</kbd> — start Shruti
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+Q</kbd> — replay the question
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+O</kbd> — replay all four options
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+E</kbd> — replay explanation
-            </li>
-            <li>
-              <kbd className="font-mono">1–4</kbd> — select option A–D
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+P</kbd> — pause / resume
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+R</kbd> — replay current part
-            </li>
-            <li>
-              <kbd className="font-mono">Alt+N</kbd> / <kbd className="font-mono">Alt+B</kbd> — next / previous question
-            </li>
-            <li>
-              <kbd className="font-mono">Esc</kbd> — stop audio
-            </li>
+            {TUTOR_HOTKEYS.map((h) => (
+              <li key={h.action}>
+                <kbd className="font-mono">{h.label}</kbd> — {h.description}
+              </li>
+            ))}
           </ul>
         </div>
       )}
