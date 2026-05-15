@@ -28,8 +28,8 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       } else {
         setMessage(
           next
-            ? "Tutor voice enabled. It will activate on your next practice session."
-            : "Tutor voice disabled."
+            ? "Shruti enabled. It will activate on your next practice session."
+            : "Shruti disabled."
         );
       }
     });
@@ -40,12 +40,12 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       <div className="flex items-start justify-between gap-6">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            AI tutor voice (नेपाली)
+            Shruti — AI voice tutor (नेपाली)
           </h2>
           <p className="mt-1 text-sm text-slate-600 max-w-prose">
-            Read questions, options, and explanations aloud in natural Nepali.
-            When enabled, you can control playback with your keyboard during
-            practice. Disable to keep using your screen reader as before.
+            Shruti reads questions, options, and explanations aloud in natural
+            Nepali. When enabled, you can control playback with your keyboard
+            during practice. Disable to keep using your screen reader as before.
           </p>
         </div>
         <Button

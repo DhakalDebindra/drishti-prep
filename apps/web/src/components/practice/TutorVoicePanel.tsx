@@ -55,7 +55,7 @@ export function TutorVoicePanel({
           : "border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900"
       }`}
       role="region"
-      aria-label="Tutor voice controls"
+      aria-label="Shruti voice controls"
     >
       <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
         {errored ? (
@@ -63,7 +63,7 @@ export function TutorVoicePanel({
         ) : (
           <Headphones className="w-5 h-5" aria-hidden="true" />
         )}
-        <span className="font-semibold text-sm">Tutor voice</span>
+        <span className="font-semibold text-sm">Shruti</span>
         <span className="text-xs text-blue-700 dark:text-blue-400">({voice})</span>
       </div>
 
@@ -108,14 +108,14 @@ export function TutorVoicePanel({
           className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
         >
           <Volume2 className="w-4 h-4" aria-hidden="true" />
-          Start tutor ({stemKey.label})
+          Start Shruti ({stemKey.label})
         </button>
       ) : (
         <button
           type="button"
           onClick={player.mute}
           className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-sm font-medium px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
-          aria-label="Mute tutor voice"
+          aria-label="Mute Shruti"
           aria-keyshortcuts="Escape"
         >
           <VolumeX className="w-4 h-4" aria-hidden="true" />
