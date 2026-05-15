@@ -179,17 +179,17 @@ function PracticeSetView() {
   return (
     <section className="space-y-6">
       {/*
-        Screen-reader announcement region for selection feedback. Suppressed
-        when tutor mode is active because the spoken explanation already
-        covers correctness — keeping it would cause double narration.
+        Screen-reader announcement region for selection feedback. Stays polite
+        even in tutor mode — without it, blind users who select an answer get
+        no correctness verdict before the explanation audio begins.
       */}
       <div
-        aria-live={tutorActive ? "off" : "polite"}
+        aria-live="polite"
         aria-atomic="true"
         role="status"
         className="sr-only"
       >
-        {tutorActive ? "" : state.announcementText}
+        {state.announcementText}
       </div>
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
