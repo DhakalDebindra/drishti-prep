@@ -1,4 +1,4 @@
-import { Prompts, QuestionSummaryItem, GKQuestion, safeParseGKExplanation } from "@/config/prompts/index";
+import { Prompts, QuestionSummaryItem, GKQuestion, safeParseGKExplanation, GKFacilitatorFewShot } from "@/config/prompts/index";
 import { generateAiContentJSON } from "./ai-service";
 
 export async function generateReviewFeedback(
@@ -39,7 +39,7 @@ export async function generateExplanation(
   const prompt = Prompts["loksewa gk facilitator"](q);
 
   try {
-    const result = await generateAiContentJSON(prompt, true, "pro");
+    const result = await generateAiContentJSON(prompt, true, "pro", GKFacilitatorFewShot);
     const parsed = safeParseGKExplanation(result.data);
     
     return {

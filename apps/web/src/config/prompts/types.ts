@@ -35,3 +35,11 @@ export type CoachFeedback = {
 export type GKExplanation = {
   general_explanation: string;
 };
+
+/**
+ * A single few-shot example pair passed to the model as a user/model turn.
+ */
+export type FewShotExample = {
+  user: string;
+  model: string;
+};

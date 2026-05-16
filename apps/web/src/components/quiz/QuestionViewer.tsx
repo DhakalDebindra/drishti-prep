@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lang } from "@/components/ui/Lang";
+import { RichText } from "@/components/ui/RichText";
 
 export interface Question {
   id: string;
@@ -154,7 +155,9 @@ export function QuestionViewer({
                 aria-live="polite"
                 className={`mt-3 text-sm text-gray-700 ${isExplanationExpanded ? "block" : "hidden"}`}
               >
-                <p>{question.explanation ? <Lang>{question.explanation}</Lang> : "Explanation will appear here once provided."}</p>
+                {question.explanation
+                  ? <RichText className="[&_ul]:mt-1 [&_li]:ml-3 leading-relaxed">{question.explanation}</RichText>
+                  : <p>Explanation will appear here once provided.</p>}
               </div>
             </div>
           )}

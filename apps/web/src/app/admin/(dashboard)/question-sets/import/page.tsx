@@ -14,9 +14,11 @@ type SubjectOption = { id: string; name: string };
 type TopicOption = { id: string; name: string; subject_id: string | null; subject_name: string | null };
 type SubtopicOption = { id: string; name: string; name_np: string | null; topic_id: string };
 
+// Explanation cells may use the literal sequence \n for line breaks (converted on import)
+// and **double asterisks** to bold the key fact.
 const TEMPLATE_CSV = `Question Content;Option A;Option B;Option C;Option D;Correct Option;Explanation;Exam Year;Paper Reference;Language
-Which city is known as the "City of Temples", Kathmandu?;Kathmandu;Pokhara;Lalitpur;Bhaktapur;A;Kathmandu is a historical city, famous for its temples.;2080;S.O. 2080-1;nepali
-Which is the highest mountain?;K2;Kangchenjunga;Mount Everest;Lhotse;C;Mount Everest is the highest peak in the world.;;;nepali`;
+Which city is known as the "City of Temples", Kathmandu?;Kathmandu;Pokhara;Lalitpur;Bhaktapur;A;सही उत्तर (A) **Kathmandu** हो।\n- विकल्प (B): Pokhara is Nepal's lake city.\n- विकल्प (C): Lalitpur is known for traditional crafts.\n- विकल्प (D): Bhaktapur preserves Newar heritage.;2080;S.O. 2080-1;nepali
+Which is the highest mountain?;K2;Kangchenjunga;Mount Everest;Lhotse;C;सन् **१९५३** मा पहिलो पटक आरोहण भएको Mount Everest विश्वकै अग्लो शिखर हो।\nनोट: यसको उचाइ ८,८४८.८६ मिटर हो।;;;nepali`;
 
 export default function BulkImportPage() {
   const router = useRouter();
@@ -124,7 +126,7 @@ export default function BulkImportPage() {
             option_c: option_c.trim(),
             option_d: option_d.trim(),
             correct_option,
-            general_explanation: explanation?.trim() || "",
+            general_explanation: explanation?.trim().replace(/\\n/g, "\n") || "",
             exam_year: exam_year?.trim() ? parseInt(exam_year) : null,
             paper_ref: paper_ref?.trim() || "",
             language: finalLanguage,
