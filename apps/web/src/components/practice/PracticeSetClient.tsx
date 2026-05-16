@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,14 +100,23 @@ function PracticeSetView() {
   );
   const audioUrls = audio.status === "ready" ? audio.urls : null;
   const player = useTutorPlayer(audioUrls);
-  const tutorActive =
-    tutorEnabled && audio.status === "ready" && !awaitingGesture;
+  // `tutorReady` — audio is fetched and playable; hotkeys may bind so Alt+S can
+  // serve as the very first start gesture.
+  const tutorReady = tutorEnabled && audio.status === "ready";
+  const tutorActive = tutorReady && !awaitingGesture;
 
-  // Auto-play stem + options on each new question, but only after the user
-  // has explicitly started tutor mode (browser autoplay policy + sanity).
+  // Tracks the question id whose audio has already been auto-played, so the
+  // effect fires exactly once per question — and never re-fires on unrelated
+  // re-renders. A keyboard/button start also stamps this so the explicit start
+  // (which plays immediately) isn't doubled by the effect.
+  const autoPlayedRef = useRef<string | null>(null);
+
+  // Auto-play stem + options on each new question, once tutor mode is active.
   useEffect(() => {
     if (!tutorActive) return;
     if (!currentQuestion) return;
+    if (autoPlayedRef.current === currentQuestion.id) return;
+    autoPlayedRef.current = currentQuestion.id;
     player.playFullSequence();
   }, [tutorActive, currentQuestion, player]);
 
@@ -137,8 +146,17 @@ function PracticeSetView() {
     [currentQuestion, handleSelect, tutorActive, player]
   );
 
-  // Hotkey bindings: only active when tutor mode is genuinely playing audio.
-  useTutorHotkeys(player, tutorActive, {
+  // Marks Shruti mode as started without playing anything. Stamps the current
+  // question as already-handled so the auto-play effect won't double up on the
+  // audio the triggering hotkey is about to play itself.
+  const activateTutor = useCallback(() => {
+    setAwaitingGesture(false);
+    if (currentQuestion) autoPlayedRef.current = currentQuestion.id;
+  }, [currentQuestion]);
+
+  // Hotkey bindings: bound as soon as audio is ready so Alt+S can act as the
+  // first start gesture. The explanation is gated until an answer is selected.
+  useTutorHotkeys(player, tutorReady, {
     onSelectOption: (letter) => {
       if (currentQuestion) {
         handleSelect(currentQuestion.id, letter);
@@ -147,11 +165,15 @@ function PracticeSetView() {
     },
     onNext: goNext,
     onPrev: goPrev,
+    onActivate: activateTutor,
+    explanationUnlocked:
+      selectedAnswer != null && selectedAnswer.selected_option !== "skipped",
   });
 
   const handleStartTutor = useCallback(() => {
-    setAwaitingGesture(false);
-  }, []);
+    activateTutor();
+    player.playFullSequence();
+  }, [activateTutor, player]);
 
   if (!currentQuestion) {
     return (
@@ -223,7 +245,7 @@ function PracticeSetView() {
       )}
       {tutorEnabled && audio.status === "not_generated" && (
         <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Tutor voice isn&apos;t available for this question yet. Using your screen
+          Shruti voice isn&apos;t available for this question yet. Using your screen
           reader instead.
         </p>
       )}
