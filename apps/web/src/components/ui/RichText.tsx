@@ -18,6 +18,17 @@ const ORDERED_RE = /^(?:\d+[.)]\s+|[१२३४५६७८९०]+[.)]\s+)(.+)
 // Matches "नोट: ..." or "Note: ..."
 const NOTE_RE = /^(?:नोट|Note):\s*(.+)/i;
 
+/**
+ * Renders inline `**bold**` spans as <strong>. Everything else stays plain text.
+ */
+function renderInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\*\*([^*]+)\*\*$/);
+    return match ? <strong key={i}>{match[1]}</strong> : <Fragment key={i}>{part}</Fragment>;
+  });
+}
+
 function parseBlocks(text: string): Block[] {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const blocks: Block[] = [];
@@ -73,7 +84,7 @@ export function RichText({ children, lang = "ne", className }: RichTextProps) {
           return (
             <ul key={i} className="list-disc list-inside space-y-1 my-1 pl-1">
               {block.items.map((item, j) => (
-                <li key={j}>{item}</li>
+                <li key={j}>{renderInline(item)}</li>
               ))}
             </ul>
           );
@@ -82,7 +93,7 @@ export function RichText({ children, lang = "ne", className }: RichTextProps) {
           return (
             <ol key={i} className="list-decimal list-inside space-y-1 my-1 pl-1">
               {block.items.map((item, j) => (
-                <li key={j}>{item}</li>
+                <li key={j}>{renderInline(item)}</li>
               ))}
             </ol>
           );
@@ -90,13 +101,13 @@ export function RichText({ children, lang = "ne", className }: RichTextProps) {
         if (block.type === "note") {
           return (
             <p key={i} className="mt-2 text-xs italic opacity-75 border-l-2 border-current pl-2">
-              <span className="not-italic font-semibold">नोट:</span> {block.text}
+              <span className="not-italic font-semibold">नोट:</span> {renderInline(block.text)}
             </p>
           );
         }
         return (
           <p key={i} className={i > 0 ? "mt-2" : undefined}>
-            {block.text}
+            {renderInline(block.text)}
           </p>
         );
       })}

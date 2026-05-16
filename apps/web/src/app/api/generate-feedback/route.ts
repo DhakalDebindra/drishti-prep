@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Prompts, safeParseGKExplanation } from "@/config/prompts/index";
+import { Prompts, safeParseGKExplanation, GKFacilitatorFewShot } from "@/config/prompts/index";
 import { generateAiContentJSON } from "@/lib/ai-service";
 import { createClient } from "@/lib/supabase/server";
 import { aiRatelimit } from "@/lib/rate-limit";
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     const payload = { content, option_a, option_b, option_c, option_d, correct_option };
     const prompt = Prompts["loksewa gk facilitator"](payload);
 
-    const result = await generateAiContentJSON(prompt, true);
+    const result = await generateAiContentJSON(prompt, true, "flash", GKFacilitatorFewShot);
     
     // Use the new validation layer
     const parsed = safeParseGKExplanation(result.data);

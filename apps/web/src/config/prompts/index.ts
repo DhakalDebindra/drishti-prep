@@ -1,4 +1,4 @@
-export { Prompts, SystemInstructions } from "./templates";
+export { Prompts, SystemInstructions, GKFacilitatorFewShot } from "./templates";
 export {
   parseCoachFeedback,
   safeParseCoachFeedback,
@@ -9,5 +9,6 @@ export type {
   CoachFeedback,
   GKExplanation,
   QuestionSummaryItem,
-  GKQuestion
+  GKQuestion,
+  FewShotExample
 } from "./types";

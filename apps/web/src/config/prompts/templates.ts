@@ -1,5 +1,5 @@
 import { GK_EXPLANATION_EXAMPLE_MODE_A, GK_EXPLANATION_EXAMPLE_MODE_B } from "./constants";
-import { GKQuestion, QuestionSummaryItem } from "./types";
+import { FewShotExample, GKQuestion, QuestionSummaryItem } from "./types";
 
 export const SystemInstructions = {
   strictNepaliJson: `
@@ -48,6 +48,8 @@ Return this exact schema:
 **Output:** A single valid JSON object — no markdown, no extra text outside the object.
 Schema: { "general_explanation": "string" }
 Use \\n (literal backslash-n) for line breaks inside the JSON string value.
+Inline emphasis: wrap the single key fact in **double asterisks** so the app renders it bold.
+Do NOT use markdown headings (#, ##), tables, or code fences anywhere.
 
 ---
 
@@ -58,20 +60,22 @@ Use when wrong options are distinct real-world entities with independent educati
 (e.g. different scientific fields, different organisations, different persons).
 
   Format:
-  सही उत्तर ([letter]) [answer name] हो।
+  सही उत्तर ([letter]) **[answer name]** हो।
   [1–2 sentences on why the correct answer is right and its significance.]
   - विकल्प ([letter]): [what this option actually is — real fact stated positively]
   - विकल्प ([letter]): [what this option actually is — real fact stated positively]
   - विकल्प ([letter]): [what this option actually is — real fact stated positively]
+  नोट: [Critical context — one common confusion, exception, or subtle distinction the aspirant should not miss.]
 
   Suppression rule: Omit a bullet silently if that distractor has no independent educational value.
+  नोट rule: Include नोट only if a genuine, verifiable nuance exists — omit it entirely otherwise.
 
 MODE B — Context-Narrative
 Use when wrong options are variants of the same value type
 (sequential dates, nearby numbers, similar years, positional alternatives, rearrangements).
 
   Format:
-  [2–4 sentences: who; what; when; where; why it matters — narrative that makes the correct answer self-evident.]
+  [2–4 sentences: who; what; when; where; why it matters — narrative that makes the correct answer self-evident. Bold the single decisive fact (the year/number/name being tested) with **…**.]
   नोट: [One real, verifiable secondary fact that deepens understanding.]
 
   Hard rules for Mode B:
@@ -85,6 +89,7 @@ Special cases → always Mode B: matching / chronological-rearrangement question
 ---
 
 **STEP 2 — Apply rules for both modes:**
+- Open with the direct answer; bold exactly one key fact per explanation — never bold whole sentences.
 - Verify every number (year, rank, count) before including it.
 - Do NOT invent facts. If uncertain, describe only what is reliably known.
 - Write entirely in formal Nepali (Devanagari). Option letters A / B / C / D may stay as-is.
@@ -94,11 +99,25 @@ Special cases → always Mode B: matching / chronological-rearrangement question
 **Question:** ${q.content}
 A: ${q.option_a} | B: ${q.option_b} | C: ${q.option_c} | D: ${q.option_d}
 Correct: ${q.correct_option}
-
-**Mode A example:**
-${GK_EXPLANATION_EXAMPLE_MODE_A}
-
-**Mode B example:**
-${GK_EXPLANATION_EXAMPLE_MODE_B}
 `.trim(),
 };
+
+/**
+ * Few-shot example turns for the "loksewa gk facilitator" prompt.
+ * Passed to the model as alternating user/model turns so it locks onto the
+ * exact Mode A / Mode B output shape before seeing the real question.
+ */
+export const GKFacilitatorFewShot: FewShotExample[] = [
+  {
+    user: `**Question:** ब्रह्माण्डको उत्पत्ति, संरचना र विकासको अध्ययन गर्ने विज्ञानको शाखालाई के भनिन्छ?
+A: खगोलशास्त्र | B: कस्मोलोजी | C: भूगर्भशास्त्र | D: मौसमविज्ञान
+Correct: B`,
+    model: GK_EXPLANATION_EXAMPLE_MODE_A,
+  },
+  {
+    user: `**Question:** अन्तर्राष्ट्रिय सगरमाथा दिवस कुन मितिमा मनाइन्छ?
+A: मे २६ | B: मे २७ | C: मे २८ | D: मे २९
+Correct: D`,
+    model: GK_EXPLANATION_EXAMPLE_MODE_B,
+  },
+];

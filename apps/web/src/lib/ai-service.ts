@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
+import type { FewShotExample } from "@/config/prompts/index";
 
 const AIConfig = {
   providers: {
@@ -39,7 +40,8 @@ export const withTimeout = <T>(promise: Promise<T>, ms: number) => {
 export async function generateAiContentJSON(
   prompt: string,
   useStrictNepali: boolean = false,
-  tier: "flash" | "pro" = "flash"
+  tier: "flash" | "pro" = "flash",
+  examples: FewShotExample[] = []
 ): Promise<{ data: string; provider: string; model: string; latency_ms: number }> {
   if (!geminiApiKey) {
     throw new Error("Missing GEMINI_API_KEY");
@@ -60,7 +62,18 @@ export async function generateAiContentJSON(
     },
   });
 
-  const result = await withTimeout(model.generateContent(finalPrompt), REQUEST_TIMEOUT_MS);
+  const contents = [
+    ...examples.flatMap((ex) => [
+      { role: "user", parts: [{ text: ex.user }] },
+      { role: "model", parts: [{ text: ex.model }] },
+    ]),
+    { role: "user", parts: [{ text: finalPrompt }] },
+  ];
+
+  const result = await withTimeout(
+    model.generateContent({ contents }),
+    REQUEST_TIMEOUT_MS
+  );
   const latencyMs = Math.round(performance.now() - started);
   const text = result.response.text();
 
