@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
       "prefer-const": "off",
       "react/no-unescaped-entities": "off",
       "react-hooks/exhaustive-deps": "off",
+      "react-hooks/incompatible-library": "off",
       "react-compiler/react-compiler": "off",
       "no-use-before-define": "off"
     }

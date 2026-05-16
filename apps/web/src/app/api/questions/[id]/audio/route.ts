@@ -30,24 +30,47 @@ export async function GET(_req: Request, ctx: Ctx) {
       .eq("id", id)
       .single();
 
-    if (!q || !q.audio_ready) {
+    if (!q) return NextResponse.json({ ready: false });
+
+    // List what actually exists in storage at this version. This is the
+    // source of truth for which segments can play; `audio_ready` on the row
+    // is a derived flag that may lag after partial regenerations.
+    const prefix = `q/${id}/v${q.audio_version}`;
+    const { data: files } = await (supabase as any).storage
+      .from(BUCKET)
+      .list(prefix);
+    const fileList: Array<{ name: string; updated_at?: string }> = files ?? [];
+    const present = new Set<string>(fileList.map((f) => f.name));
+    const updatedByName = new Map<string, string>(
+      fileList.map((f) => [f.name, f.updated_at ?? ""])
+    );
+    const segments_present = SEGMENTS.filter((s) => present.has(`${s}.mp3`));
+
+    if (segments_present.length === 0) {
       return NextResponse.json({ ready: false });
     }
 
+    // Storage objects are uploaded with an immutable cache-control header for
+    // CDN efficiency, so when a single segment is regenerated the URL alone
+    // can't tell the browser/CDN to refetch. Append the file's updated_at as
+    // a cache-busting querystring; same content → same buster → still cached.
     const urls = Object.fromEntries(
       SEGMENTS.map((s) => {
         const { data } = (supabase as any).storage
           .from(BUCKET)
           .getPublicUrl(storagePathFor(id, q.audio_version, s));
-        return [s, data.publicUrl as string];
+        const updated = updatedByName.get(`${s}.mp3`);
+        const buster = updated ? `?t=${Date.parse(updated) || encodeURIComponent(updated)}` : "";
+        return [s, `${data.publicUrl as string}${buster}`];
       })
     );
 
     return NextResponse.json({
-      ready: true,
+      ready: segments_present.length === SEGMENTS.length,
       voice: q.audio_voice,
       version: q.audio_version,
       urls,
+      segments_present,
     });
   } catch (e: any) {
     console.error("[audio] read error:", e);

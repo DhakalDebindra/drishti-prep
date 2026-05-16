@@ -2,30 +2,27 @@
 
 import { useEffect } from "react";
 import type { TutorPlayer } from "./useTutorPlayer";
+import { matchTutorAction } from "@/lib/tutor-hotkeys";
 
 type Callbacks = {
-  onSelectOption: (letter: "A" | "B" | "C" | "D") => void;
   onNext: () => void;
   onPrev: () => void;
+  onShowHelp: () => void;
+  // Starts Shruti mode (clears the awaiting-gesture state and plays). Lets the
+  // Alt+S keypress itself serve as the required user gesture for autoplay.
+  onStart: () => void;
+  // True only once a real answer has been selected for the current question.
+  // The explanation must not be read aloud before this is true.
+  explanationUnlocked: boolean;
 };
 
 /**
- * Keyboard bindings for tutor-voice mode. Activates only when `enabled`.
+ * Keyboard bindings for tutor-voice (Shruti) mode. The combo definitions live
+ * in `lib/tutor-hotkeys.ts` — this hook just dispatches matched actions. Alt+
+ * prefix is intentional: it avoids hijacking NVDA/JAWS/VoiceOver quick-nav.
  *
- * Convention:
- *   1-4    select option (also stops current audio and plays explanation if answered)
- *   Q      replay question stem
- *   O      replay all options in sequence
- *   E      replay explanation
- *   Space  pause / resume current segment
- *   R      replay current segment from the start
- *   Esc    mute and reset
- *   →      next question
- *   ←      previous question
- *
- * The hook ignores keystrokes when an input/textarea is focused so it never
- * hijacks typing. Arrow keys are NOT bound here when the focused element is a
- * radiogroup option (existing QuestionOptions handles those).
+ * Ignored when an input/textarea is focused, so typing in the answer feedback
+ * box (or any future free-form field) is never captured.
  */
 export function useTutorHotkeys(
   player: TutorPlayer,
@@ -42,79 +39,49 @@ export function useTutorHotkeys(
         if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
           return;
         }
-        // Don't fight QuestionOptions' arrow-key navigation inside the radiogroup
-        if (
-          target.getAttribute("role") === "radio" &&
-          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
-        ) {
-          return;
-        }
       }
 
-      switch (e.key) {
-        case "1":
-        case "2":
-        case "3":
-        case "4": {
-          const letter = ["A", "B", "C", "D"][Number(e.key) - 1] as
-            | "A"
-            | "B"
-            | "C"
-            | "D";
-          player.mute();
-          cb.onSelectOption(letter);
-          e.preventDefault();
-          return;
-        }
-        case "q":
-        case "Q":
+      const action = matchTutorAction(e);
+      if (!action) return;
+
+      // "answer" is handled by useAnswerHotkeys (always-on, not gated by
+      // tutor playback). Anything tutor-player-specific stays here.
+      if (action === "answer") return;
+      switch (action) {
+        case "start":
+          cb.onStart();
+          break;
+        case "stem":
           player.playStem();
-          e.preventDefault();
-          return;
-        case "o":
-        case "O":
+          break;
+        case "options":
           player.playOptions();
-          e.preventDefault();
-          return;
-        case "e":
-        case "E":
-          player.playExplanation();
-          e.preventDefault();
-          return;
-        case " ":
+          break;
+        case "explanation":
+          // Gated: don't read the explanation aloud until the learner has
+          // actually committed to an answer.
+          if (cb.explanationUnlocked) player.playExplanation();
+          break;
+        case "pause":
           player.togglePause();
-          e.preventDefault();
-          return;
-        case "r":
-        case "R":
+          break;
+        case "replay":
           player.replayCurrent();
-          e.preventDefault();
-          return;
-        case "Escape":
+          break;
+        case "mute":
           player.mute();
-          e.preventDefault();
-          return;
-        case "ArrowRight":
-          if (
-            !target ||
-            target.tagName !== "BUTTON" ||
-            target.getAttribute("role") !== "radio"
-          ) {
-            cb.onNext();
-            e.preventDefault();
-          }
-          return;
-        case "ArrowLeft":
-          if (
-            !target ||
-            target.tagName !== "BUTTON" ||
-            target.getAttribute("role") !== "radio"
-          ) {
-            cb.onPrev();
-            e.preventDefault();
-          }
-          return;
+          break;
+        case "next":
+          cb.onNext();
+          break;
+        case "prev":
+          cb.onPrev();
+          break;
+        case "help":
+          cb.onShowHelp();
+          break;
       }
+      e.preventDefault();
     };
 
     window.addEventListener("keydown", handler);

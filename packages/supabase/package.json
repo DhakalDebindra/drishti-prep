@@ -7,11 +7,14 @@
     "typecheck": "tsc --noEmit"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./mobile": "./src/mobile.ts"
   },
   "dependencies": {
+    "expo-secure-store": "~15.0.3",
     "@supabase/ssr": "^0.9.0",
-    "@supabase/supabase-js": "^2.99.1"
+    "@supabase/supabase-js": "^2.99.1",
+    "react-native-url-polyfill": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.39"

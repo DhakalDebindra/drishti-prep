@@ -33,6 +33,10 @@ type AttemptAction =
   | { type: "SET_ATTEMPT_ID"; payload: string }
   | { type: "RESET_STORE" };
 
+// Minimum number of genuinely answered questions before a learner may submit.
+// Clamped to the set size for short sets.
+const MIN_ATTEMPTED_TO_SUBMIT = 10;
+
 // --- Reducer ---
 
 const initialState: AttemptState = {
@@ -127,19 +131,29 @@ export function AttemptProvider({
   const derived = useMemo(() => {
   const answerValues = Object.values(state.answers) as any[];
 
+  // Count only real answers (A, B, C, D), excluding "skipped"
+  const answeredCount = answerValues.filter((a: any) =>
+    a !== null && a.selected_option && a.selected_option !== "skipped"
+  ).length;
+
+  // Learners may submit once they have genuinely answered this many
+  // questions; any remaining ones are treated as skipped on submit.
+  const minToSubmit = Math.min(MIN_ATTEMPTED_TO_SUBMIT, questions.length);
+
   return {
     currentQuestion: questions[state.currentIndex] || null,
     questionCount: questions.length,
-    // Count only real answers (A, B, C, D), excluding "skipped"
-    answeredCount: answerValues.filter((a: any) => 
-      a !== null && a.selected_option && a.selected_option !== "skipped"
-    ).length,
+    answeredCount,
     // Count only "skipped" entries
-    skippedCount: answerValues.filter((a: any) => 
+    skippedCount: answerValues.filter((a: any) =>
       a?.selected_option === "skipped"
     ).length,
+    // Everything not answered — explicit skips plus never-visited questions.
+    unansweredCount: questions.length - answeredCount,
     // Total handled is the count of all keys compared to question list
     allHandled: Object.keys(state.answers).length === questions.length,
+    minToSubmit,
+    canSubmit: answeredCount >= minToSubmit,
     progress: questions.length > 0 ? ((state.currentIndex + 1) / questions.length) * 100 : 0,
   };
 }, [state.currentIndex, state.answers, questions]);
