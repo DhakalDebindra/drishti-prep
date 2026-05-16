@@ -41,6 +41,7 @@ export function TutorVoicePanel({
     return "Silent";
   })();
 
+  const startKey = getHotkey("start");
   const stemKey = getHotkey("stem");
   const optsKey = getHotkey("options");
   const explKey = getHotkey("explanation");
@@ -104,11 +105,11 @@ export function TutorVoicePanel({
         <button
           type="button"
           onClick={onStart}
-          aria-keyshortcuts={stemKey.combo}
+          aria-keyshortcuts={startKey.combo}
           className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
         >
           <Volume2 className="w-4 h-4" aria-hidden="true" />
-          Start Shruti ({stemKey.label})
+          Start Shruti ({startKey.label})
         </button>
       ) : (
         <button
@@ -124,6 +125,7 @@ export function TutorVoicePanel({
       )}
 
       <p className="basis-full text-xs text-blue-800 dark:text-blue-300">
+        <kbd className="font-mono">{startKey.label}</kbd> start / replay,{" "}
         <kbd className="font-mono">{stemKey.label}</kbd> question,{" "}
         <kbd className="font-mono">{optsKey.label}</kbd> options,{" "}
         <kbd className="font-mono">1-4</kbd> answer,{" "}

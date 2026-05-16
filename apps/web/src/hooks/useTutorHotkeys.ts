@@ -8,11 +8,17 @@ type Callbacks = {
   onNext: () => void;
   onPrev: () => void;
   onShowHelp: () => void;
+  // Starts Shruti mode (clears the awaiting-gesture state and plays). Lets the
+  // Alt+S keypress itself serve as the required user gesture for autoplay.
+  onStart: () => void;
+  // True only once a real answer has been selected for the current question.
+  // The explanation must not be read aloud before this is true.
+  explanationUnlocked: boolean;
 };
 
 /**
- * Keyboard bindings for tutor-voice mode. The combo definitions live in
- * `lib/tutor-hotkeys.ts` — this hook just dispatches matched actions. Alt+
+ * Keyboard bindings for tutor-voice (Shruti) mode. The combo definitions live
+ * in `lib/tutor-hotkeys.ts` — this hook just dispatches matched actions. Alt+
  * prefix is intentional: it avoids hijacking NVDA/JAWS/VoiceOver quick-nav.
  *
  * Ignored when an input/textarea is focused, so typing in the answer feedback
@@ -42,6 +48,9 @@ export function useTutorHotkeys(
       // tutor playback). Anything tutor-player-specific stays here.
       if (action === "answer") return;
       switch (action) {
+        case "start":
+          cb.onStart();
+          break;
         case "stem":
           player.playStem();
           break;
@@ -49,7 +58,9 @@ export function useTutorHotkeys(
           player.playOptions();
           break;
         case "explanation":
-          player.playExplanation();
+          // Gated: don't read the explanation aloud until the learner has
+          // actually committed to an answer.
+          if (cb.explanationUnlocked) player.playExplanation();
           break;
         case "pause":
           player.togglePause();

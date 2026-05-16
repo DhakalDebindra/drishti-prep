@@ -55,6 +55,10 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
   }, []);
 
   const currentSegRef = useRef<Segment | null>(null);
+  // The most recently played segment — unlike `currentSegRef` this is NOT
+  // cleared when the queue drains, so `replayCurrent` can still replay the
+  // last thing heard after a sequence has finished and the player is idle.
+  const lastSegmentRef = useRef<Segment | null>(null);
 
   const playNext = useCallback(() => {
     const audio = audioRef.current;
@@ -66,6 +70,7 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
       return;
     }
     currentSegRef.current = next;
+    lastSegmentRef.current = next;
     audio.src = urls[next];
     setState({ kind: "playing", segment: next, paused: false });
     audio.play().catch((err) => {
@@ -131,6 +136,8 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
     audio.pause();
     audio.currentTime = 0;
     queueRef.current = [];
+    currentSegRef.current = null;
+    lastSegmentRef.current = null;
     setState({ kind: "idle" });
   }, [urls]);
 
@@ -174,6 +181,11 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
       } else if (state.kind === "error" && state.segment) {
         // Re-attempt after a transient failure.
         queueRef.current = [state.segment];
+        playNext();
+      } else if (state.kind === "idle" && lastSegmentRef.current) {
+        // Sequence already finished — replay the last segment that was heard
+        // rather than silently doing nothing.
+        queueRef.current = [lastSegmentRef.current];
         playNext();
       }
     },

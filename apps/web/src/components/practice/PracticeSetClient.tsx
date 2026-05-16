@@ -115,8 +115,10 @@ function PracticeSetView() {
   );
   const audioUrls = audio.status === "ready" ? audio.urls : null;
   const player = useTutorPlayer(audioUrls);
-  const tutorActive =
-    tutorEnabled && audio.status === "ready" && !awaitingGesture;
+  // `tutorReady` — audio is fetched and playable. Hotkeys bind at this point
+  // (not only once playing) so Alt+S can serve as the first start gesture.
+  const tutorReady = tutorEnabled && audio.status === "ready";
+  const tutorActive = tutorReady && !awaitingGesture;
 
   // Auto-play stem + options on each new question, but only after the user
   // has explicitly started tutor mode (browser autoplay policy + sanity).
@@ -158,29 +160,33 @@ function PracticeSetView() {
     [currentQuestion, handleSelect, tutorActive, player]
   );
 
-  // Player-control hotkeys are only active when tutor audio is actually
-  // playing. Option-selection (Alt+1-4) is always-on so keyboard users can
-  // answer regardless of tutor mode — that's the more common path.
-  useTutorHotkeys(player, tutorActive, {
+  // Kick off the first play() INSIDE the gesture handler so the browser sees
+  // it as user-initiated. Deferring to a useEffect after `setAwaitingGesture`
+  // commits loses that gesture context in Safari and (intermittently) Chrome,
+  // and audio.play() rejects with "Playback blocked". Reused as the Alt+S
+  // hotkey handler so the keypress doubles as the start gesture.
+  const handleStartTutor = useCallback(() => {
+    setAwaitingGesture(false);
+    if (currentQuestion) lastAutoPlayedRef.current = currentQuestion.id;
+    player.playFullSequence();
+  }, [player, currentQuestion]);
+
+  // Player-control hotkeys bind as soon as audio is ready so Alt+S can start
+  // Shruti. Option-selection (Alt+1-4) is always-on via useAnswerHotkeys so
+  // keyboard users can answer regardless of tutor mode.
+  useTutorHotkeys(player, tutorReady, {
     onNext: goNext,
     onPrev: goPrev,
     onShowHelp: () => setShowHotkeyHelp(true),
+    onStart: handleStartTutor,
+    explanationUnlocked:
+      selectedAnswer != null && selectedAnswer.selected_option !== "skipped",
   });
   useAnswerHotkeys(Boolean(currentQuestion), (letter) => {
     if (!currentQuestion) return;
     if (tutorActive) player.mute();
     handleOptionSelect(letter);
   });
-
-  // Kick off the first play() INSIDE the click handler so the browser sees
-  // it as user-initiated. Deferring to a useEffect after `setAwaitingGesture`
-  // commits loses that gesture context in Safari and (intermittently) Chrome,
-  // and audio.play() rejects with "Playback blocked".
-  const handleStartTutor = useCallback(() => {
-    setAwaitingGesture(false);
-    if (currentQuestion) lastAutoPlayedRef.current = currentQuestion.id;
-    player.playFullSequence();
-  }, [player, currentQuestion]);
 
   if (!currentQuestion) {
     return (

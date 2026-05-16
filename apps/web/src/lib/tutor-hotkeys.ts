@@ -11,6 +11,7 @@
  * from it too — keep the two in lockstep by importing rather than duplicating.
  */
 export type TutorAction =
+  | "start"
   | "stem"
   | "options"
   | "explanation"
@@ -32,7 +33,8 @@ export type Hotkey = {
 };
 
 export const TUTOR_HOTKEYS: Hotkey[] = [
-  { action: "stem", combo: "Alt+S", label: "Alt + S", description: "Replay question" },
+  { action: "start", combo: "Alt+S", label: "Alt + S", description: "Start / replay Shruti" },
+  { action: "stem", combo: "Alt+Q", label: "Alt + Q", description: "Replay question" },
   { action: "options", combo: "Alt+O", label: "Alt + O", description: "Replay all options" },
   { action: "explanation", combo: "Alt+E", label: "Alt + E", description: "Play explanation" },
   { action: "answer", combo: "Alt+1 Alt+2 Alt+3 Alt+4", label: "Alt + 1–4", description: "Select option A/B/C/D" },
@@ -65,6 +67,8 @@ export function matchTutorAction(e: KeyboardEvent): TutorAction | null {
   if (/^[1-4]$/.test(e.key)) return "answer";
   switch (e.key.toLowerCase()) {
     case "s":
+      return "start";
+    case "q":
       return "stem";
     case "o":
       return "options";
