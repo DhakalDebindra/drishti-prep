@@ -91,6 +91,9 @@ export default async function NestedReviewPage({ params, searchParams }: PagePro
   });
 
   const totalQuestions = attempt.question_count || questions?.length || 0;
+  const skippedCount = reviewQuestions.filter(
+    (q) => q.selected_option === null || q.selected_option === "skipped"
+  ).length;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -102,6 +105,7 @@ export default async function NestedReviewPage({ params, searchParams }: PagePro
         scoreRaw={attempt.score_raw ?? 0}
         scorePct={attempt.score_pct ?? 0}
         totalQuestions={totalQuestions}
+        skippedCount={skippedCount}
         submittedAt={attempt.submitted_at}
       />
 

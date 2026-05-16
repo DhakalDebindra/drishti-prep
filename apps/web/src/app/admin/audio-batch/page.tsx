@@ -73,7 +73,7 @@ export default async function AudioBatchPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Audio Library</h1>
         <p className="text-slate-500 mt-1">
-          Pre-generate Nepali tutor-voice audio for question sets. Audio is cached
+          Pre-generate Nepali Shruti voice audio for question sets. Audio is cached
           forever in Storage; each question generates once and is then free to play.
         </p>
       </div>

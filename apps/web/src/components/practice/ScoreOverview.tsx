@@ -7,6 +7,7 @@ interface ScoreOverviewProps {
   scoreRaw: number;
   scorePct: number;
   totalQuestions: number;
+  skippedCount: number;
   submittedAt?: string | null;
 }
 
@@ -14,12 +15,12 @@ export function ScoreOverview({
   scoreRaw,
   scorePct,
   totalQuestions,
+  skippedCount,
   submittedAt,
 }: ScoreOverviewProps) {
-  const incorrectQuestions = totalQuestions - scoreRaw;
-  // We can eventually calculate skipped questions if we pass the answers array.
-  // Assuming raw correct + incorrect = total for now simplified.
-  // Actually, let's keep it simple.
+  // Skipped questions are neither correct nor incorrect — exclude them so the
+  // incorrect count isn't inflated.
+  const incorrectQuestions = Math.max(0, totalQuestions - scoreRaw - skippedCount);
 
   const formattedDate = submittedAt
     ? new Date(submittedAt).toLocaleDateString("en-US", {
@@ -108,7 +109,15 @@ export function ScoreOverview({
               {incorrectQuestions}
             </div>
           </div>
-          {/* Skipping skipped questions metric for now to keep it straightforward, or we can add it later if we pass answers array */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">
+              <MinusCircle className="w-4 h-4" />
+              Skipped
+            </div>
+            <div className="text-2xl font-semibold text-slate-600 dark:text-slate-400">
+              {skippedCount}
+            </div>
+          </div>
         </div>
       </div>
     </section>

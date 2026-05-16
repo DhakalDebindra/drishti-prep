@@ -43,6 +43,9 @@ importers:
       '@repo/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
+      '@repo/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@supabase/supabase-js':
         specifier: ^2.104.1
         version: 2.104.1
@@ -107,6 +110,9 @@ importers:
         specifier: ^0.8.1
         version: 0.8.1(@babel/core@7.29.0)(@react-native/metro-config@0.85.2(@babel/core@7.29.0))(react-native@0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.2(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
     devDependencies:
+      '@types/node':
+        specifier: ^20.19.39
+        version: 20.19.39
       '@types/react':
         specifier: ~19.1.10
         version: 19.1.17
