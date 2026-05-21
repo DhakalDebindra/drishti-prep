@@ -13,7 +13,7 @@ import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
 import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
 import { TutorHotkeyHelp } from "@/components/practice/TutorHotkeyHelp";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
-import { useTutorAudio } from "@/hooks/useTutorAudio";
+import { useTutorAudio, prefetchQuestionAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
 import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
 import { useAnswerHotkeys } from "@/hooks/useAnswerHotkeys";
@@ -68,7 +68,7 @@ export default function PracticeSetClient(props: Props) {
 }
 
 function PracticeSetView() {
-  const { state, derived, actions, setInfo, userEmail } = useAttemptStore();
+  const { state, derived, actions, setInfo, userEmail, questions } = useAttemptStore();
   const { goPrev, goNext, handleSelect, handleSkip, setShowConfirmDialog, toggleExplanation } = actions;
 
   const currentQuestion = derived.currentQuestion;
@@ -133,6 +133,14 @@ function PracticeSetView() {
     lastAutoPlayedRef.current = currentQuestion.id;
     player.playFullSequence();
   }, [tutorActive, currentQuestion, player]);
+
+  // Warm the next and previous questions' audio while the learner is on the
+  // current one, so pressing Next/Prev starts playback with no network wait.
+  useEffect(() => {
+    if (!tutorEnabled) return;
+    prefetchQuestionAudio(questions[currentIndex + 1]?.id ?? null);
+    prefetchQuestionAudio(questions[currentIndex - 1]?.id ?? null);
+  }, [tutorEnabled, questions, currentIndex]);
 
   const optionsList = useMemo(
     () =>

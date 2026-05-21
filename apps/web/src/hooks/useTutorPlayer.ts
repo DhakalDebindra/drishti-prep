@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAudioUrls } from "@repo/types";
+import {
+  getAudioObjectURL,
+  peekAudioObjectURL,
+  prefetchSegments,
+} from "@/lib/tutor-audio-cache";
 
 export type Segment = keyof TutorAudioUrls; // 'stem'|'opt_a'|'opt_b'|'opt_c'|'opt_d'|'explanation'
 export type PlayerState =
@@ -60,6 +65,11 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
   // last thing heard after a sequence has finished and the player is idle.
   const lastSegmentRef = useRef<Segment | null>(null);
 
+  // Bumped on every play start and on every hard stop. A play() interrupted
+  // by a newer load or a pause() rejects asynchronously; comparing the token
+  // lets that stale rejection be ignored instead of clobbering newer state.
+  const playTokenRef = useRef(0);
+
   const playNext = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !urls) return;
@@ -71,17 +81,47 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
     }
     currentSegRef.current = next;
     lastSegmentRef.current = next;
-    audio.src = urls[next];
+    const token = ++playTokenRef.current;
     setState({ kind: "playing", segment: next, paused: false });
-    audio.play().catch((err) => {
-      // Autoplay blocked (no user gesture) vs real decode failure — both end
-      // up here. Surface as error so the UI can prompt the user to interact.
-      setState({
-        kind: "error",
-        segment: next,
-        message: err?.message?.includes("user") ? "Tap Start to enable audio" : "Playback blocked",
+
+    const remoteUrl = urls[next];
+
+    const start = (src: string) => {
+      // A newer play() (or a stop) superseded this one while its blob was
+      // still downloading — drop it silently.
+      if (playTokenRef.current !== token) return;
+      audio.src = src;
+      audio.play().catch((err: unknown) => {
+        if (playTokenRef.current !== token) return;
+        const name = err instanceof Error ? err.name : "";
+        // AbortError just means a newer load/pause interrupted this play. It
+        // is expected on every navigation and segment change — never an error
+        // worth showing the learner.
+        if (name === "AbortError") return;
+        setState({
+          kind: "error",
+          segment: next,
+          message:
+            name === "NotAllowedError"
+              ? "Tap Start to enable audio"
+              : "Playback blocked",
+        });
       });
-    });
+    };
+
+    // Play straight from the in-memory blob cache when possible: this keeps
+    // audio.play() inside the user-gesture tick (autoplay policy) and removes
+    // the per-segment network fetch that caused buffering between segments.
+    const cached = peekAudioObjectURL(remoteUrl);
+    if (cached) {
+      start(cached);
+    } else {
+      getAudioObjectURL(remoteUrl)
+        .then(start)
+        // Blob fetch failed (e.g. storage CORS) — fall back to streaming the
+        // remote URL directly so playback still works, just uncached.
+        .catch(() => start(remoteUrl));
+    }
   }, [urls]);
 
   // Wire ended / error / metadata listeners once the audio element is created.
@@ -133,12 +173,16 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    // Invalidate any play() still in flight from the previous question.
+    playTokenRef.current++;
     audio.pause();
     audio.currentTime = 0;
     queueRef.current = [];
     currentSegRef.current = null;
     lastSegmentRef.current = null;
     setState({ kind: "idle" });
+    // Warm the blob cache for every segment so playback streams from memory.
+    if (urls) prefetchSegments(urls);
   }, [urls]);
 
   const playQueue = useCallback(
@@ -192,6 +236,7 @@ export function useTutorPlayer(urls: TutorAudioUrls | null): TutorPlayer {
     mute: () => {
       const audio = audioRef.current;
       if (!audio) return;
+      playTokenRef.current++;
       audio.pause();
       audio.currentTime = 0;
       queueRef.current = [];
