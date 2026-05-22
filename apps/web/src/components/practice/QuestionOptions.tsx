@@ -91,7 +91,7 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
                 ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
                 : isSelected
                 ? "border-blue-600 bg-blue-50 text-blue-900 shadow-sm"
-                : "border-slate-300 hover:border-slate-500 hover:bg-slate-50 text-slate-900"
+                : "border-slate-500 hover:border-slate-700 hover:bg-slate-50 text-slate-900"
             } ${isSubmitted ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
           >
             <div className="flex items-start gap-4">
@@ -106,11 +106,11 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
                   <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                 )}
                 {(!selectedAnswer || (isSelected && selectedAnswer?.is_correct === undefined) || (!isSelected && !isCorrectOption)) && (
-                  <Circle className={`h-6 w-6 ${isSelected ? "fill-blue-600 text-blue-600" : "text-slate-400"}`} />
+                  <Circle className={`h-6 w-6 ${isSelected ? "fill-blue-600 text-blue-600" : "text-slate-600"}`} />
                 )}
               </div>
               <div className="space-y-1.5 flex-1">
-                <p id={optionLabelId} className="text-slate-900">
+                <p id={optionLabelId} className="text-base sm:text-lg text-slate-900">
                   <span className="mr-2 font-bold">{option.value}.</span>
                   <Lang>{option.text}</Lang>
                 </p>
