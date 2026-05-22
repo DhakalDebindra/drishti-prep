@@ -260,11 +260,11 @@ function PracticeSetView() {
         )}
 
         <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
-          <p className="text-sm font-semibold text-slate-500">
+          <p className="text-sm font-semibold text-slate-700">
             Question {currentIndex + 1} of {questionCount}
           </p>
           <div
-            className="text-lg font-medium text-slate-900 leading-relaxed"
+            className="text-lg sm:text-xl font-medium text-slate-900 leading-relaxed"
             aria-hidden={tutorActive ? "true" : undefined}
           >
             <Lang>{currentQuestion.content}</Lang>
@@ -289,7 +289,7 @@ function PracticeSetView() {
           >
             Previous
           </Button>
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-slate-700">
             Answered {answeredCount}/{questionCount}
           </span>
           <Button
@@ -317,14 +317,14 @@ function PracticeSetView() {
                 : "Submit"}
           </Button>
           {!canSubmit && state.status !== "submitted" && (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-700">
               Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
               Any unanswered questions will be marked as skipped.
             </p>
           )}
         </div>
 
-        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-600">
+        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700">
           <p className="font-semibold mb-1 text-slate-700">Keyboard shortcuts</p>
           <p className="leading-relaxed">
             <kbd className="font-mono">Alt+S</kbd> start ·{" "}
@@ -360,7 +360,7 @@ function PracticeSetView() {
         {state.announcementText}
       </div>
       <nav aria-label="Breadcrumb">
-        <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
           <li><Link href="/courses" className="text-blue-700 hover:text-blue-900">Courses</Link></li>
           <li aria-hidden="true">/</li>
           <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.subjectName}</Lang></Link></li>
@@ -381,7 +381,7 @@ function PracticeSetView() {
 
       <header className="space-y-2">
         <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">{setInfo.title}</h1>
-        <p className="text-gray-600">Difficulty {setInfo.difficulty_level}</p>
+        <p className="text-slate-700">Difficulty {setInfo.difficulty_level}</p>
         {state.message && (
           <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{state.message}</p>
         )}
@@ -430,7 +430,7 @@ function PracticeSetView() {
         <CardContent className="flex flex-col gap-4 flex-1">
           <div
             id={questionTitleId}
-            className="text-base sm:text-lg font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed mb-2"
+            className="text-lg sm:text-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed mb-2"
             tabIndex={-1}
             // When tutor mode is actively reading aloud, hide the stem from
             // screen readers to prevent simultaneous English-SR + Nepali-TTS
@@ -438,7 +438,7 @@ function PracticeSetView() {
             // anyone with tutor muted keep their full UX.
             aria-hidden={tutorActive ? "true" : undefined}
           >
-            <span className="text-slate-500 text-sm font-semibold uppercase tracking-wider block mb-1">Question {currentIndex + 1}</span>
+            <span className="text-slate-700 text-sm font-semibold uppercase tracking-wider block mb-1">Question {currentIndex + 1}</span>
             <Lang>{currentQuestion.content}</Lang>
           </div>
 
@@ -486,7 +486,7 @@ function PracticeSetView() {
                       ? <RichText className="space-y-1">{currentQuestion.explanation}</RichText>
                       : "No explanation available."}
                   </div>
-                  <p className="mt-4 pt-3 border-t border-slate-200 text-sm font-medium text-slate-600">
+                  <p className="mt-4 pt-3 border-t border-slate-200 text-sm font-medium text-slate-700">
                     Your choice: <span className="text-slate-900">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span> | Correct: <span className="text-emerald-700 font-bold">{currentQuestion.correct_option}</span>
                   </p>
                 </div>
@@ -496,7 +496,7 @@ function PracticeSetView() {
 
           <div className="mt-auto border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 order-2 sm:order-1">
-              <Button aria-label="Previous question" variant="outline" size="lg" className="border-2 border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-100 font-medium" onClick={goPrev} disabled={currentIndex === 0}>
+              <Button aria-label="Previous question" variant="outline" size="lg" className="border-2 border-slate-500 text-slate-800 hover:border-slate-700 hover:bg-slate-100 font-medium" onClick={goPrev} disabled={currentIndex === 0}>
                 Previous
               </Button>
               {currentIndex === questionCount - 1 ? (
@@ -546,7 +546,7 @@ function PracticeSetView() {
                 </Button>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-600 order-1 sm:order-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-700 order-1 sm:order-2">
               <span className="font-medium">Q {currentIndex + 1}</span>
               <span>•</span>
               <span>
@@ -577,7 +577,7 @@ function PracticeSetView() {
                     : "Done"}
             </Button>
             {!canSubmit && state.status !== "submitted" && (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-700">
                 Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
                 Any unanswered questions will be marked as skipped.
               </p>
