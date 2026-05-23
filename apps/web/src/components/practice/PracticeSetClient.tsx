@@ -429,8 +429,9 @@ function PracticeSetView() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4 flex-1">
           <div
+            key={currentQuestion.id}
             id={questionTitleId}
-            className="text-lg sm:text-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed mb-2"
+            className="text-lg sm:text-xl font-medium text-slate-900 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] leading-relaxed mb-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
             tabIndex={-1}
             // When tutor mode is actively reading aloud, hide the stem from
             // screen readers to prevent simultaneous English-SR + Nepali-TTS
@@ -476,7 +477,7 @@ function PracticeSetView() {
               {state.showExplanation[currentQuestion.id] && (
                 <div
                   id={`explanation-${currentQuestion.id}`}
-                  className="mt-3 rounded-lg bg-slate-50 border-l-4 border-slate-700 p-4 text-slate-800 shadow-sm"
+                  className="mt-3 rounded-lg bg-slate-50 border-l-4 border-slate-700 p-4 text-slate-800 shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200"
                   role="region"
                   aria-live="polite"
                 >

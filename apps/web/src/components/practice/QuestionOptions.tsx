@@ -82,28 +82,28 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
               if (isSubmitted) return;
               onSelect(option.value);
             }}
-            className={`w-full rounded-xl border-2 p-4 sm:p-5 text-left transition focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 ${
+            className={`w-full rounded-xl p-4 sm:p-5 text-left transition-all duration-150 motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.99] focus:outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] ${
               isSelected && selectedAnswer?.is_correct === true
-                ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
+                ? "border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
                 : isSelected && selectedAnswer?.is_correct === false
-                ? "border-red-600 bg-red-50 text-red-900 shadow-sm"
+                ? "border-[3px] border-red-600 bg-red-50 text-red-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
                 : isCorrectOption && selectedAnswer
-                ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm"
+                ? "border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
                 : isSelected
-                ? "border-blue-600 bg-blue-50 text-blue-900 shadow-sm"
-                : "border-slate-500 hover:border-slate-700 hover:bg-slate-50 text-slate-900"
+                ? "border-[3px] border-blue-600 bg-blue-50 text-blue-900 shadow-sm forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:border-[HighlightText]"
+                : "border-2 border-slate-500 hover:border-slate-700 hover:bg-slate-50 text-slate-900"
             } ${isSubmitted ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
           >
             <div className="flex items-start gap-4">
               <div aria-hidden="true" className="mt-0.5 shrink-0">
                 {isSelected && selectedAnswer?.is_correct === true && (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
                 )}
                 {isSelected && selectedAnswer?.is_correct === false && (
-                  <XCircle className="h-6 w-6 text-red-600" />
+                  <XCircle className="h-6 w-6 text-red-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
                 )}
                 {!isSelected && isCorrectOption && selectedAnswer && (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
                 )}
                 {(!selectedAnswer || (isSelected && selectedAnswer?.is_correct === undefined) || (!isSelected && !isCorrectOption)) && (
                   <Circle className={`h-6 w-6 ${isSelected ? "fill-blue-600 text-blue-600" : "text-slate-600"}`} />
