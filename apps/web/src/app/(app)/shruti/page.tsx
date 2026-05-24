@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import {
   chunkDocument,
@@ -65,13 +64,15 @@ export default function ShrutiDictationPage() {
       // Revert to base pace if auto-advance is turned off
       runtime.setPace(pace);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runtime.state.autoAdvance, effectivePace, pace]);
 
   // Hydration gate: capability checks read `window`, which differs between
   // server and client. Render that UI only after first client paint.
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const canStart = useMemo(() => text.trim().length > 0, [text]);
 
@@ -185,7 +186,6 @@ export default function ShrutiDictationPage() {
     if (synthAbortRef.current) {
       cancelPrepare("Settings changed — preparation cancelled. Click Prepare to retry.");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, mode, runtime.state.selectedVoiceURI, pace.preset, pace.wpm]);
 
   // Cleanup on unmount.
@@ -214,7 +214,6 @@ export default function ShrutiDictationPage() {
   const hasStarted = doc !== null && status !== "IDLE";
   let primaryLabel: string;
   let primaryAction: () => void;
-  let primaryVariant: "default" | "outline" = "default";
   if (!doc) {
     primaryLabel = "Prepare & Start";
     primaryAction = startNow;
@@ -224,7 +223,6 @@ export default function ShrutiDictationPage() {
   } else if (hasStarted) {
     primaryLabel = "Stop";
     primaryAction = runtime.pause;
-    primaryVariant = "outline";
   } else {
     primaryLabel = "Start";
     primaryAction = startNow;
@@ -236,19 +234,6 @@ export default function ShrutiDictationPage() {
   };
 
   const activeModeHint = MODES.find((m) => m.value === mode)?.hint ?? "";
-  const activePaceConfig = pace;
-  const autoAdvanceApplies = mode === "word" || mode === "phrase";
-
-  // Detect Devanagari in the current source text. Word and phrase modes
-  // ARE supported now — each chunk gets its own Edge TTS call. The
-  // mode dropdown stays freely usable for Nepali.
-  const isDevanagariSource = useMemo(
-    () => /\p{Script=Devanagari}/u.test(text),
-    [text],
-  );
-
-  // Auto-advance is now allowed in all modes (sentence mode + auto-advance is
-  // the primary Nepali workflow). No coercion needed.
 
   // ─── Source upload state ──────────────────────────────────────────────
   type SourceTab = "paste" | "pdf" | "image";
@@ -587,10 +572,10 @@ export default function ShrutiDictationPage() {
               </select>
               <p id="pace-hint" className="text-xs text-slate-600 dark:text-slate-400">
                 Speech: natural pace, natural pitch (always).
-                Inside a sentence: <strong>{Math.round(activePaceConfig.intraSentenceWordGapMs)}ms</strong> silence
+                Inside a sentence: <strong>{Math.round(pace.intraSentenceWordGapMs)}ms</strong> silence
                 between each word. Writing pause:
-                {" "}{Math.round(activePaceConfig.interWordPauseMs / 100) / 10}s between chunks,
-                {" "}{Math.round(activePaceConfig.interSentencePauseMs / 100) / 10}s between sentences.
+                {" "}{Math.round(pace.interWordPauseMs / 100) / 10}s between chunks,
+                {" "}{Math.round(pace.interSentencePauseMs / 100) / 10}s between sentences.
               </p>
             </div>
           </div>
@@ -740,13 +725,8 @@ export default function ShrutiDictationPage() {
         <h2 id="controls-heading" className="text-lg font-medium">3. Start dictation</h2>
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <Button
-            onClick={
-              runtime.state.status === "IDLE"
-                ? prepare
-                : runtime.state.status === "PLAYING"
-                  ? runtime.pause
-                  : runtime.resume
-            }
+            onClick={primaryAction}
+            aria-label={primaryLabel}
             disabled={!canStart && runtime.state.status === "IDLE"}
             size="lg"
             className={

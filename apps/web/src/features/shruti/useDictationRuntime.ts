@@ -17,7 +17,7 @@ import {
   SessionEvent,
   createDictationSession,
 } from "./createDictationSession";
-import { HardenedTTS, spellSequence } from "./hardenedTts";
+import { HardenedTTS } from "./hardenedTts";
 import { VoiceCapture } from "./voiceCapture";
 import { logDebug, logWarn } from "./log";
 import { prewarmAudio } from "./audioCache";
@@ -238,7 +238,7 @@ export function useDictationRuntime(
   initialMode: DictationMode = "sentence",
 ): RuntimeApi {
   const ttsRef = useRef<HardenedTTS | null>(null);
-  const sessionRef = useRef<DictationSession | null>(null);
+  const [session, setSession] = useState<DictationSession | null>(null);
   const voiceRef = useRef<VoiceCapture | null>(null);
   const spellCancelRef = useRef<(() => void) | null>(null);
   const interSentenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -258,6 +258,28 @@ export function useDictationRuntime(
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURIState] = useState<string | null>(null);
+  const [currentSentence, setCurrentSentence] = useState<Sentence | null>(null);
+  const [currentChunkText, setCurrentChunkText] = useState<string | null>(null);
+
+  // Rebuild session and reset indices when doc changes, directly in render
+  const [prevDoc, setPrevDoc] = useState<DictationDocument | null>(null);
+  if (doc !== prevDoc) {
+    setPrevDoc(doc);
+    const newSession = doc
+      ? createDictationSession({
+          doc,
+          pace: initialPace,
+          mode: initialMode,
+          announcePunctuation,
+        })
+      : null;
+    setSession(newSession);
+    setGlobalSentenceIndex(0);
+    setWordIndex(0);
+    setStatus("IDLE");
+    setCurrentSentence(newSession?.currentSentence() ?? null);
+    setCurrentChunkText(newSession?.currentChunkText() ?? null);
+  }
 
   // Merge browser-installed voices with our virtual cloud voices into one
   // picker list. Cloud voices come first so Hemkala/Sagar are obvious.
@@ -268,20 +290,6 @@ export function useDictationRuntime(
     ];
   }, [browserVoices]);
   const lastChunkWasSentenceEnd = useRef(false);
-
-  // Build/rebuild session when doc changes.
-  useEffect(() => {
-    if (!doc) {
-      sessionRef.current = null;
-      return;
-    }
-    sessionRef.current = createDictationSession({
-      doc, pace: initialPace, mode: initialMode, announcePunctuation,
-    });
-    setGlobalSentenceIndex(0);
-    setWordIndex(0);
-    setStatus("IDLE");
-  }, [doc, initialPace, initialMode, announcePunctuation]);
 
   // Lazy TTS init (browser only).
   useEffect(() => {
@@ -326,15 +334,7 @@ export function useDictationRuntime(
     [],
   );
 
-  const currentSentence = useMemo<Sentence | null>(() => {
-    return sessionRef.current?.currentSentence() ?? null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalSentenceIndex, doc]);
 
-  const currentChunkText = useMemo<string | null>(() => {
-    return sessionRef.current?.currentChunkText() ?? null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalSentenceIndex, wordIndex, mode, doc]);
 
   const totalSentences = doc?.progressMap.totalSentences ?? 0;
 
@@ -550,25 +550,25 @@ export function useDictationRuntime(
         }
       }
       // Status may have changed from SPEAK (PLAYING) without a PERSIST event.
-      const live = sessionRef.current?.getState();
-      if (live) {
+      const live = session?.getState();
+      if (live && session) {
         setStatus(live.status);
         setGlobalSentenceIndex(live.globalSentenceIndex);
         setWordIndex(live.wordIndex);
+        setCurrentSentence(session.currentSentence());
+        setCurrentChunkText(session.currentChunkText());
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [doc, pace.wpm, pace.interSentencePauseMs, pace.interWordPauseMs],
+    [doc, pace, selectedVoiceURI, session],
   );
 
   const dispatch = useCallback(
     (intent: Intent) => {
-      const session = sessionRef.current;
       if (!session) return;
       const events = session.dispatch(intent);
       handleEvents(events);
     },
-    [handleEvents],
+    [handleEvents, session],
   );
 
   // Keep a stable ref so long-lived listeners (TTS callbacks, recognition
@@ -638,13 +638,13 @@ export function useDictationRuntime(
     const ms = computeWritingPauseMs({
       pace,
       isSentenceEnd: lastChunkWasSentenceEnd.current,
-      sentence: sessionRef.current?.currentSentence() ?? null,
+      sentence: session?.currentSentence() ?? null,
     });
     const t = setTimeout(() => {
       dispatchRef.current({ type: "NEXT" });
     }, ms);
     return () => clearTimeout(t);
-  }, [status, autoAdvance, pace.interSentencePauseMs, pace.interWordPauseMs, pace.wpm]);
+  }, [status, autoAdvance, pace.interSentencePauseMs, pace.interWordPauseMs, pace.wpm, session]);
 
   // Voice listening gate: keep recognizer alive but reject results
   // arriving while we're in PLAYING. Driven from BOTH a status effect
