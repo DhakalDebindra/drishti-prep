@@ -1,6 +1,13 @@
 import { Mp3Encoder } from "@breezystack/lamejs";
 
-const MODEL = "gemini-2.5-pro-preview-tts";
+// Pro TTS — better quality but very low daily quota (50/day on free tier).
+// Used for question audio where each clip is heard by many students.
+const MODEL_PRO = "gemini-2.5-pro-preview-tts";
+// Flash TTS — much higher quotas, slightly less polished. Used for Shruti
+// dictation where the same user may need 100+ chunks per session.
+const MODEL_FLASH = "gemini-2.5-flash-preview-tts";
+// Default for legacy callers.
+const MODEL = MODEL_PRO;
 
 // Gemini 2.5 Pro TTS paid tier allows ~30 RPM; 2 s between calls keeps us safely under.
 const TTS_MIN_INTERVAL_MS = 2_000;
@@ -24,7 +31,9 @@ const RETRY_DELAYS_MS = [1000, 3000, 8000];
 // PCM L16 24kHz mono — the only format Gemini TTS currently emits.
 const SAMPLE_RATE = 24_000;
 const BITS_PER_SAMPLE = 16;
-const MP3_BITRATE = 64; // kbps — ~400KB per question vs ~2.5MB WAV
+// 96 kbps is a noticeable jump in clarity over 64 with only ~50% size cost.
+// 128 is overkill for mono speech (the high frequencies barely benefit).
+const MP3_BITRATE = 96; // kbps
 
 // Empirical thresholds: a usable Nepali utterance is at least ~300ms with
 // non-trivial signal. Anything below has caused silent MP3 uploads in prod.
@@ -110,6 +119,25 @@ function buildNepaliPrompt(text: string): string {
   );
 }
 
+/**
+ * Shruti-specific style prompt. Differs from the question-audio prompt by
+ * being shorter, more deterministic, and emphasizing CONSISTENCY across
+ * many utterances in one session. Gemini TTS re-rolls vocal
+ * characteristics on each call; an explicit "maintain identical voice"
+ * directive significantly reduces inter-chunk drift in pitch / tempo /
+ * energy. The terser frame also leaves Gemini less interpretive room.
+ */
+function buildShrutiNepaliPrompt(text: string): string {
+  return (
+    "Voice: female Nepali teacher from Kathmandu, calm, even, neutral pitch. " +
+    "Maintain identical voice characteristics, pitch, tempo, and energy across " +
+    "every utterance — do not vary tone, do not add emotion, do not emphasize. " +
+    "Use authentic Nepali (ne-NP) pronunciation only; never Hindi (hi-IN) " +
+    "phonemes or intonation. Read at a steady moderate pace.\n" +
+    `Say: ${text}`
+  );
+}
+
 // Errors that should NOT be retried — auth/quota won't recover within the retry window.
 function isFatal(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
@@ -140,9 +168,27 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
  * field required for audio output. Switching SDKs only for this one call would
  * pull a large new dep; the REST shape is small enough to inline.
  */
+export interface SynthesizeOptions {
+  /**
+   * When true, uses the consistency-anchored prompt (terser, explicit
+   * "maintain identical voice" directive) and locks `temperature: 0`.
+   * Use for multi-utterance dictation sessions where chunk-to-chunk
+   * vocal drift is the bigger problem than expressiveness.
+   */
+  consistencyMode?: boolean;
+  /**
+   * Override the underlying TTS model. Defaults to the Pro variant for
+   * back-compat with the question-audio pipeline; pass "flash" to use
+   * the Flash TTS variant which has substantially higher daily and
+   * per-minute quotas — required for Shruti's longer sessions.
+   */
+  modelTier?: "pro" | "flash";
+}
+
 export async function synthesizeNepali(
   text: string,
-  voice: TutorVoice
+  voice: TutorVoice,
+  opts: SynthesizeOptions = {}
 ): Promise<SynthesizeResult> {
   const key =
     process.env.GEMINI_API_KEY ??
@@ -156,13 +202,21 @@ export async function synthesizeNepali(
   // — Gemini speaks only the text after "Say:" while the preface conditions
   // the accent. Anchoring to native Nepali pronunciation here eliminates the
   // hi-IN-flavoured option readings reported in prod.
-  const styled = buildNepaliPrompt(text);
+  const styled = opts.consistencyMode
+    ? buildShrutiNepaliPrompt(text)
+    : buildNepaliPrompt(text);
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
+  const modelId = opts.modelTier === "flash" ? MODEL_FLASH : MODEL;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`;
   const body = {
     contents: [{ parts: [{ text: styled }] }],
     generationConfig: {
       responseModalities: ["AUDIO"],
+      // Temperature 0 sharply reduces vocal drift between calls. The
+      // question-audio path uses the model's default; Shruti needs the
+      // tighter pin so a 100-chunk dictation session sounds like one
+      // continuous reader, not 100 slightly different ones.
+      temperature: opts.consistencyMode ? 0 : undefined,
       speechConfig: {
         voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
       },

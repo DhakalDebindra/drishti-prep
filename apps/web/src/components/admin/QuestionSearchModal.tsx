@@ -41,7 +41,7 @@ export function QuestionSearchModal({
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       setResults(data);
-    } catch (err) {
+    } catch {
       setError("Failed to load questions. Please try again.");
     } finally {
       setLoading(false);
@@ -85,6 +85,12 @@ export function QuestionSearchModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] bg-slate-50/50">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-200 text-center">
+              {error}
+            </div>
+          )}
+
           {loading && (
             <div className="flex flex-col items-center justify-center py-20 text-slate-500">
               <Loader2 className="w-8 h-8 animate-spin mb-2" />
