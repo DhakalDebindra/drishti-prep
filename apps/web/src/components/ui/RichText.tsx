@@ -11,12 +11,28 @@ type Block =
   | { type: "p"; text: string }
   | { type: "note"; text: string }
   | { type: "ul"; items: string[] }
-  | { type: "ol"; items: string[] };
+  | { type: "ol"; items: string[] }
+  | { type: "table"; head: string[]; rows: string[][] };
 
 const BULLET_RE = /^[-•]\s+(.+)/;
 const ORDERED_RE = /^(?:\d+[.)]\s+|[१२३४५६७८९०]+[.)]\s+)(.+)/;
 // Matches "नोट: ..." or "Note: ..."
 const NOTE_RE = /^(?:नोट|Note):\s*(.+)/i;
+// GFM-style table detection. A table is a row line starting and ending with
+// `|`, immediately followed by a separator row whose cells are made of
+// dashes (with optional leading/trailing colons for column alignment).
+// Without the separator row a stray pipe-line stays a normal paragraph, so
+// content that legitimately uses `|` (e.g. "ctrl|shift|delete") is unaffected.
+const TABLE_ROW_RE = /^\|.*\|$/;
+const TABLE_SEPARATOR_RE = /^\|(?:\s*:?-+:?\s*\|)+$/;
+
+/** Strip the framing pipes and split a row into trimmed cells. */
+function splitTableRow(line: string): string[] {
+  return line
+    .slice(1, -1)
+    .split("|")
+    .map((cell) => cell.trim());
+}
 
 /**
  * Renders inline `**bold**` spans as <strong>. Everything else stays plain text.
@@ -33,7 +49,34 @@ function parseBlocks(text: string): Block[] {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const blocks: Block[] = [];
 
-  for (const line of lines) {
+  // Index-based loop so we can lookahead at lines[i+1] for the table-separator
+  // row. The rest of the matchers work on a single line and just increment i
+  // by one — only the table branch consumes multiple lines per iteration.
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const nextLine = lines[i + 1];
+
+    // GFM table: header row + separator row + 0..N data rows. Both the header
+    // row AND the separator row must match for the block to be a table; this
+    // keeps a lone "|cmd|out|" line in prose from being misclassified.
+    if (
+      TABLE_ROW_RE.test(line) &&
+      nextLine !== undefined &&
+      TABLE_SEPARATOR_RE.test(nextLine)
+    ) {
+      const head = splitTableRow(line);
+      const rows: string[][] = [];
+      let j = i + 2;
+      while (j < lines.length && TABLE_ROW_RE.test(lines[j])) {
+        rows.push(splitTableRow(lines[j]));
+        j++;
+      }
+      blocks.push({ type: "table", head, rows });
+      i = j;
+      continue;
+    }
+
     const bulletMatch = line.match(BULLET_RE);
     const orderedMatch = line.match(ORDERED_RE);
     const noteMatch = line.match(NOTE_RE);
@@ -57,6 +100,7 @@ function parseBlocks(text: string): Block[] {
     } else {
       blocks.push({ type: "p", text: line });
     }
+    i++;
   }
 
   return blocks;
@@ -103,6 +147,44 @@ export function RichText({ children, lang = "ne", className }: RichTextProps) {
             <p key={i} className="mt-2 text-xs italic opacity-75 border-l-2 border-current pl-2">
               <span className="not-italic font-semibold">नोट:</span> {renderInline(block.text)}
             </p>
+          );
+        }
+        if (block.type === "table") {
+          // Semantic <table> with <th scope="col"> so assistive tech announces
+          // column relationships. Outer scroll wrapper prevents wide tables
+          // (medal tallies with many columns) from breaking mobile layouts.
+          return (
+            <div key={i} className="my-2 overflow-x-auto">
+              <table className="w-full text-sm border-collapse border border-current/30">
+                <thead>
+                  <tr>
+                    {block.head.map((cell, ci) => (
+                      <th
+                        key={ci}
+                        scope="col"
+                        className="border border-current/30 px-2 py-1 text-left font-semibold bg-current/5"
+                      >
+                        {renderInline(cell)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.rows.map((row, ri) => (
+                    <tr key={ri}>
+                      {row.map((cell, ci) => (
+                        <td
+                          key={ci}
+                          className="border border-current/30 px-2 py-1 align-top"
+                        >
+                          {renderInline(cell)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           );
         }
         return (
