@@ -2,6 +2,17 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
 import type { FewShotExample } from "@/config/prompts/index";
 
+export type GroundingChunk = {
+  web?: { uri?: string; title?: string };
+};
+
+export type GroundedProseResult = {
+  text: string;
+  latencyMs: number;
+  groundingChunks: GroundingChunk[];
+  model: string;
+};
+
 const AIConfig = {
   providers: {
     gemini: {
@@ -82,5 +93,82 @@ export async function generateAiContentJSON(
     provider: "google",
     model: modelId,
     latency_ms: latencyMs,
+  };
+}
+
+// Grounded prose generation with Google Search tool. Used when the answer
+// hinges on facts that may be newer than the model's training cutoff
+// (current officials, latest sports results, recent statistics, post-2024
+// events). The model decides when to search; results are cited back via
+// `groundingChunks` if you want to surface sources.
+//
+// Uses raw fetch because the v0.24 SDK only exposes the legacy
+// `googleSearchRetrieval` field name from Gemini 1.5; Gemini 2.5 requires
+// `google_search`, which only the v1beta REST endpoint accepts.
+export async function generateGroundedProse(opts: {
+  systemInstruction: string;
+  userMessage: string;
+  /** Defaults to 90s. Grounded calls are slower because Gemini executes
+   *  searches mid-generation. */
+  timeoutMs?: number;
+  /** Defaults to 0.3 — slight creativity for natural prose, but tight
+   *  enough that the grounded facts stay deterministic. */
+  temperature?: number;
+  /** Override model id; defaults to gemini-2.5-flash. */
+  modelId?: string;
+}): Promise<GroundedProseResult> {
+  if (!geminiApiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const started = performance.now();
+  const modelId = opts.modelId ?? AIConfig.providers.gemini.flash;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${geminiApiKey}`;
+
+  const body = {
+    systemInstruction: { parts: [{ text: opts.systemInstruction }] },
+    contents: [{ role: "user", parts: [{ text: opts.userMessage }] }],
+    tools: [{ google_search: {} }],
+    generationConfig: {
+      temperature: opts.temperature ?? 0.3,
+    },
+  };
+
+  const res = await withTimeout(
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    opts.timeoutMs ?? 90_000,
+  );
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Gemini grounded prose HTTP ${res.status}: ${errText.slice(0, 500)}`);
+  }
+
+  type Resp = {
+    candidates?: Array<{
+      content?: { parts?: Array<{ text?: string }> };
+      groundingMetadata?: { groundingChunks?: GroundingChunk[] };
+    }>;
+  };
+  const json = (await res.json()) as Resp;
+  const candidate = json.candidates?.[0];
+  const text = (candidate?.content?.parts ?? [])
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
+
+  if (!text) {
+    throw new Error("Gemini grounded prose returned empty text");
+  }
+
+  return {
+    text,
+    latencyMs: Math.round(performance.now() - started),
+    groundingChunks: candidate?.groundingMetadata?.groundingChunks ?? [],
+    model: modelId,
   };
 }
