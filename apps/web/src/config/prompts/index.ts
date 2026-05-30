@@ -1,4 +1,4 @@
-export { Prompts, SystemInstructions, GKFacilitatorFewShot } from "./templates";
+export { Prompts, SystemInstructions, GKFacilitatorFewShot, LoksewaGKFacilitatorGrounded } from "./templates";
 export {
   parseCoachFeedback,
   safeParseCoachFeedback,
