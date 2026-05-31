@@ -467,7 +467,7 @@ function PracticeSetView() {
             <div className="border-t pt-3">
               <button
                 type="button"
-                className="text-sm font-bold text-blue-700 hover:text-blue-900 underline underline-offset-4"
+                className="inline-flex min-h-12 sm:min-h-0 items-center text-base sm:text-sm font-bold text-blue-700 hover:text-blue-900 underline underline-offset-4 py-2 sm:py-0"
                 aria-expanded={state.showExplanation[currentQuestion.id]}
                 aria-controls={`explanation-${currentQuestion.id}`}
                 onClick={() => toggleExplanation(currentQuestion.id)}
@@ -495,8 +495,13 @@ function PracticeSetView() {
             </div>
           )}
 
-          <div className="mt-auto border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 order-2 sm:order-1">
+          {/*
+            Desktop action row. On mobile, the sticky MobileActionBar below
+            replaces this so the primary actions stay within thumb reach
+            without scrolling past long questions and option lists.
+          */}
+          <div className="mt-auto border-t pt-4 hidden md:flex md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center justify-start gap-4">
               <Button aria-label="Previous question" variant="outline" size="lg" className="border-2 border-slate-500 text-slate-800 hover:border-slate-700 hover:bg-slate-100 font-medium" onClick={goPrev} disabled={currentIndex === 0}>
                 Previous
               </Button>
@@ -547,7 +552,7 @@ function PracticeSetView() {
                 </Button>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-700 order-1 sm:order-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-700">
               <span className="font-medium">Q {currentIndex + 1}</span>
               <span>•</span>
               <span>
@@ -560,7 +565,9 @@ function PracticeSetView() {
 
       <QuestionNavigator />
 
-      <div className="flex flex-col gap-2 w-full">
+      {/* Early-submit shortcut — kept on desktop only. On mobile users
+          navigate to the last question and use the sticky-bar Submit. */}
+      <div className="hidden md:flex flex-col gap-2 w-full">
         {currentIndex !== questionCount - 1 && (
           <>
             <Button
@@ -585,6 +592,72 @@ function PracticeSetView() {
             )}
           </>
         )}
+      </div>
+
+      {/* Spacer so the last content isn't hidden behind the mobile sticky bar. */}
+      <div className="md:hidden h-24" aria-hidden="true" />
+
+      {/* Mobile sticky bottom action bar — primary actions within thumb reach. */}
+      <div
+        className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur shadow-[0_-4px_12px_rgba(15,23,42,0.06)]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="flex items-stretch gap-2 px-4 py-3">
+          <Button
+            aria-label="Previous question"
+            variant="outline"
+            className="flex-1 min-h-12 border-2 border-slate-500 text-slate-800 hover:border-slate-700 hover:bg-slate-100 font-medium"
+            onClick={goPrev}
+            disabled={currentIndex === 0}
+          >
+            Previous
+          </Button>
+          <div className="flex flex-col items-center justify-center text-[11px] leading-tight text-slate-700 min-w-[56px]">
+            <span className="font-semibold text-slate-900">
+              {currentIndex + 1}/{questionCount}
+            </span>
+            <span className="text-slate-500">{answeredCount} done</span>
+          </div>
+          {currentIndex === questionCount - 1 ? (
+            <Button
+              className="flex-1 min-h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
+              onClick={async () => {
+                if (!currentHandled) {
+                  await handleSkip(currentQuestion.id);
+                }
+                setShowConfirmDialog(true);
+              }}
+              disabled={
+                state.status === "submitted" ||
+                state.isSubmitting ||
+                state.saving ||
+                !canSubmit
+              }
+            >
+              {state.isSubmitting
+                ? "Submitting..."
+                : state.status === "submitted"
+                  ? "Submitted"
+                  : !currentHandled
+                    ? "Skip & Submit"
+                    : "Submit"}
+            </Button>
+          ) : (
+            <Button
+              aria-label="Next question"
+              className="flex-1 min-h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+              onClick={async () => {
+                if (!currentHandled) {
+                  await handleSkip(currentQuestion.id);
+                } else {
+                  goNext();
+                }
+              }}
+            >
+              Next
+            </Button>
+          )}
+        </div>
       </div>
 
       <ConfirmSubmitDialog />
