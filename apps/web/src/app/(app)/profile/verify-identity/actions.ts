@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 500 * 1024;
 const ALLOWED_MIME = new Set([
   "image/jpeg",
   "image/png",
@@ -29,7 +29,7 @@ export async function submitIdentityVerification(formData: FormData) {
     return { error: "No file provided." };
   }
   if (file.size > MAX_BYTES) {
-    return { error: "File is too large. Maximum size is 5 MB." };
+    return { error: "File is too large. Maximum size is 500 KB. Please compress the image and try again." };
   }
   if (!ALLOWED_MIME.has(file.type)) {
     return {
