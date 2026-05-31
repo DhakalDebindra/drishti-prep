@@ -39,6 +39,11 @@ export function IdentityVerifyPrompt({
     } catch {
       // sessionStorage unavailable (private mode, etc.) — still show.
     }
+    // One-time mount-time read of sessionStorage to decide whether to
+    // open. This is a legitimate "sync with external system" effect —
+    // sessionStorage doesn't emit change events to the same tab, so
+    // useSyncExternalStore would not help.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(true);
   }, [shouldShow]);
 
