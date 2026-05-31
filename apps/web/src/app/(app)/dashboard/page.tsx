@@ -5,6 +5,7 @@ import { MacroAnalytics } from "@/components/dashboard/MacroAnalytics";
 import { PracticeBanners } from "@/components/dashboard/PracticeBanners";
 import { AttemptHistoryList } from "@/components/dashboard/AttemptHistoryList";
 import { IdentityStatusBanner } from "@/components/dashboard/IdentityStatusBanner";
+import { IdentityVerifyPrompt } from "@/components/dashboard/IdentityVerifyPrompt";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -82,6 +83,8 @@ export default async function DashboardPage() {
           Track your progress, review your mistakes, and continue learning.
         </p>
       </div>
+
+      <IdentityVerifyPrompt shouldShow={disabilityStatus === "not_submitted"} />
 
       <IdentityStatusBanner
         status={disabilityStatus}
