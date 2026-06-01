@@ -85,21 +85,36 @@ export async function GET(req: Request, { params }: RouteParams) {
   const result = await generateReviewFeedback(questionsSummary, scoreRaw, totalQuestions, scorePct);
   const parsed = result.data ? safeParseCoachFeedback(result.data) : null;
 
+  // AI failure path: log the upstream error server-side, but never persist
+  // it or leak it to the client. Without this guard, the raw provider error
+  // (which can contain billing URLs and API endpoint hints) was being
+  // upserted into ai_feedback.strengths and rendered as coaching text.
+  if (!parsed) {
+    console.error("[ai_feedback] generation failed", {
+      attempt_id: attemptId,
+      provider_error: result.error,
+      model: result.model,
+    });
+    return NextResponse.json(
+      { error: "AI feedback temporarily unavailable. Please try again shortly." },
+      { status: 503 },
+    );
+  }
+
   const explanationsFallback: Record<string, string> = {};
   decorated.forEach((a) => {
     if (a.explanation) explanationsFallback[a.question_id] = a.explanation;
   });
 
   const feedbackPayload = {
-    strengths: parsed?.strengths || result.error || "AI feedback generation failed.",
-    weak_zones: parsed?.weakZones || null,
+    strengths: parsed.strengths,
+    weak_zones: parsed.weakZones || null,
     explanations: explanationsFallback,
     model: result.model || null,
     latency_ms: result.latency_ms || null,
     cost_cents: null,
   };
 
-  // Save dynamically generated feedback
   await supabase
     .from("ai_feedback")
     .upsert({

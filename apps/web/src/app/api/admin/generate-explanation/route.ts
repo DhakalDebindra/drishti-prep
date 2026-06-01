@@ -58,13 +58,22 @@ export async function POST(req: Request) {
       correct_option
     } as any);
 
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+    if (result.error || !result.data) {
+      console.error("[admin.generate-explanation] AI failed", {
+        provider_error: result.error,
+      });
+      return NextResponse.json(
+        { error: "Explanation generation temporarily unavailable." },
+        { status: 503 },
+      );
     }
 
     return NextResponse.json({ explanation: result.data });
   } catch (error: any) {
-    console.error("Explanation Generation Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[admin.generate-explanation] handler error", error);
+    return NextResponse.json(
+      { error: "Internal error generating explanation." },
+      { status: 500 },
+    );
   }
 }

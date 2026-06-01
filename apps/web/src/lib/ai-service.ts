@@ -13,11 +13,15 @@ export type GroundedProseResult = {
   model: string;
 };
 
+// Model IDs are env-overridable so we can A/B newer Gemini releases
+// (e.g. swap `flash` to `gemini-2.5-flash-lite` for cost, or `pro` to
+// `gemini-3.1-pro-preview` for a quality experiment) without a redeploy.
+// Defaults stay on the GA 2.5 family for stability.
 const AIConfig = {
   providers: {
     gemini: {
-      flash: "gemini-2.5-flash",
-      pro: "gemini-2.5-pro",
+      flash: process.env.GEMINI_MODEL_FLASH || "gemini-2.5-flash",
+      pro: process.env.GEMINI_MODEL_PRO || "gemini-2.5-pro",
       responseMimeType: "application/json",
       temperature: 0.2,
     },
