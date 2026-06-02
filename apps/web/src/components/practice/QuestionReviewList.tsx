@@ -6,6 +6,7 @@ import { Lang } from "@/components/ui/Lang";
 import { RichText } from "@/components/ui/RichText";
 import { toggleBookmark } from "@/app/actions/practice-actions";
 import { ReportIssueModal } from "./ReportIssueModal";
+import { QuestionContent } from "./QuestionContent";
 
 export type ReviewQuestion = {
   id: string;
@@ -158,7 +159,14 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                         aria-controls={`question-panel-${q.id}`}
                         className="w-full text-left font-medium pr-8 focus:outline-none focus:underline"
                      >
-                        <p className="text-slate-900 dark:text-white inline"><Lang>{q.content}</Lang></p>
+                        {/*
+                          The collapsed button only shows the first line of the stem
+                          (everything before the first newline) so a table/list
+                          structure isn't crammed into an interactive control. The
+                          fully formatted stem renders inside the expanded panel
+                          below, where block-level elements are valid.
+                        */}
+                        <p className="text-slate-900 dark:text-white inline"><Lang>{q.content.split(/\r?\n/, 1)[0]}</Lang></p>
                      </button>
                   </div>
 
@@ -179,6 +187,14 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
 
                 {isExpanded && (
                   <div id={`question-panel-${q.id}`} className="border-t border-slate-100 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-900/50 space-y-4">
+                    {/* Full stem with accessible table / list rendering for
+                        match-pair and numbered-list question shapes. */}
+                    {q.content.includes("\n") ? (
+                      <QuestionContent
+                        content={q.content}
+                        className="text-slate-900 dark:text-white text-base leading-relaxed"
+                      />
+                    ) : null}
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-3" aria-label="Question options">
                       {["a", "b", "c", "d"].map((opt) => {
                         const optKey = `option_${opt}` as keyof ReviewQuestion;

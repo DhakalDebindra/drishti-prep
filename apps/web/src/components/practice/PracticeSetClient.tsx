@@ -24,6 +24,7 @@ import type {
   Question,
 } from "@repo/types";
 import { QuestionOptions, optionKeys } from "@/components/practice/QuestionOptions";
+import { QuestionContent } from "@/components/practice/QuestionContent";
 
 type Props = {
   setInfo: {
@@ -263,12 +264,11 @@ function PracticeSetView() {
           <p className="text-sm font-semibold text-slate-700">
             Question {currentIndex + 1} of {questionCount}
           </p>
-          <div
+          <QuestionContent
+            content={currentQuestion.content}
             className="text-lg sm:text-xl font-medium text-slate-900 leading-relaxed"
-            aria-hidden={tutorActive ? "true" : undefined}
-          >
-            <Lang>{currentQuestion.content}</Lang>
-          </div>
+            ariaHidden={tutorActive}
+          />
           <QuestionOptions
             questionId={currentQuestion.id}
             options={optionsList}
@@ -428,20 +428,25 @@ function PracticeSetView() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 flex-1">
-          <div
+          {/*
+            When tutor mode is actively reading aloud, the stem is hidden
+            from screen readers to prevent simultaneous English-SR + Nepali-TTS
+            narration. The visible text is unchanged so sighted users and
+            anyone with tutor muted keep their full UX.
+          */}
+          <QuestionContent
             key={currentQuestion.id}
             id={questionTitleId}
+            content={currentQuestion.content}
             className="text-lg sm:text-xl font-medium text-slate-900 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] leading-relaxed mb-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
             tabIndex={-1}
-            // When tutor mode is actively reading aloud, hide the stem from
-            // screen readers to prevent simultaneous English-SR + Nepali-TTS
-            // narration. The visible text is unchanged so sighted users and
-            // anyone with tutor muted keep their full UX.
-            aria-hidden={tutorActive ? "true" : undefined}
-          >
-            <span className="text-slate-700 text-sm font-semibold uppercase tracking-wider block mb-1">Question {currentIndex + 1}</span>
-            <Lang>{currentQuestion.content}</Lang>
-          </div>
+            ariaHidden={tutorActive}
+            header={
+              <span className="text-slate-700 text-sm font-semibold uppercase tracking-wider block mb-1">
+                Question {currentIndex + 1}
+              </span>
+            }
+          />
 
           <QuestionOptions
             questionId={currentQuestion.id}
