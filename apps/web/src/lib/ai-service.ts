@@ -17,6 +17,14 @@ export type GroundedProseResult = {
 // (e.g. swap `flash` to `gemini-2.5-flash-lite` for cost, or `pro` to
 // `gemini-3.1-pro-preview` for a quality experiment) without a redeploy.
 // Defaults stay on the GA 2.5 family for stability.
+//
+// DEPRECATION SCHEDULE (per https://ai.google.dev/gemini-api/docs/deprecations):
+//   • gemini-2.5-flash       → shutdown Oct 16, 2026 → replace with gemini-3.5-flash
+//   • gemini-2.5-pro         → shutdown Oct 16, 2026 → replace with gemini-3.1-pro-preview
+//   • gemini-2.5-flash-lite  → shutdown Oct 16, 2026 → replace with gemini-3.1-flash-lite
+// Plan: benchmark Nepali output quality on the 3.x replacements before
+// flipping defaults. Until then, override via env at the platform level
+// when you want to test individual paths.
 const AIConfig = {
   providers: {
     gemini: {

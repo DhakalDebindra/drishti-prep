@@ -1,11 +1,24 @@
 import { Mp3Encoder } from "@breezystack/lamejs";
 
+// ─── TTS model IDs ────────────────────────────────────────────────────────
+// Both 2.5 preview TTS models are scheduled for retirement (no exact date
+// from Google as of June 2026, but the upstream `gemini-2.5-*` text family
+// is set for shutdown on **October 16, 2026** and the preview TTS variants
+// usually follow on a similar or shorter clock). Google's recommended
+// replacement is `gemini-3.1-flash-tts-preview` for both tiers.
+//
+// IDs are env-overridable so the migration can happen without a redeploy
+// once we've A/B tested Nepali quality on 3.1 Flash TTS. Defaults stay on
+// the GA 2.5 family to avoid breaking anything before that test runs.
+//
 // Pro TTS — better quality but very low daily quota (50/day on free tier).
 // Used for question audio where each clip is heard by many students.
-const MODEL_PRO = "gemini-2.5-pro-preview-tts";
+const MODEL_PRO =
+  process.env.GEMINI_MODEL_TTS_PRO || "gemini-2.5-pro-preview-tts";
 // Flash TTS — much higher quotas, slightly less polished. Used for Shruti
 // dictation where the same user may need 100+ chunks per session.
-const MODEL_FLASH = "gemini-2.5-flash-preview-tts";
+const MODEL_FLASH =
+  process.env.GEMINI_MODEL_TTS_FLASH || "gemini-2.5-flash-preview-tts";
 // Default for legacy callers.
 const MODEL = MODEL_PRO;
 
