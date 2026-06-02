@@ -11,6 +11,15 @@ import { submitIdentityVerification } from "./actions";
 
 type Status = "not_submitted" | "pending" | "approved" | "rejected";
 
+const MAX_BYTES = 500 * 1024;
+const ALLOWED_MIME = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "application/pdf",
+];
+
 export default function VerifyIdentityClient({
   status,
   rejectionReason,
@@ -29,12 +38,21 @@ export default function VerifyIdentityClient({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [hasInvalidFile, setHasInvalidFile] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setIsUploading(true);
     const formData = new FormData(e.currentTarget);
+    const file = formData.get("file");
+    if (file instanceof File) {
+      const validation = validateFile(file);
+      if (validation) {
+        setError(validation);
+        return;
+      }
+    }
+    setIsUploading(true);
     const res = await submitIdentityVerification(formData);
     if (res?.error) {
       setError(res.error);
@@ -46,6 +64,14 @@ export default function VerifyIdentityClient({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
     setSelectedName(f ? `${f.name} (${formatBytes(f.size)})` : null);
+    if (!f) {
+      setError(null);
+      setHasInvalidFile(false);
+      return;
+    }
+    const validation = validateFile(f);
+    setError(validation);
+    setHasInvalidFile(validation !== null);
   };
 
   if (status === "approved") {
@@ -162,7 +188,9 @@ export default function VerifyIdentityClient({
               onChange={handleFileChange}
             />
             <p id="upload-hint" className="text-sm text-gray-500 mt-1">
-              Maximum 5 MB. Supported formats: JPG, PNG, WEBP, HEIC, PDF.
+              Maximum 500 KB. Supported formats: JPG, PNG, WEBP, HEIC, PDF. If
+              your file is larger, please compress or take a lower-resolution
+              photo before uploading.
             </p>
             <p
               id="upload-selected"
@@ -173,7 +201,7 @@ export default function VerifyIdentityClient({
             </p>
           </div>
 
-          <Button type="submit" disabled={isUploading}>
+          <Button type="submit" disabled={isUploading || hasInvalidFile}>
             {isUploading ? (
               "Uploading..."
             ) : (
@@ -186,6 +214,17 @@ export default function VerifyIdentityClient({
       </div>
     </div>
   );
+}
+
+function validateFile(file: File): string | null {
+  if (file.size === 0) return "The selected file is empty.";
+  if (file.size > MAX_BYTES) {
+    return `File is too large (${formatBytes(file.size)}). Maximum size is 500 KB. Please compress the image or take a lower-resolution photo.`;
+  }
+  if (!ALLOWED_MIME.includes(file.type)) {
+    return "Unsupported format. Please upload JPG, PNG, WEBP, HEIC, or PDF.";
+  }
+  return null;
 }
 
 function formatBytes(bytes: number): string {

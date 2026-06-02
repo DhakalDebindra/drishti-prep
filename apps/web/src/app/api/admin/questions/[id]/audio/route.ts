@@ -17,7 +17,14 @@ export const runtime = "nodejs";
 export const maxDuration = 300; // 5 min — generating 6 segments takes ~90s
 
 const BUCKET = "question-audio";
-const MODEL = "gemini-2.5-pro-preview-tts";
+// Recorded as the `model` column on question_audio rows for cost telemetry.
+// The actual TTS call uses the model resolved inside `tts-service.ts`
+// (GEMINI_MODEL_TTS_PRO env override → default `gemini-2.5-pro-preview-tts`);
+// keep this label in sync with that resolver if you change it.
+// Deprecation note: the 2.5 preview TTS models are slated for retirement
+// in line with the Oct 16 2026 shutdown of the 2.5 text family.
+const MODEL =
+  process.env.GEMINI_MODEL_TTS_PRO || "gemini-2.5-pro-preview-tts";
 
 type Ctx = { params: Promise<{ id: string }> };
 
