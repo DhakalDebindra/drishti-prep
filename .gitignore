@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Manana TTS test outputs (local A/B audio renders)
+apps/web/tmp/
+
 # typescript
 *.tsbuildinfo
 **/next-env.d.ts

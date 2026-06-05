@@ -8,11 +8,18 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "backfill:manana-memory": "tsx --env-file=.env.local scripts/manana-backfill-memory.ts",
+    "test:manana-script": "tsx --env-file=.env.local scripts/manana-test-script.ts",
+    "test:manana-elevenlabs": "tsx --env-file=.env.local scripts/manana-test-elevenlabs.ts",
+    "rerender:manana": "tsx --env-file=.env.local scripts/manana-rerender-audio.ts",
+    "diag:gemini-tier": "tsx --env-file=.env.local scripts/check-gemini-tier.ts",
+    "seed:manana-branding": "tsx --env-file=.env.local scripts/manana-seed-branding-sounds.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@breezystack/lamejs": "^1.2.7",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -23,10 +30,12 @@
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/validation": "workspace:*",
+    "@supabase/supabase-js": "^2.99.1",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "class-variance-authority": "^0.7.1",
     "dotenv": "^17.3.1",
+    "ffmpeg-static": "^5.2.0",
     "lucide-react": "^0.577.0",
     "msedge-tts": "^2.0.5",
     "next": "16.1.6",
@@ -51,6 +60,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

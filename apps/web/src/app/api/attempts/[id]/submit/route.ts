@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { applyOutcome, INITIAL_STABILITY, type Outcome } from "@/lib/manana/memory";
+import { logger } from "@/lib/logger";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -63,6 +65,71 @@ export async function POST(req: Request, { params }: RouteParams) {
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message || "Failed to finalize attempt" }, { status: 500 });
+  }
+
+  // Manana memory-heat update: per-question stability via Ebbinghaus model.
+  // Best-effort — failure here must not block the attempt submission. Cast to
+  // any because user_memory_states (added in the manana migration) is not yet
+  // in the generated database.types.ts.
+  try {
+    type ScoredAnswer = { question_id: string; is_correct: boolean };
+    const scored: ScoredAnswer[] = (answers ?? [])
+      .filter((a) => a.question_id != null && a.is_correct != null)
+      .map((a) => ({ question_id: a.question_id as string, is_correct: a.is_correct as boolean }));
+
+    if (scored.length > 0) {
+      const questionIds = scored.map((a) => a.question_id);
+      const { data: existing } = await (supabase as any)
+        .from("user_memory_states")
+        .select("question_id, stability, review_count, mistake_count")
+        .eq("user_id", user.id)
+        .in("question_id", questionIds);
+
+      const prevByQ = new Map<
+        string,
+        { stability: number; review_count: number; mistake_count: number }
+      >(
+        ((existing as any[]) ?? []).map((r) => [
+          r.question_id as string,
+          {
+            stability: r.stability as number,
+            review_count: r.review_count as number,
+            mistake_count: r.mistake_count as number,
+          },
+        ]),
+      );
+
+      const nowIso = new Date().toISOString();
+      const rows = scored.map((a) => {
+        const outcome: Outcome = a.is_correct ? "correct" : "wrong";
+        const prev = prevByQ.get(a.question_id);
+        const prevStability = prev?.stability ?? INITIAL_STABILITY;
+        const reviewCount = (prev?.review_count ?? 0) + 1;
+        const mistakeCount = (prev?.mistake_count ?? 0) + (outcome === "wrong" ? 1 : 0);
+        return {
+          user_id: user.id,
+          question_id: a.question_id,
+          stability: applyOutcome(prevStability, outcome),
+          last_reviewed_at: nowIso,
+          last_outcome: outcome,
+          review_count: reviewCount,
+          mistake_count: mistakeCount,
+          updated_at: nowIso,
+        };
+      });
+
+      const { error: memErr } = await (supabase as any)
+        .from("user_memory_states")
+        .upsert(rows, { onConflict: "user_id,question_id" });
+      if (memErr) {
+        logger.error("[manana] memory upsert failed", { attemptId, error: memErr.message });
+      }
+    }
+  } catch (e) {
+    logger.error("[manana] memory hook threw", {
+      attemptId,
+      error: e instanceof Error ? e.message : String(e),
+    });
   }
 
   // CLEANUP LOGIC: Maintain clean database

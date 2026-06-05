@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type ResponseSchema } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
 import type { FewShotExample } from "@/config/prompts/index";
 
@@ -108,15 +108,80 @@ export async function generateAiContentJSON(
   };
 }
 
-// Grounded prose generation with Google Search tool. Used when the answer
-// hinges on facts that may be newer than the model's training cutoff
-// (current officials, latest sports results, recent statistics, post-2024
-// events). The model decides when to search; results are cited back via
-// `groundingChunks` if you want to surface sources.
+// Variant that enforces a `responseSchema` so the model is forced to emit a
+// payload matching the declared shape. Used by Manana's script compiler.
+// `systemInstruction` is passed separately from `userMessage` so the system
+// instruction can be reused across calls and cached by the SDK.
+export async function generateStructuredContent<T = unknown>(opts: {
+  systemInstruction: string;
+  userMessage: string;
+  responseSchema: ResponseSchema;
+  tier?: "flash" | "pro";
+  temperature?: number;
+  // Override the default 25s timeout. Long-form generators (Manana's 10–15 min
+  // podcast script ≈ ~3000 output tokens) need 60–90s to be reliable on Flash.
+  timeoutMs?: number;
+}): Promise<{ data: T; raw: string; model: string; latency_ms: number }> {
+  if (!geminiApiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const started = performance.now();
+  const modelId = AIConfig.providers.gemini[opts.tier ?? "flash"];
+
+  const model = genAI.getGenerativeModel({
+    model: modelId,
+    systemInstruction: opts.systemInstruction,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: opts.responseSchema,
+      temperature: opts.temperature ?? AIConfig.providers.gemini.temperature,
+    },
+  });
+
+  const result = await withTimeout(
+    model.generateContent({
+      contents: [{ role: "user", parts: [{ text: opts.userMessage }] }],
+    }),
+    opts.timeoutMs ?? REQUEST_TIMEOUT_MS,
+  );
+  const latencyMs = Math.round(performance.now() - started);
+  const raw = result.response.text();
+
+  let data: T;
+  try {
+    data = JSON.parse(raw) as T;
+  } catch {
+    throw new Error(`Structured response was not valid JSON: ${raw.slice(0, 200)}`);
+  }
+
+  return { data, raw, model: modelId, latency_ms: latencyMs };
+}
+
+// ─── Grounded prose generation (Google Search tool) ──────────────────────
 //
-// Uses raw fetch because the v0.24 SDK only exposes the legacy
-// `googleSearchRetrieval` field name from Gemini 1.5; Gemini 2.5 requires
-// `google_search`, which only the v1beta REST endpoint accepts.
+// Used by Manana for the first pass of script generation: produce long-form
+// Nepali prose with web search grounding so current-affairs claims can be
+// verified against fresh results instead of relying on the model's training
+// cutoff. The grounded prose is then reformatted into the structured
+// MananaEpisodeScript schema by a second `generateStructuredContent` call —
+// Gemini's structured-output mode and Google Search tool historically don't
+// combine cleanly, so two passes is the safe architecture.
+//
+// Uses raw fetch because the v0.24 SDK only exposes `googleSearchRetrieval`
+// (the legacy Gemini 1.5 field name); Gemini 2.5 requires `google_search`,
+// which only the v1beta REST endpoint accepts.
+
+export type GroundingChunk = {
+  web?: { uri?: string; title?: string };
+};
+
+export type GroundedProseResult = {
+  text: string;
+  latencyMs: number;
+  groundingChunks: GroundingChunk[];
+  model: string;
+};
 export async function generateGroundedProse(opts: {
   systemInstruction: string;
   userMessage: string;
@@ -140,6 +205,9 @@ export async function generateGroundedProse(opts: {
   const body = {
     systemInstruction: { parts: [{ text: opts.systemInstruction }] },
     contents: [{ role: "user", parts: [{ text: opts.userMessage }] }],
+    // Gemini 2.x search tool. Empty object is correct — tool config goes in
+    // the dynamic_retrieval_config sub-object which we don't need here
+    // (default behaviour: model decides when to search).
     tools: [{ google_search: {} }],
     generationConfig: {
       temperature: opts.temperature ?? 0.3,
