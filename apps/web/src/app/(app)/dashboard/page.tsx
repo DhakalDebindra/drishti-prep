@@ -6,6 +6,9 @@ import { PracticeBanners } from "@/components/dashboard/PracticeBanners";
 import { AttemptHistoryList } from "@/components/dashboard/AttemptHistoryList";
 import { IdentityStatusBanner } from "@/components/dashboard/IdentityStatusBanner";
 import { IdentityVerifyPrompt } from "@/components/dashboard/IdentityVerifyPrompt";
+import { MemoryHeatWidget } from "@/components/dashboard/MemoryHeatWidget";
+import { fetchMemoryHeat } from "@/lib/manana/heat-aggregate";
+import { MananaPlayerCard } from "@/features/manana/components/MananaPlayerCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -65,6 +68,8 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
+  const memoryHeat = await fetchMemoryHeat(supabase, user.id);
+
   const safeAttempts = attempts as any[] || [];
   const activeCourses = enrollments?.map((e: any) => e.modules).filter(Boolean) || [];
   const disabilityStatus = (profile?.disability_status ?? "not_submitted") as
@@ -72,6 +77,23 @@ export default async function DashboardPage() {
     | "pending"
     | "approved"
     | "rejected";
+
+  const { data: episode } = await (supabase as any)
+    .from("manana_episodes")
+    .select("id, storage_path")
+    .eq("user_id", user.id)
+    .eq("status", "ready")
+    .order("week_starting", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let mananaSignedUrl = null;
+  if (episode?.storage_path) {
+    const { data } = await supabase.storage
+      .from("manana-episodes")
+      .createSignedUrl(episode.storage_path, 3600);
+    mananaSignedUrl = data?.signedUrl || null;
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -117,6 +139,19 @@ export default async function DashboardPage() {
       <div id="analytics">
         <MacroAnalytics attempts={safeAttempts} />
       </div>
+
+      {episode && mananaSignedUrl && (
+        <MananaPlayerCard
+          episodeId={episode.id}
+          audioUrl={mananaSignedUrl}
+        />
+      )}
+
+      <MemoryHeatWidget
+        overallHeat={memoryHeat.overallHeat}
+        totalQuestions={memoryHeat.totalQuestions}
+        coldestTopics={memoryHeat.coldestTopics}
+      />
 
       <PracticeBanners attempts={safeAttempts} />
 

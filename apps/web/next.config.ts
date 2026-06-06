@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     "@repo/utils",
     "@repo/validation",
   ],
+  serverExternalPackages: ["ffmpeg-static"],
 };
 
 export default nextConfig;

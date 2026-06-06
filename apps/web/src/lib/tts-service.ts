@@ -13,17 +13,58 @@ import { Mp3Encoder } from "@breezystack/lamejs";
 //
 // Pro TTS — better quality but very low daily quota (50/day on free tier).
 // Used for question audio where each clip is heard by many students.
-const MODEL_PRO =
-  process.env.GEMINI_MODEL_TTS_PRO || "gemini-2.5-pro-preview-tts";
+const MODEL_PRO = "gemini-2.5-flash-preview-tts"; // Temporarily swapped due to quota
 // Flash TTS — much higher quotas, slightly less polished. Used for Shruti
 // dictation where the same user may need 100+ chunks per session.
 const MODEL_FLASH =
   process.env.GEMINI_MODEL_TTS_FLASH || "gemini-2.5-flash-preview-tts";
 // Default for legacy callers.
-const MODEL = MODEL_PRO;
+const MODEL = MODEL_FLASH;
 
-// Gemini 2.5 Pro TTS paid tier allows ~30 RPM; 2 s between calls keeps us safely under.
-const TTS_MIN_INTERVAL_MS = 2_000;
+// ─── PRODUCTION SCALING TODO ─────────────────────────────────────────────
+//
+// Both model ids above are *preview* models (-preview-tts). Preview models
+// have their own quota buckets that are SEPARATE from production Gemini
+// limits and do NOT scale up much with paid billing:
+//
+//   Free tier:    3 RPM,  15 RPD
+//   Tier 1 (paid billing):   10 RPM, 100 RPD
+//   Tier 2 ($250+ spend):    higher
+//
+// A single Manana long-form episode consumes 16–18 TTS calls. On Tier 1
+// that caps weekly renders at ~5–6 unique users/day before the daily quota
+// resets — fine for dev, not viable for production traffic.
+//
+// Before launch, evaluate moving to one of:
+//   (a) Google Cloud Text-to-Speech — separate paid product, much higher
+//       quotas (millions of chars/day), Wavenet/Neural2 voices. Loses
+//       Gemini-specific niceties but is the lowest-friction scaling path.
+//   (b) ElevenLabs voice TTS — scaffolding already in
+//       apps/web/src/lib/elevenlabs-tts.ts; needs paid plan to bypass abuse
+//       detection.
+//   (c) Stay on Gemini and request quota increase / move to Tier 2 by
+//       accumulating $250 of API spend.
+//
+// Stem-audio caching in question-audio bucket already lowers cost for
+// repeat listeners, but the FIRST render of a week's episode for N users
+// is always 16N fresh calls. Watch this metric once Manana ships.
+// ────────────────────────────────────────────────────────────────────────
+
+// Throttle interval between Gemini TTS calls (ms).
+//
+//   Free tier:  10 RPM → use 6500ms (~9.2 RPM, safe under the cap).
+//   Paid tier:  30 RPM → use 2000ms (the previous default).
+//
+// The Manana long-form pipeline issues 16–20 segments per episode in
+// parallel — at 2000ms the burst tripped 429s on free tier that no amount of
+// retry could clear (steady-state rate exceeded the bucket).
+//
+// Override via env so flipping on paid billing doesn't require a redeploy.
+const TTS_MIN_INTERVAL_MS = (() => {
+  const raw = process.env.GEMINI_TTS_MIN_INTERVAL_MS;
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) && n >= 500 ? n : 6_500;
+})();
 let _nextAllowedAt = 0;
 let _ttsQueue = Promise.resolve();
 
@@ -38,8 +79,14 @@ function ttsThrottle(): Promise<void> {
 }
 
 const REQUEST_TIMEOUT_MS = 30_000;
-const MAX_ATTEMPTS = 3;
-const RETRY_DELAYS_MS = [1000, 3000, 8000];
+// Bump attempts to 5 for the long-form Manana case: a single 18-segment
+// episode bursts past free-tier 10 RPM and needs 1–2 retries on the
+// rate-limit-hit segments while the per-minute bucket refills.
+const MAX_ATTEMPTS = 5;
+const RETRY_DELAYS_MS = [1000, 3000, 8000, 15000, 30000];
+// Cap honoured retry-after sleeps so a misbehaving error message doesn't
+// stall an episode for minutes. Gemini's typical "retry in Xs" is 3–30s.
+const MAX_RETRY_AFTER_MS = 30_000;
 
 // PCM L16 24kHz mono — the only format Gemini TTS currently emits.
 const SAMPLE_RATE = 24_000;
@@ -151,10 +198,26 @@ function buildShrutiNepaliPrompt(text: string): string {
   );
 }
 
-// Errors that should NOT be retried — auth/quota won't recover within the retry window.
+// Errors that should NOT be retried — auth/permission won't recover.
+// NOTE: 429 is intentionally NOT here. Gemini's 429 for free-tier rate limits
+// is recoverable within seconds; the retry loop honours the "retry in Xs"
+// hint from the error body. Sustained quota exhaustion (daily cap) still
+// surfaces after MAX_ATTEMPTS.
 function isFatal(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return /\b(401|403|429)\b|API key|quota|PERMISSION_DENIED|INVALID_ARGUMENT/i.test(msg);
+  return /\b(401|403)\b|API key|PERMISSION_DENIED|INVALID_ARGUMENT/i.test(msg);
+}
+
+// Pull a "retry in 3.82s" / "retry in 12s" hint out of a Gemini 429 message.
+// Returns the suggested wait in ms, or null if not parseable.
+function parseRetryAfterMs(err: unknown): number | null {
+  const msg = err instanceof Error ? err.message : String(err);
+  const m = msg.match(/retry in\s+([\d.]+)s/i);
+  if (!m) return null;
+  const sec = Number(m[1]);
+  if (!Number.isFinite(sec) || sec <= 0) return null;
+  // Add a small jitter buffer so we don't hammer right as the bucket reopens.
+  return Math.min(Math.round(sec * 1000) + 500, MAX_RETRY_AFTER_MS);
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -294,7 +357,10 @@ export async function synthesizeNepali(
     } catch (err) {
       lastErr = err;
       if (isFatal(err) || attempt === MAX_ATTEMPTS - 1) break;
-      await sleep(RETRY_DELAYS_MS[attempt]);
+      // Honour Gemini's "retry in Xs" hint for 429s; fall back to the fixed
+      // backoff curve for other transient errors.
+      const retryAfterMs = parseRetryAfterMs(err);
+      await sleep(retryAfterMs ?? RETRY_DELAYS_MS[attempt]);
     }
   }
 
