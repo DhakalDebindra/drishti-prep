@@ -78,7 +78,7 @@ export default async function DashboardPage() {
     | "approved"
     | "rejected";
 
-  const { data: episode } = await supabase
+  const { data: episode } = await (supabase as any)
     .from("manana_episodes")
     .select("id, storage_path")
     .eq("user_id", user.id)
