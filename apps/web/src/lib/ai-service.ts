@@ -172,7 +172,16 @@ export async function generateStructuredContent<T = unknown>(opts: {
 // (the legacy Gemini 1.5 field name); Gemini 2.5 requires `google_search`,
 // which only the v1beta REST endpoint accepts.
 
+export type GroundingChunk = {
+  web?: { uri?: string; title?: string };
+};
 
+export type GroundedProseResult = {
+  text: string;
+  latencyMs: number;
+  groundingChunks: GroundingChunk[];
+  model: string;
+};
 export async function generateGroundedProse(opts: {
   systemInstruction: string;
   userMessage: string;
