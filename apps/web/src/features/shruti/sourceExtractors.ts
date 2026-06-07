@@ -83,34 +83,6 @@ async function loadPdfJs(): Promise<PdfJsLib> {
   return pdfjsPromise;
 }
 
-function isPreetiOrLegacyGibberish(text: string): boolean {
-  if (!text) return false;
-  
-  // If it already contains Devanagari characters, it's actual Nepali Unicode.
-  const hasDevanagari = /[ऀ-ॿ]/.test(text);
-  if (hasDevanagari) return false;
-
-  // If there are no Devanagari characters, it's either English or legacy Nepali (Preeti, etc.)
-  // Check if it's English by looking for common English stop words.
-  const commonEnglishWords = /\b(the|and|of|to|in|is|that|it|he|was|for|on|are|as|with|his|they|i|at|be|this|have|from|or|one|had|by|word|but|not|what|all|were|we|when|your|can|said|there|use|an|each|which|she|do|how|their|if|will|up|other|about|out|many|then|them|these|so|some|her|would|make|like|him|into|time|has|look|two|more|write|go|see|no|way|could|my|than|first|water|been|call|who|oil|its|now|find|long|down|day|did|get|come|made|may|part)\b/i;
-  
-  const isEnglish = commonEnglishWords.test(text);
-  if (isEnglish) {
-    // If it has a high density of Preeti characters, it's still likely Preeti
-    const curlyBraces = (text.match(/[{}]/g) ?? []).length;
-    const squareBrackets = (text.match(/[\[\]]/g) ?? []).length;
-    const preetiMarkers = curlyBraces + squareBrackets;
-    const ratio = preetiMarkers / text.length;
-    if (ratio > 0.02) {
-      return true; // Still Preeti
-    }
-    return false; // Valid English text, don't run OCR
-  }
-
-  // If it's not English and has no Devanagari, it's gibberish/legacy font.
-  return true;
-}
-
 export async function extractPdfPages(file: File, ocrEndpoint = "/api/shruti/ocr"): Promise<ExtractionResult> {
   const buf = await file.arrayBuffer();
   let pdfjs: PdfJsLib;
@@ -132,100 +104,63 @@ export async function extractPdfPages(file: File, ocrEndpoint = "/api/shruti/ocr
   }
 
   const total = doc.numPages;
-  const pageCount = Math.min(total, MAX_PDF_PAGES);
+  const ocrPagesCount = Math.min(total, MAX_IMAGES);
   const pages: ExtractedPage[] = [];
   let totalChars = 0;
 
-  for (let i = 1; i <= pageCount; i++) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  
+  if (!ctx) {
+    throw new Error("Could not initialize canvas context for PDF OCR.");
+  }
+
+  for (let i = 1; i <= ocrPagesCount; i++) {
     let text = "";
     try {
       const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      text = content.items
-        .map((it) => it.str)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
+      // Scale 2.0 for higher DPI, improving OCR accuracy
+      const viewport = page.getViewport({ scale: 2.0 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.9)
+      );
+      if (blob) {
+        const imgFile = new File([blob], `page_${i}.jpg`, { type: "image/jpeg" });
+        const ocrText = await ocrImage(imgFile, ocrEndpoint);
+        if (ocrText) {
+          text = ocrText;
+          totalChars += ocrText.length;
+        }
+      }
     } catch (err) {
-      // Per-page error — keep going. Logged via console for dev debugging only.
       if (typeof console !== "undefined" && process.env.NODE_ENV !== "production") {
-        console.warn(`[Shruti] PDF page ${i} extract failed:`, err);
+        console.warn(`[Shruti] PDF page ${i} OCR failed:`, err);
       }
     }
-    totalChars += text.length;
+
     pages.push({
       index: i - 1,
-      label: `Page ${i}${total > MAX_PDF_PAGES ? ` of ${total}` : ""}${text ? "" : " (empty)"}`,
+      label: `Page ${i}${total > MAX_IMAGES ? ` of ${total}` : ""} (OCR)`,
       text,
     });
   }
 
-  // If every page came back empty or contains legacy Preeti/gibberish, fallback to OCR.
-  const isAllGibberishOrEmpty = pages.every((p) => !p.text || isPreetiOrLegacyGibberish(p.text));
-  if (totalChars === 0 || isAllGibberishOrEmpty) {
-    totalChars = 0; // Reset count to measure clean OCR text
-    const ocrPagesCount = Math.min(total, MAX_IMAGES);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    
-    if (ctx) {
-      for (let i = 1; i <= ocrPagesCount; i++) {
-        try {
-          const page = await doc.getPage(i);
-          // Scale 2.0 for higher DPI, improving OCR accuracy
-          const viewport = page.getViewport({ scale: 2.0 });
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          await page.render({ canvasContext: ctx, viewport }).promise;
-
-          const blob = await new Promise<Blob | null>((resolve) =>
-            canvas.toBlob(resolve, "image/jpeg", 0.9)
-          );
-          if (blob) {
-            const imgFile = new File([blob], `page_${i}.jpg`, { type: "image/jpeg" });
-            const ocrText = await ocrImage(imgFile, ocrEndpoint);
-            if (ocrText) {
-              totalChars += ocrText.length;
-              pages[i - 1].text = ocrText;
-              const cleanLabel = pages[i - 1].label.replace(" (empty)", "");
-              pages[i - 1].label = cleanLabel.endsWith(" (OCR)") ? cleanLabel : `${cleanLabel} (OCR)`;
-            } else {
-              // If OCR returned nothing, make sure we clear the legacy/gibberish text
-              pages[i - 1].text = "";
-            }
-          }
-        } catch (err) {
-          if (typeof console !== "undefined" && process.env.NODE_ENV !== "production") {
-            console.warn(`[Shruti] PDF page ${i} OCR fallback failed:`, err);
-          }
-          // Clear text on failure so we don't return gibberish Preeti
-          pages[i - 1].text = "";
-        }
-      }
-    }
-
-    if (totalChars === 0) {
-      throw new Error(
-        "Could not extract any text from this PDF, even after attempting OCR. " +
-        "Please ensure the document contains readable text."
-      );
-    }
-
-    // Since we only OCR up to MAX_IMAGES pages to avoid rate limits, we truncate
-    // the document earlier than a standard text-layer PDF.
-    return {
-      pages: pages.slice(0, ocrPagesCount),
-      source: "pdf",
-      filename: file.name,
-      truncated: total > MAX_IMAGES,
-    };
+  if (totalChars === 0) {
+    throw new Error(
+      "Could not extract any text from this PDF via OCR. " +
+      "Please ensure the document contains readable text."
+    );
   }
 
   return {
     pages,
     source: "pdf",
     filename: file.name,
-    truncated: total > MAX_PDF_PAGES,
+    truncated: total > MAX_IMAGES,
   };
 }
 
