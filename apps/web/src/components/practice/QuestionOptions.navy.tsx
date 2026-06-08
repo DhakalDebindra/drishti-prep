@@ -88,33 +88,33 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
               if (isSubmitted) return;
               onSelect(option.value);
             }}
-            className={`w-full relative group rounded-2xl p-5 sm:p-6 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-black dark:focus-visible:outline-yellow-400 forced-colors:focus-visible:outline-[Highlight] ${
+            className={`w-full relative group rounded-2xl p-5 sm:p-6 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-white forced-colors:focus-visible:outline-[Highlight] ${
               isSelected && selectedAnswer?.is_correct === true
-                ? "border-[4px] border-b-[8px] border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-black dark:text-emerald-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(52,211,153,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
+                ? "border-[3px] border-b-[6px] border-emerald-500 bg-emerald-950/40 text-emerald-50 shadow-lg"
                 : isSelected && selectedAnswer?.is_correct === false
-                ? "border-[4px] border-b-[8px] border-red-600 dark:border-red-500 bg-red-50 dark:bg-red-950/40 text-black dark:text-red-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
+                ? "border-[3px] border-b-[6px] border-red-500 bg-red-950/40 text-red-50 shadow-lg"
                 : isCorrectOption && selectedAnswer
-                ? "border-[4px] border-b-[8px] border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-black dark:text-emerald-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(52,211,153,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
+                ? "border-[3px] border-b-[6px] border-emerald-500 bg-emerald-950/40 text-emerald-50 shadow-lg"
                 : isSelected
-                ? "border-[4px] border-b-[8px] border-black dark:border-yellow-400 bg-yellow-400 dark:bg-[#222] text-black dark:text-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,1)] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:border-[HighlightText]"
-                : "border-[4px] border-b-[8px] active:translate-y-[4px] active:border-b-[4px] border-black dark:border-yellow-400 hover:bg-yellow-100 dark:hover:bg-[#222] text-black dark:text-yellow-400"
-            } ${isSubmitted ? "cursor-not-allowed opacity-95 hover:translate-y-0 hover:border-b-[8px]" : "cursor-pointer"}`}
+                ? "border-[3px] border-b-[6px] border-white bg-white/10 text-white shadow-lg"
+                : "border-[3px] border-b-[6px] active:translate-y-[3px] active:border-b-[3px] border-[#233554] hover:border-slate-400 hover:bg-[#233554]/50 text-slate-300 hover:text-white"
+            } ${isSubmitted ? "cursor-not-allowed opacity-95 hover:translate-y-0 hover:border-b-[6px]" : "cursor-pointer"}`}
           >
             <div className="flex items-start gap-4 sm:gap-6">
               {/* Option Identifier Box */}
               <div aria-hidden="true" className={`shrink-0 flex items-center justify-center w-12 h-12 rounded-xl border-[3px] text-xl font-black transition-colors ${
-                isSelected && selectedAnswer?.is_correct === true ? "bg-emerald-600 border-emerald-600 text-white" :
-                isSelected && selectedAnswer?.is_correct === false ? "bg-red-600 border-red-600 text-white" :
-                isCorrectOption && selectedAnswer ? "bg-emerald-600 border-emerald-600 text-white" :
-                isSelected ? "bg-black border-black text-yellow-400 dark:bg-yellow-400 dark:border-yellow-400 dark:text-black" :
-                "bg-white dark:bg-black border-black dark:border-yellow-400 text-black dark:text-yellow-400 group-hover:bg-black group-hover:text-yellow-400 dark:group-hover:bg-yellow-400 dark:group-hover:text-black"
+                isSelected && selectedAnswer?.is_correct === true ? "bg-emerald-500 border-emerald-500 text-[#0a192f]" :
+                isSelected && selectedAnswer?.is_correct === false ? "bg-red-500 border-red-500 text-[#0a192f]" :
+                isCorrectOption && selectedAnswer ? "bg-emerald-500 border-emerald-500 text-[#0a192f]" :
+                isSelected ? "bg-white border-white text-[#0a192f]" :
+                "bg-[#0a192f] border-[#233554] text-slate-400 group-hover:border-slate-400 group-hover:text-white"
               }`}>
                 {option.value}
               </div>
 
               <div className="space-y-3 flex-1 pt-1">
                 <p id={optionLabelId} className={`text-lg sm:text-xl md:text-2xl font-black leading-snug transition-colors ${
-                  isSelected || (isCorrectOption && selectedAnswer) ? "text-black dark:text-yellow-400" : "text-black dark:text-yellow-400"
+                  isSelected || (isCorrectOption && selectedAnswer) ? "text-white" : "text-slate-200"
                 }`}>
                   <Lang>{option.text}</Lang>
                 </p>

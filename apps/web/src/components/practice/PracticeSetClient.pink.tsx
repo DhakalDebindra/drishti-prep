@@ -366,7 +366,7 @@ function PracticeSetView() {
   }
 
   return (
-    <main className="fixed inset-0 z-[100] overflow-y-auto bg-yellow-400 dark:bg-black font-sans text-black dark:text-yellow-400 selection:bg-black selection:text-yellow-400 dark:selection:bg-yellow-400 dark:selection:text-black">
+    <main className="fixed inset-0 z-[100] overflow-y-auto bg-[#fbcfe8] font-sans text-[#0b1b3d] selection:bg-[#0b1b3d] selection:text-white">
       <div className="max-w-4xl mx-auto min-h-screen flex flex-col p-4 sm:p-6 md:p-8 gap-6 pb-40 md:pb-12">
         
         {/* Screen-reader announcement region */}
@@ -375,16 +375,16 @@ function PracticeSetView() {
         </div>
 
         {/* Immersive Top Navigation Bar */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-[#111] px-6 py-5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,1)] border-[3px] border-black dark:border-yellow-400 gap-4">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-6 py-5 rounded-2xl shadow-xl border-4 border-[#0b1b3d] gap-4">
           <div className="space-y-1.5">
-            <h1 id="main-heading" className="text-xl sm:text-2xl font-black text-black dark:text-yellow-400 tracking-tight">
+            <h1 id="main-heading" className="text-xl sm:text-2xl font-black text-[#0b1b3d] tracking-tight">
               {setInfo.title}
             </h1>
             <nav aria-label="Breadcrumb">
-              <ol className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-black/70 dark:text-yellow-400/70">
+              <ol className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-[#0b1b3d]/70">
                 <li className="uppercase tracking-widest"><Lang>{setInfo.subjectName}</Lang></li>
-                <li aria-hidden="true" className="text-black/30 dark:text-yellow-400/30">•</li>
-                <li className="uppercase tracking-widest font-black text-black dark:text-yellow-400"><Lang>{setInfo.topicName}</Lang></li>
+                <li aria-hidden="true" className="text-[#0b1b3d]/30">•</li>
+                <li className="uppercase tracking-widest font-black text-[#0b1b3d]"><Lang>{setInfo.topicName}</Lang></li>
               </ol>
             </nav>
           </div>
@@ -435,27 +435,27 @@ function PracticeSetView() {
           </p>
         )}
 
-      <div className={`practice-experience-container flex flex-col bg-white dark:bg-[#111] rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(250,204,21,1)] border-[4px] border-black dark:border-yellow-400 overflow-hidden ${state.status === "submitted" ? "opacity-90" : ""}`}>
+      <div className={`practice-experience-container flex flex-col bg-white rounded-3xl shadow-2xl border-4 border-[#0b1b3d] overflow-hidden ${state.status === "submitted" ? "opacity-90" : ""}`}>
         {/* Prominent Progress Ribbon */}
-        <div className="bg-yellow-400 dark:bg-black border-b-[4px] border-black dark:border-yellow-400 px-6 sm:px-10 py-5 sm:py-6 flex items-center justify-between">
+        <div className="bg-[#fbcfe8]/20 border-b-4 border-[#0b1b3d] px-6 sm:px-10 py-5 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <span className="text-[11px] font-black tracking-widest uppercase text-black dark:text-yellow-400 mb-1">
+              <span className="text-[11px] font-black tracking-widest uppercase text-[#0b1b3d]/70 mb-1">
                 Question {currentIndex + 1} of {questionCount}
               </span>
-              <span className="text-base sm:text-lg font-black text-black dark:text-yellow-400">
+              <span className="text-base sm:text-lg font-black text-[#0b1b3d]">
                 Practice Session
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm font-black text-black dark:text-yellow-400">
-            <div className="w-24 sm:w-40 h-4 bg-white dark:bg-[#222] rounded-full overflow-hidden border-[3px] border-black dark:border-yellow-400">
+          <div className="flex items-center gap-4 text-sm font-black text-[#0b1b3d]">
+            <div className="w-24 sm:w-40 h-3 bg-pink-50 rounded-full overflow-hidden border-2 border-[#0b1b3d]">
               <div 
-                className="h-full bg-black dark:bg-yellow-400 transition-all duration-500 ease-out"
+                className="h-full bg-[#0b1b3d] transition-all duration-500 ease-out"
                 style={{ width: `${Math.max(5, (answeredCount / questionCount) * 100)}%` }}
               />
             </div>
-            <span className="min-w-[3rem] text-right text-black dark:text-yellow-400">{Math.round((answeredCount / questionCount) * 100)}%</span>
+            <span className="min-w-[3rem] text-right text-[#0b1b3d]">{Math.round((answeredCount / questionCount) * 100)}%</span>
           </div>
         </div>
 
@@ -619,16 +619,15 @@ function PracticeSetView() {
       </div>
       
       {/* Modern Floating Mobile Pill */}
-      {/* Placed BEFORE QuestionNavigator in the DOM so TalkBack users hit Next/Prev immediately after options, instead of tabbing through 20+ question numbers first. */}
       <div
-        className="md:hidden fixed inset-x-4 bottom-6 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] rounded-[2rem] border-2 border-slate-200/50 dark:border-slate-700/50 p-2 transition-transform duration-300"
+        className="md:hidden fixed inset-x-4 bottom-6 z-[110] bg-white/95 backdrop-blur-xl shadow-2xl rounded-3xl border-4 border-[#0b1b3d] p-2 transition-transform duration-300"
         style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
       >
         <div className="flex items-center justify-between gap-2">
           <Button
             aria-label="Previous question"
             variant="ghost"
-            className="flex-1 h-14 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-black focus-visible:ring-4 focus-visible:ring-indigo-600 gap-1 rounded-2xl"
+            className="flex-1 h-14 bg-white text-[#0b1b3d] hover:bg-[#fbcfe8]/50 font-black border-2 border-[#0b1b3d] focus-visible:ring-4 focus-visible:ring-pink-300 gap-1 rounded-2xl transition-colors"
             onClick={goPrev}
             disabled={currentIndex === 0}
           >
