@@ -19,7 +19,13 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
   const questionTitleId = `question-${questionId}-title`;
   const optionsContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Focus management has been moved to the QuestionContent in PracticeSetClient
+  // for mobile/touch devices so screen readers read the question before the options.
+  // For desktop/keyboard users, we restore the auto-focus on the options.
   useEffect(() => {
+    // Only auto-focus options on non-touch devices (desktop)
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
     const container = optionsContainerRef.current;
     if (!container) return;
 
@@ -28,14 +34,14 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
     const target = selectedButton ?? buttons[0];
 
     if (target) {
-      requestAnimationFrame(() => target.focus());
+      requestAnimationFrame(() => target.focus({ preventScroll: true }));
     }
   }, [questionId]);
 
   return (
     <div
       ref={optionsContainerRef}
-      className="space-y-3"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6"
       role="radiogroup"
       aria-labelledby={questionTitleId}
       onKeyDown={(e) => {
@@ -82,49 +88,61 @@ export const QuestionOptions = memo(({ questionId, options, selectedAnswer, onSe
               if (isSubmitted) return;
               onSelect(option.value);
             }}
-            className={`w-full rounded-xl p-4 sm:p-5 text-left transition-all duration-150 motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.99] focus:outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] ${
+            className={`w-full relative group rounded-2xl p-5 sm:p-6 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-black dark:focus-visible:outline-yellow-400 forced-colors:focus-visible:outline-[Highlight] ${
               isSelected && selectedAnswer?.is_correct === true
-                ? "border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
+                ? "border-[4px] border-b-[8px] border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-black dark:text-emerald-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(52,211,153,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
                 : isSelected && selectedAnswer?.is_correct === false
-                ? "border-[3px] border-red-600 bg-red-50 text-red-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
+                ? "border-[4px] border-b-[8px] border-red-600 dark:border-red-500 bg-red-50 dark:bg-red-950/40 text-black dark:text-red-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
                 : isCorrectOption && selectedAnswer
-                ? "border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900 shadow-sm forced-colors:outline forced-colors:outline-2 forced-colors:outline-[CanvasText]"
+                ? "border-[4px] border-b-[8px] border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-black dark:text-emerald-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(52,211,153,1)] forced-colors:outline forced-colors:outline-[4px] forced-colors:outline-[CanvasText]"
                 : isSelected
-                ? "border-[3px] border-blue-600 bg-blue-50 text-blue-900 shadow-sm forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:border-[HighlightText]"
-                : "border-2 border-slate-500 hover:border-slate-700 hover:bg-slate-50 text-slate-900"
-            } ${isSubmitted ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
+                ? "border-[4px] border-b-[8px] border-black dark:border-yellow-400 bg-yellow-400 dark:bg-[#222] text-black dark:text-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,1)] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText] forced-colors:border-[HighlightText]"
+                : "border-[4px] border-b-[8px] active:translate-y-[4px] active:border-b-[4px] border-black dark:border-yellow-400 hover:bg-yellow-100 dark:hover:bg-[#222] text-black dark:text-yellow-400"
+            } ${isSubmitted ? "cursor-not-allowed opacity-95 hover:translate-y-0 hover:border-b-[8px]" : "cursor-pointer"}`}
           >
-            <div className="flex items-start gap-4">
-              <div aria-hidden="true" className="mt-0.5 shrink-0">
-                {isSelected && selectedAnswer?.is_correct === true && (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
-                )}
-                {isSelected && selectedAnswer?.is_correct === false && (
-                  <XCircle className="h-6 w-6 text-red-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
-                )}
-                {!isSelected && isCorrectOption && selectedAnswer && (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
-                )}
-                {(!selectedAnswer || (isSelected && selectedAnswer?.is_correct === undefined) || (!isSelected && !isCorrectOption)) && (
-                  <Circle className={`h-6 w-6 ${isSelected ? "fill-blue-600 text-blue-600" : "text-slate-600"}`} />
-                )}
+            <div className="flex items-start gap-4 sm:gap-6">
+              {/* Option Identifier Box */}
+              <div aria-hidden="true" className={`shrink-0 flex items-center justify-center w-12 h-12 rounded-xl border-[3px] text-xl font-black transition-colors ${
+                isSelected && selectedAnswer?.is_correct === true ? "bg-emerald-600 border-emerald-600 text-white" :
+                isSelected && selectedAnswer?.is_correct === false ? "bg-red-600 border-red-600 text-white" :
+                isCorrectOption && selectedAnswer ? "bg-emerald-600 border-emerald-600 text-white" :
+                isSelected ? "bg-black border-black text-yellow-400 dark:bg-yellow-400 dark:border-yellow-400 dark:text-black" :
+                "bg-white dark:bg-black border-black dark:border-yellow-400 text-black dark:text-yellow-400 group-hover:bg-black group-hover:text-yellow-400 dark:group-hover:bg-yellow-400 dark:group-hover:text-black"
+              }`}>
+                {option.value}
               </div>
-              <div className="space-y-1.5 flex-1">
-                <p id={optionLabelId} className="text-base sm:text-lg text-slate-900">
-                  <span className="mr-2 font-bold">{option.value}.</span>
+
+              <div className="space-y-3 flex-1 pt-1">
+                <p id={optionLabelId} className={`text-lg sm:text-xl md:text-2xl font-black leading-snug transition-colors ${
+                  isSelected || (isCorrectOption && selectedAnswer) ? "text-black dark:text-yellow-400" : "text-black dark:text-yellow-400"
+                }`}>
                   <Lang>{option.text}</Lang>
                 </p>
-                <div className="flex flex-wrap items-center gap-2">
+
+                {/* State Indicators & Feedback */}
+                <div className="flex flex-wrap items-center gap-3">
                   {isSelected && selectedAnswer?.selected_option !== "skipped" && (
-                    <p className={`text-sm font-bold ${selectedAnswer?.is_correct === false ? 'text-red-700' : selectedAnswer?.is_correct === true ? 'text-emerald-700' : 'text-blue-700'}`}>
-                      <span className="sr-only">{selectedAnswer?.is_correct === false ? 'incorrect' : selectedAnswer?.is_correct === true ? 'correct' : 'selected'}</span>
+                    <div className={`flex items-center gap-2 text-base font-black px-3 py-1 rounded-md ${
+                      selectedAnswer?.is_correct === false 
+                        ? 'bg-red-200 dark:bg-red-900/60 text-red-800 dark:text-red-200' 
+                        : selectedAnswer?.is_correct === true 
+                          ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200' 
+                          : 'bg-indigo-200 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200'
+                    }`}>
+                      {selectedAnswer?.is_correct === false && <XCircle className="w-5 h-5" />}
+                      {selectedAnswer?.is_correct === true && <CheckCircle2 className="w-5 h-5" />}
+                      {selectedAnswer?.is_correct === undefined && <Circle className="w-5 h-5 fill-current" />}
+                      <span className="sr-only">
+                        {selectedAnswer?.is_correct === false ? 'incorrect' : selectedAnswer?.is_correct === true ? 'correct' : 'selected'}
+                      </span>
                       Your choice
-                    </p>
+                    </div>
                   )}
                   {isCorrectOption && selectedAnswer && (
-                    <p className="text-sm font-bold text-emerald-700">
+                    <div className="flex items-center gap-2 text-base font-black px-3 py-1 rounded-md bg-emerald-200 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">
+                      <CheckCircle2 className="w-5 h-5" />
                       Correct Answer
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>

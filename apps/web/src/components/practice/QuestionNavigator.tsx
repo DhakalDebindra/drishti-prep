@@ -10,8 +10,13 @@ export function QuestionNavigator() {
   } = useAttemptStore();
 
   return (
-    <div className="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-gray-700">Question Navigator</h3>
+    <nav
+      aria-label="Question Navigator"
+      className="mt-6 rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm"
+    >
+      <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-slate-300">
+        Question Navigator
+      </h3>
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: questionCount }).map((_, index) => {
           const qId = questions[index]?.id;
@@ -24,7 +29,7 @@ export function QuestionNavigator() {
           let extraClasses = "";
 
           if (isCurrent) {
-            extraClasses = "ring-2 ring-blue-500 ring-offset-2";
+            extraClasses = "ring-2 ring-blue-600 dark:ring-blue-400 ring-offset-2 dark:ring-offset-slate-900 font-bold border-2 border-blue-600 dark:border-blue-400 scale-105 shadow-md z-10";
           }
 
           if (isAnswered) {
@@ -43,7 +48,7 @@ export function QuestionNavigator() {
             <Button
               key={index}
               variant={variant}
-              className={`h-10 w-10 p-0 text-sm font-medium ${extraClasses}`}
+              className={`h-11 w-11 sm:h-10 sm:w-10 p-0 text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${extraClasses}`}
               aria-label={ariaLabel}
               aria-current={isCurrent ? "true" : undefined}
               onClick={() => jumpToQuestion(index)}
@@ -53,6 +58,6 @@ export function QuestionNavigator() {
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }

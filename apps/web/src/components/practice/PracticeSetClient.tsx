@@ -4,7 +4,6 @@ import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from "rea
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lang } from "@/components/ui/Lang";
 import { RichText } from "@/components/ui/RichText";
 import { QuestionNavigator } from "@/components/practice/QuestionNavigator";
@@ -25,6 +24,7 @@ import type {
 } from "@repo/types";
 import { QuestionOptions, optionKeys } from "@/components/practice/QuestionOptions";
 import { QuestionContent } from "@/components/practice/QuestionContent";
+import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 
 type Props = {
   setInfo: {
@@ -142,6 +142,24 @@ function PracticeSetView() {
     prefetchQuestionAudio(questions[currentIndex + 1]?.id ?? null);
     prefetchQuestionAudio(questions[currentIndex - 1]?.id ?? null);
   }, [tutorEnabled, questions, currentIndex]);
+
+  // Focus management: 
+  // On mobile/touch devices, we focus the question text so TalkBack reads it automatically.
+  // On desktop, QuestionOptions auto-focuses the options for keyboard efficiency.
+  useEffect(() => {
+    if (!currentQuestion || tutorActive) return;
+    
+    const timer = setTimeout(() => {
+      if (window.matchMedia("(pointer: coarse)").matches) {
+        const el = document.getElementById(questionTitleId);
+        if (el) {
+          el.focus({ preventScroll: true });
+        }
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [currentQuestion?.id, questionTitleId, tutorActive]);
 
   const optionsList = useMemo(
     () =>
@@ -282,24 +300,27 @@ function PracticeSetView() {
         <div className="flex items-center justify-between gap-3">
           <Button
             aria-label="Previous question"
-            variant="outline"
+            variant="secondary"
             size="lg"
+            className="border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800/80 shadow-sm font-semibold focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 gap-2 [&_svg]:size-4"
             onClick={goPrev}
             disabled={currentIndex === 0}
           >
+            <ChevronLeft aria-hidden="true" />
             Previous
           </Button>
-          <span className="text-sm text-slate-700">
+          <span className="text-sm text-slate-700 dark:text-slate-300">
             Answered {answeredCount}/{questionCount}
           </span>
           <Button
             aria-label="Next question"
             size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 text-white font-semibold shadow-sm gap-2 [&_svg]:size-4"
             onClick={goNext}
             disabled={currentIndex === questionCount - 1}
           >
             Next
+            <ChevronRight aria-hidden="true" />
           </Button>
         </div>
 
@@ -345,89 +366,100 @@ function PracticeSetView() {
   }
 
   return (
-    <section className="space-y-6">
-      {/*
-        Screen-reader announcement region for selection feedback. Stays polite
-        even in tutor mode — without it, blind users who select an answer get
-        no correctness verdict before the explanation audio begins.
-      */}
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        role="status"
-        className="sr-only"
-      >
-        {state.announcementText}
-      </div>
-      <nav aria-label="Breadcrumb">
-        <ol className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-          <li><Link href="/courses" className="text-blue-700 hover:text-blue-900">Courses</Link></li>
-          <li aria-hidden="true">/</li>
-          <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.subjectName}</Lang></Link></li>
-          <li aria-hidden="true">/</li>
-          <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{setInfo.topicName}</Lang></Link></li>
+    <main className="fixed inset-0 z-[100] overflow-y-auto bg-yellow-400 dark:bg-black font-sans text-black dark:text-yellow-400 selection:bg-black selection:text-yellow-400 dark:selection:bg-yellow-400 dark:selection:text-black">
+      <div className="max-w-4xl mx-auto min-h-screen flex flex-col p-4 sm:p-6 md:p-8 gap-6 pb-40 md:pb-12">
+        
+        {/* Screen-reader announcement region */}
+        <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
+          {state.announcementText}
+        </div>
 
-          {(setInfo as any).subtopicSlug && (
-            <>
-              <li aria-hidden="true">/</li>
-              <li><Link href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}/${(setInfo as any).subtopicSlug}`} className="text-blue-700 hover:text-blue-900"><Lang>{(setInfo as any).subtopicName}</Lang></Link></li>
-            </>
-          )}
+        {/* Immersive Top Navigation Bar */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-[#111] px-6 py-5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,1)] border-[3px] border-black dark:border-yellow-400 gap-4">
+          <div className="space-y-1.5">
+            <h1 id="main-heading" className="text-xl sm:text-2xl font-black text-black dark:text-yellow-400 tracking-tight">
+              {setInfo.title}
+            </h1>
+            <nav aria-label="Breadcrumb">
+              <ol className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-black/70 dark:text-yellow-400/70">
+                <li className="uppercase tracking-widest"><Lang>{setInfo.subjectName}</Lang></li>
+                <li aria-hidden="true" className="text-black/30 dark:text-yellow-400/30">•</li>
+                <li className="uppercase tracking-widest font-black text-black dark:text-yellow-400"><Lang>{setInfo.topicName}</Lang></li>
+              </ol>
+            </nav>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {tutorEnabled && (
+              <Link
+                href={`${pathname}?view=listen`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 rounded-xl text-sm font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-all active:scale-95"
+              >
+                🎧 Listen Mode
+              </Link>
+            )}
+            <Link 
+              href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
+              className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95"
+            >
+              Exit
+            </Link>
+          </div>
+        </header>
 
-          <li aria-hidden="true">/</li>
-          <li aria-current="page" className="text-gray-700"><Lang>{setInfo.title}</Lang></li>
-        </ol>
-      </nav>
-
-      <header className="space-y-2">
-        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">{setInfo.title}</h1>
-        <p className="text-slate-700">Difficulty {setInfo.difficulty_level}</p>
         {state.message && (
-          <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{state.message}</p>
+          <p className="rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 border-2 border-emerald-200 dark:border-emerald-800 px-5 py-4 text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm">{state.message}</p>
         )}
         {state.error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
+          <p className="rounded-2xl bg-red-100 dark:bg-red-900/40 border-2 border-red-200 dark:border-red-800 px-5 py-4 text-sm font-bold text-red-800 dark:text-red-300 shadow-sm">{state.error}</p>
         )}
         {state.authRequired && (
-          <p className="rounded-md bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+          <p className="rounded-2xl bg-amber-100 dark:bg-amber-900/40 border-2 border-amber-200 dark:border-amber-800 px-5 py-4 text-sm font-bold text-amber-800 dark:text-amber-300 shadow-sm">
             Please log in to save your progress.
           </p>
         )}
-        {!userEmail && !state.authRequired && <p className="text-sm text-gray-600"></p>}
-      </header>
 
-      {tutorEnabled && audio.status === "ready" && (
-        <TutorVoicePanel
-          player={player}
-          voice={audio.voice}
-          awaitingFirstGesture={awaitingGesture}
-          onStart={handleStartTutor}
-          onShowHelp={() => setShowHotkeyHelp(true)}
-        />
-      )}
-      <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
-      {tutorEnabled && audio.status === "not_generated" && (
-        <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Shruti isn&apos;t available for this question yet. Using your screen
-          reader instead.
-        </p>
-      )}
-      {tutorEnabled && (
-        <Link
-          href={`${pathname}?view=listen`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900 underline underline-offset-4"
-        >
-          🎧 Open Listening mode — an audio-first, distraction-free view
-        </Link>
-      )}
+        {tutorEnabled && audio.status === "ready" && (
+          <TutorVoicePanel
+            player={player}
+            voice={audio.voice}
+            awaitingFirstGesture={awaitingGesture}
+            onStart={handleStartTutor}
+            onShowHelp={() => setShowHotkeyHelp(true)}
+          />
+        )}
+        <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
+        {tutorEnabled && audio.status === "not_generated" && (
+          <p className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 px-5 py-4 text-sm font-bold text-amber-800 dark:text-amber-300 shadow-sm">
+            Shruti isn&apos;t available for this question yet. Using your screen reader instead.
+          </p>
+        )}
 
-      <Card className={`flex flex-col ${state.status === "submitted" ? "opacity-90" : ""}`}>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            Question {currentIndex + 1} of {questionCount}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 flex-1">
+      <div className={`practice-experience-container flex flex-col bg-white dark:bg-[#111] rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(250,204,21,1)] border-[4px] border-black dark:border-yellow-400 overflow-hidden ${state.status === "submitted" ? "opacity-90" : ""}`}>
+        {/* Prominent Progress Ribbon */}
+        <div className="bg-yellow-400 dark:bg-black border-b-[4px] border-black dark:border-yellow-400 px-6 sm:px-10 py-5 sm:py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black tracking-widest uppercase text-black dark:text-yellow-400 mb-1">
+                Question {currentIndex + 1} of {questionCount}
+              </span>
+              <span className="text-base sm:text-lg font-black text-black dark:text-yellow-400">
+                Practice Session
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-sm font-black text-black dark:text-yellow-400">
+            <div className="w-24 sm:w-40 h-4 bg-white dark:bg-[#222] rounded-full overflow-hidden border-[3px] border-black dark:border-yellow-400">
+              <div 
+                className="h-full bg-black dark:bg-yellow-400 transition-all duration-500 ease-out"
+                style={{ width: `${Math.max(5, (answeredCount / questionCount) * 100)}%` }}
+              />
+            </div>
+            <span className="min-w-[3rem] text-right text-black dark:text-yellow-400">{Math.round((answeredCount / questionCount) * 100)}%</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-10 flex-1 p-6 sm:p-10 md:p-12">
           {/*
             When tutor mode is actively reading aloud, the stem is hidden
             from screen readers to prevent simultaneous English-SR + Nepali-TTS
@@ -438,14 +470,9 @@ function PracticeSetView() {
             key={currentQuestion.id}
             id={questionTitleId}
             content={currentQuestion.content}
-            className="text-lg sm:text-xl font-medium text-slate-900 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] leading-relaxed mb-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
+            className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-50 leading-snug md:leading-relaxed tracking-tight outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
             tabIndex={-1}
             ariaHidden={tutorActive}
-            header={
-              <span className="text-slate-700 text-sm font-semibold uppercase tracking-wider block mb-1">
-                Question {currentIndex + 1}
-              </span>
-            }
           />
 
           <QuestionOptions
@@ -461,40 +488,56 @@ function PracticeSetView() {
             state.answers[currentQuestion.id]?.selected_option !== "skipped" &&
             state.status !== "submitted" && (
               <p
-                className={`text-sm font-medium ${state.answers[currentQuestion.id]?.is_correct ? "text-emerald-700" : "text-orange-700"
+                className={`text-lg font-bold px-4 py-2 rounded-lg inline-block self-start ${state.answers[currentQuestion.id]?.is_correct ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
                   }`}
               >
-                {state.answers[currentQuestion.id]?.is_correct ? "Right!" : "Wrong..."}
+                {state.answers[currentQuestion.id]?.is_correct ? "Correct!" : "Incorrect"}
               </p>
             )}
 
           {(state.status === "submitted" || (state.answers[currentQuestion.id] && state.answers[currentQuestion.id].selected_option !== "skipped")) && (
-            <div className="border-t pt-3">
-              <button
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-8 mt-2">
+              <Button
                 type="button"
-                className="inline-flex min-h-12 sm:min-h-0 items-center text-base sm:text-sm font-bold text-blue-700 hover:text-blue-900 underline underline-offset-4 py-2 sm:py-0"
+                variant="outline"
+                className="inline-flex min-h-12 sm:min-h-14 items-center justify-between gap-3 px-6 py-3 text-base font-bold text-indigo-700 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-100/70 dark:hover:bg-indigo-950/40 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 transition-all [&_svg]:size-5"
                 aria-expanded={state.showExplanation[currentQuestion.id]}
                 aria-controls={`explanation-${currentQuestion.id}`}
                 onClick={() => toggleExplanation(currentQuestion.id)}
               >
-                {state.showExplanation[currentQuestion.id] ? "Hide explanation" : "Show explanation"}
-              </button>
+                <span className="flex items-center gap-3">
+                  <BookOpen aria-hidden="true" className="w-5 h-5" />
+                  <span>
+                    {state.showExplanation[currentQuestion.id] ? "Hide Explanation" : "Show Explanation"}
+                  </span>
+                </span>
+                {state.showExplanation[currentQuestion.id] ? (
+                  <ChevronUp className="text-indigo-500 dark:text-indigo-400 w-5 h-5" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="text-indigo-500 dark:text-indigo-400 w-5 h-5" aria-hidden="true" />
+                )}
+              </Button>
               {state.showExplanation[currentQuestion.id] && (
                 <div
                   id={`explanation-${currentQuestion.id}`}
-                  className="mt-3 rounded-lg bg-slate-50 border-l-4 border-slate-700 p-4 text-slate-800 shadow-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200"
+                  className="mt-6 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-l-8 border-l-indigo-500 p-6 md:p-8 text-slate-800 dark:text-slate-200 shadow-inner motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-300"
                   role="region"
                   aria-live="polite"
                 >
-                  <p className="font-bold text-slate-900 mb-2">Explanation</p>
-                  <div className="text-slate-700 text-base leading-relaxed">
+                  <p className="font-black text-xl text-slate-900 dark:text-slate-100 mb-4 tracking-tight">Explanation</p>
+                  <div className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
                     {currentQuestion.explanation
-                      ? <RichText className="space-y-1">{currentQuestion.explanation}</RichText>
-                      : "No explanation available."}
+                      ? <RichText className="space-y-3">{currentQuestion.explanation}</RichText>
+                      : "No explanation available for this question."}
                   </div>
-                  <p className="mt-4 pt-3 border-t border-slate-200 text-sm font-medium text-slate-700">
-                    Your choice: <span className="text-slate-900">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span> | Correct: <span className="text-emerald-700 font-bold">{currentQuestion.correct_option}</span>
-                  </p>
+                  <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 text-base font-medium">
+                    <span className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                      Your choice: <span className="font-bold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
+                    </span>
+                    <span className="px-3 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
+                      Correct Answer: <span className="font-bold">{currentQuestion.correct_option}</span>
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -505,15 +548,26 @@ function PracticeSetView() {
             replaces this so the primary actions stay within thumb reach
             without scrolling past long questions and option lists.
           */}
-          <div className="mt-auto border-t pt-4 hidden md:flex md:flex-row md:items-center justify-between gap-4">
+          {/*
+            Desktop action row. 
+          */}
+          <div className="mt-8 pt-8 border-t-2 border-slate-100 dark:border-slate-800 hidden md:flex md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center justify-start gap-4">
-              <Button aria-label="Previous question" variant="outline" size="lg" className="border-2 border-slate-500 text-slate-800 hover:border-slate-700 hover:bg-slate-100 font-medium" onClick={goPrev} disabled={currentIndex === 0}>
+              <Button
+                aria-label="Previous question"
+                variant="secondary"
+                size="lg"
+                className="h-16 px-8 border-b-4 active:border-b-0 active:translate-y-1 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-lg focus-visible:ring-4 focus-visible:ring-indigo-600/50 dark:focus-visible:ring-indigo-400/50 gap-3 [&_svg]:size-6 rounded-2xl transition-all"
+                onClick={goPrev}
+                disabled={currentIndex === 0}
+              >
+                <ChevronLeft aria-hidden="true" strokeWidth={3} />
                 Previous
               </Button>
               {currentIndex === questionCount - 1 ? (
                 <Button
                   size="lg"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
+                  className="h-16 px-10 bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-500/50 text-white font-black text-lg shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 rounded-2xl transition-all"
                   onClick={async () => {
                     if (!currentHandled) {
                       await handleSkip(currentQuestion.id);
@@ -534,7 +588,7 @@ function PracticeSetView() {
                       : !userEmail
                         ? !currentHandled
                           ? "Skip & See Demo Feedback"
-                          : "Submit & Get   Feedback"
+                          : "Submit & Get Feedback"
                         : !currentHandled
                           ? "Skip & Submit"
                           : "Done"}
@@ -543,7 +597,7 @@ function PracticeSetView() {
                 <Button
                   aria-label="Next question"
                   size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+                  className="h-16 px-10 bg-indigo-500 hover:bg-indigo-400 focus-visible:ring-4 focus-visible:ring-indigo-500/50 text-white font-black text-lg shadow-lg border-b-4 border-indigo-700 active:border-b-0 active:translate-y-1 gap-3 [&_svg]:size-6 rounded-2xl transition-all"
                   onClick={async () => {
                     if (!currentHandled) {
                       await handleSkip(currentQuestion.id);
@@ -554,78 +608,37 @@ function PracticeSetView() {
                   disabled={currentIndex === questionCount - 1}
                 >
                   Next
+                  <ChevronRight aria-hidden="true" strokeWidth={3} />
                 </Button>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-700">
-              <span className="font-medium">Q {currentIndex + 1}</span>
-              <span>•</span>
-              <span>
-                Answered {answeredCount}, Skipped {skippedCount}/{questionCount}
-              </span>
-            </div>
+            
+            {/* The right-side stats block (Answered/Skipped) was removed to declutter the UI. */}
           </div>
-        </CardContent>
-      </Card>
-
-      <QuestionNavigator />
-
-      {/* Early-submit shortcut — kept on desktop only. On mobile users
-          navigate to the last question and use the sticky-bar Submit. */}
-      <div className="hidden md:flex flex-col gap-2 w-full">
-        {currentIndex !== questionCount - 1 && (
-          <>
-            <Button
-              size="lg"
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
-            >
-              {state.isSubmitting
-                ? "Submitting..."
-                : state.status === "submitted"
-                  ? "Submitted"
-                  : !userEmail
-                    ? "Submit & See Demo Feedback"
-                    : "Done"}
-            </Button>
-            {!canSubmit && state.status !== "submitted" && (
-              <p className="text-sm text-slate-700">
-                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
-                Any unanswered questions will be marked as skipped.
-              </p>
-            )}
-          </>
-        )}
+        </div>
       </div>
-
-      {/* Spacer so the last content isn't hidden behind the mobile sticky bar. */}
-      <div className="md:hidden h-24" aria-hidden="true" />
-
-      {/* Mobile sticky bottom action bar — primary actions within thumb reach. */}
+      
+      {/* Modern Floating Mobile Pill */}
+      {/* Placed BEFORE QuestionNavigator in the DOM so TalkBack users hit Next/Prev immediately after options, instead of tabbing through 20+ question numbers first. */}
       <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur shadow-[0_-4px_12px_rgba(15,23,42,0.06)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="md:hidden fixed inset-x-4 bottom-6 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] rounded-[2rem] border-2 border-slate-200/50 dark:border-slate-700/50 p-2 transition-transform duration-300"
+        style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex items-stretch gap-2 px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
           <Button
             aria-label="Previous question"
-            variant="outline"
-            className="flex-1 min-h-12 border-2 border-slate-500 text-slate-800 hover:border-slate-700 hover:bg-slate-100 font-medium"
+            variant="ghost"
+            className="flex-1 h-14 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-black focus-visible:ring-4 focus-visible:ring-indigo-600 gap-1 rounded-2xl"
             onClick={goPrev}
             disabled={currentIndex === 0}
           >
-            Previous
+            <ChevronLeft aria-hidden="true" strokeWidth={3} />
+            <span className="hidden sm:inline">Prev</span>
           </Button>
-          <div className="flex flex-col items-center justify-center text-[11px] leading-tight text-slate-700 min-w-[56px]">
-            <span className="font-semibold text-slate-900">
-              {currentIndex + 1}/{questionCount}
-            </span>
-            <span className="text-slate-500">{answeredCount} done</span>
-          </div>
+
           {currentIndex === questionCount - 1 ? (
             <Button
-              className="flex-1 min-h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
+              className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-400 text-white font-black shadow-md rounded-2xl border-b-[3px] border-emerald-700 active:border-b-0 active:translate-y-[3px]"
               onClick={async () => {
                 if (!currentHandled) {
                   await handleSkip(currentQuestion.id);
@@ -639,18 +652,12 @@ function PracticeSetView() {
                 !canSubmit
               }
             >
-              {state.isSubmitting
-                ? "Submitting..."
-                : state.status === "submitted"
-                  ? "Submitted"
-                  : !currentHandled
-                    ? "Skip & Submit"
-                    : "Submit"}
+              {state.isSubmitting ? "Wait" : state.status === "submitted" ? "Done" : "Submit"}
             </Button>
           ) : (
             <Button
               aria-label="Next question"
-              className="flex-1 min-h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+              className="flex-1 h-14 bg-indigo-500 hover:bg-indigo-400 text-white font-black shadow-md gap-1 rounded-2xl border-b-[3px] border-indigo-700 active:border-b-0 active:translate-y-[3px]"
               onClick={async () => {
                 if (!currentHandled) {
                   await handleSkip(currentQuestion.id);
@@ -659,14 +666,48 @@ function PracticeSetView() {
                 }
               }}
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight aria-hidden="true" strokeWidth={3} />
             </Button>
           )}
         </div>
       </div>
 
+      <QuestionNavigator />
+
+      {/* Early-submit shortcut — kept on desktop only. On mobile users
+          navigate to the last question and use the sticky-bar Submit. */}
+      <div className="hidden md:flex flex-col gap-2 w-full">
+        {currentIndex !== questionCount - 1 && (
+          <>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-400 text-white font-semibold shadow-sm"
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
+            >
+              {state.isSubmitting
+                ? "Submitting..."
+                : state.status === "submitted"
+                  ? "Submitted"
+                  : !userEmail
+                    ? "Submit & See Demo Feedback"
+                    : "Done"}
+            </Button>
+            {!canSubmit && state.status !== "submitted" && (
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
+                Any unanswered questions will be marked as skipped.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      </div>
+      
       <ConfirmSubmitDialog />
       <SubmitLoader />
-    </section>
+    </main>
   );
 }
