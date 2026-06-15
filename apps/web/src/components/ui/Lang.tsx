@@ -1,4 +1,5 @@
 import { ElementType, ReactNode } from "react";
+import { accessibleNumerals } from "@/components/ui/accessibleNumerals";
 
 type LangProps = {
   children: ReactNode;
@@ -25,9 +26,12 @@ export function Lang({
   className,
 }: LangProps) {
   if (children == null || children === "") return null;
+  // Plain-string content is run through accessibleNumerals so Android screen
+  // readers announce Devanagari digits (they otherwise skip them). Non-string
+  // children (already-rendered nodes) pass through untouched.
   return (
     <Tag lang={code} className={className}>
-      {children}
+      {typeof children === "string" ? accessibleNumerals(children) : children}
     </Tag>
   );
 }

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { accessibleNumerals } from "@/components/ui/accessibleNumerals";
 
 type RichTextProps = {
   children: string | null | undefined;
@@ -41,7 +42,13 @@ function renderInline(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     const match = part.match(/^\*\*([^*]+)\*\*$/);
-    return match ? <strong key={i}>{match[1]}</strong> : <Fragment key={i}>{part}</Fragment>;
+    // accessibleNumerals wraps Devanagari digits so Android screen readers
+    // announce them (see components/ui/accessibleNumerals).
+    return match ? (
+      <strong key={i}>{accessibleNumerals(match[1])}</strong>
+    ) : (
+      <Fragment key={i}>{accessibleNumerals(part)}</Fragment>
+    );
   });
 }
 
