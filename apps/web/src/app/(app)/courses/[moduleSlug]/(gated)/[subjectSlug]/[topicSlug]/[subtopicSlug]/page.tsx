@@ -25,6 +25,7 @@ export default async function SubtopicPage({ params }: PageProps) {
       id,
       name,
       name_np,
+      syllabus_ref,
       description,
       topics!inner(
         id,
@@ -105,7 +106,8 @@ export default async function SubtopicPage({ params }: PageProps) {
 
       <header>
         <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">
-          Practice Sets for <Lang>{subtopicData.name_np || subtopicData.name}</Lang>
+          {subtopicData.syllabus_ref && <span className="text-gray-500 font-normal mr-2">{subtopicData.syllabus_ref}</span>}
+          <Lang>{subtopicData.name_np || subtopicData.name}</Lang>
         </h1>
         <p className="text-gray-600">
           {subtopicData.description || "Choose a question set to begin your practice attempt."}
