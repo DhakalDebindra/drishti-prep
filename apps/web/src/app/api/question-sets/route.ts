@@ -115,6 +115,45 @@ export async function POST(req: Request) {
       return errorResponse(junctionInsertError.message, 400);
     }
 
+    // Register the set in question_set_modules (primary module + cross-module mirrors)
+    const { data: topicRow } = await supabase
+      .from("topics")
+      .select("subjects!inner(module_id)")
+      .eq("id", topic_id)
+      .single();
+
+    const primaryModuleId = (topicRow?.subjects as any)?.module_id as string | undefined;
+    if (primaryModuleId) {
+      await supabase.from("question_set_modules").insert({
+        question_set_id: insertedSet.id,
+        module_id: primaryModuleId,
+        subtopic_id: subtopic_id ?? null,
+      });
+
+      // Auto-mirror source subtopics to the Nimavi course
+      const NIMAVI_MODULE_ID = "6695669a-f40e-421a-a4ec-b09bbeaf56c4";
+      const SOURCE_TO_NIMAVI_SLUG: Record<string, string> = {
+        "68f17c03-c021-4bd6-bf1d-b5f3273a8c75": "nimavi-aasman-collection",
+        "496b46ba-91ca-44b6-9dba-9ac38f2713f7": "nimavi-gorkhapatra",
+        "6f1b8a1c-8c6a-4892-9600-9525550d5270": "nimavi-psc-publications",
+        "58e63396-f84a-4f4c-afc6-4b8878f4c445": "nimavi-daily-news-digest",
+      };
+      const nimaviSlug = subtopic_id ? SOURCE_TO_NIMAVI_SLUG[subtopic_id] : undefined;
+      if (nimaviSlug) {
+        const { data: nimaviSub } = await supabase
+          .from("subtopics")
+          .select("id")
+          .eq("slug", nimaviSlug)
+          .single();
+        if (nimaviSub) {
+          await supabase.from("question_set_modules").upsert(
+            { question_set_id: insertedSet.id, module_id: NIMAVI_MODULE_ID, subtopic_id: nimaviSub.id },
+            { onConflict: "question_set_id,module_id", ignoreDuplicates: true }
+          );
+        }
+      }
+    }
+
     return NextResponse.json({ id: insertedSet.id }, { status: 201 });
   } catch (error: unknown) {
     console.error("Error creating question set:", error);

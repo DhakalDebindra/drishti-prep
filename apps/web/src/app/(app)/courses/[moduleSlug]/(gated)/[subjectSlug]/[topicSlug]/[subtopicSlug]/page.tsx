@@ -28,14 +28,14 @@ export default async function SubtopicPage({ params }: PageProps) {
       syllabus_ref,
       description,
       topics!inner(
-        id, 
-        name, 
-        slug, 
+        id,
+        name,
+        slug,
         subjects!inner(
-          id, 
-          name, 
-          slug, 
-          modules!inner(slug)
+          id,
+          name,
+          slug,
+          modules!inner(id, slug)
         )
       )
     `)
@@ -56,17 +56,33 @@ export default async function SubtopicPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch verified active question sets for this subtopic
-  const { data: sets, error } = await supabase
-    .from("question_sets")
-    .select("id, title, difficulty_level, version")
-    .eq("subtopic_id", subtopicData.id)
-    .eq("is_verified", true)
-    .order("created_at", { ascending: true });
+  // Native sets directly assigned to this subtopic
+  const [{ data: nativeSets, error }, { data: crossLinks }] = await Promise.all([
+    supabase
+      .from("question_sets")
+      .select("id, title, difficulty_level, version")
+      .eq("subtopic_id", subtopicData.id)
+      .eq("is_verified", true)
+      .order("created_at", { ascending: true }),
+    // Cross-module sets: sets from another module's subtopic linked here via junction table
+    supabase
+      .from("question_set_modules")
+      .select("question_sets!inner(id, title, difficulty_level, version)")
+      .eq("module_id", moduleItem.id)
+      .eq("subtopic_id", subtopicData.id)
+      .eq("question_sets.is_verified", true),
+  ]);
 
   if (error) {
     console.error("Error fetching question sets:", error);
   }
+
+  const nativeIds = new Set((nativeSets ?? []).map((s) => s.id));
+  const crossSets = (crossLinks ?? [])
+    .map((link) => (link as any).question_sets)
+    .filter((s): s is NonNullable<typeof s> => s && !nativeIds.has(s.id));
+
+  const sets = [...(nativeSets ?? []), ...crossSets];
 
   return (
     <section className="space-y-6">

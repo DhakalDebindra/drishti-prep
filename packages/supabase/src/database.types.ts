@@ -518,6 +518,46 @@ export type Database = {
           },
         ]
       }
+      question_set_modules: {
+        Row: {
+          module_id: string
+          question_set_id: string
+          subtopic_id: string | null
+        }
+        Insert: {
+          module_id: string
+          question_set_id: string
+          subtopic_id?: string | null
+        }
+        Update: {
+          module_id?: string
+          question_set_id?: string
+          subtopic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_set_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_set_modules_question_set_id_fkey"
+            columns: ["question_set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_set_modules_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_sets: {
         Row: {
           created_at: string
