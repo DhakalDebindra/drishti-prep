@@ -819,6 +819,7 @@ export type Database = {
           name: string
           name_np: string | null
           slug: string
+          syllabus_ref: string | null
           topic_id: string
           updated_at: string
         }
@@ -831,6 +832,7 @@ export type Database = {
           name: string
           name_np?: string | null
           slug: string
+          syllabus_ref?: string | null
           topic_id: string
           updated_at?: string
         }
@@ -843,6 +845,7 @@ export type Database = {
           name?: string
           name_np?: string | null
           slug?: string
+          syllabus_ref?: string | null
           topic_id?: string
           updated_at?: string
         }
