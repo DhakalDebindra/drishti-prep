@@ -34,7 +34,7 @@ export default async function TopicPage({ params }: PageProps) {
   // NEW: Check for subtopics
   const { data: subtopics } = await supabase
     .from("subtopics")
-    .select("id, name, name_np, slug, description, display_order")
+    .select("id, name, name_np, slug, description, display_order, syllabus_ref")
     .eq("topic_id", topicData.id)
     .eq("is_active", true)
     .order("display_order", { ascending: true });
@@ -75,6 +75,7 @@ export default async function TopicPage({ params }: PageProps) {
             >
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                  {subtopic.syllabus_ref && <span className="text-gray-500 font-normal mr-2">{subtopic.syllabus_ref}</span>}
                   <Lang>{subtopic.name_np || subtopic.name}</Lang>
                 </h2>
               </div>
