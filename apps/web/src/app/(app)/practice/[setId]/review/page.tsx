@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ScoreOverview } from "@/components/practice/ScoreOverview";
 import { AIFeedbackPanel } from "@/components/practice/AIFeedbackPanel";
 import { QuestionReviewList, ReviewQuestion } from "@/components/practice/QuestionReviewList";
+import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -96,9 +97,31 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
   ).length;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 id="main-heading" className="text-2xl font-bold text-slate-900 dark:text-white">Performance Review</h1>
+    <div className="mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+              Practice review
+            </p>
+            <h1 id="main-heading" className="mt-1 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
+              Performance Review
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              A clearer look at how this session went — score, AI insights, and a question-by-question breakdown.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <PracticeAccessibilityMenu buttonMode="label" />
+            <Link
+              href="/practice/dashboard"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              Back to practice
+            </Link>
+          </div>
+        </div>
       </div>
 
       <ScoreOverview
@@ -110,8 +133,8 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
       />
 
       <Suspense fallback={
-        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 h-48 animate-pulse flex items-center justify-center">
-           <p className="text-slate-500">Preparing AI insights...</p>
+        <div className="flex h-48 items-center justify-center rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-6 animate-pulse dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-slate-500 dark:text-slate-400">Preparing AI insights…</p>
         </div>
       }>
         <AIFeedbackPanel attemptId={attemptId} />

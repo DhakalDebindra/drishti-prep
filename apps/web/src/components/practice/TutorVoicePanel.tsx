@@ -38,7 +38,7 @@ export function TutorVoicePanel({
     if (state.kind === "playing") {
       return paused ? "Paused" : SEGMENT_LABEL[state.segment] ?? "Playing";
     }
-    return "Silent";
+    return "Ready";
   })();
 
   const startKey = getHotkey("start");
@@ -50,81 +50,83 @@ export function TutorVoicePanel({
 
   return (
     <div
-      className={`rounded-lg border p-4 flex flex-wrap items-center gap-3 ${
+      className={`rounded-[2rem] border p-4 shadow-sm backdrop-blur-xl sm:p-5 ${
         errored
-          ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900"
-          : "border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900"
+          ? "border-amber-200 bg-amber-50/90 dark:border-amber-900/50 dark:bg-amber-950/25"
+          : "border-cyan-200 bg-cyan-50/80 dark:border-cyan-900/50 dark:bg-cyan-950/25"
       }`}
       role="region"
       aria-label="Shruti voice controls"
     >
-      <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
-        {errored ? (
-          <AlertTriangle className="w-5 h-5 text-amber-700" aria-hidden="true" />
-        ) : (
-          <Headphones className="w-5 h-5" aria-hidden="true" />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+          {errored ? (
+            <AlertTriangle className="h-5 w-5 text-amber-700" aria-hidden="true" />
+          ) : (
+            <Headphones className="h-5 w-5 text-cyan-700 dark:text-cyan-300" aria-hidden="true" />
+          )}
+          <span className="text-sm font-semibold">Shruti</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">({voice})</span>
+        </div>
+
+        <span
+          aria-live="polite"
+          aria-atomic="true"
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+            errored
+              ? "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200"
+              : "bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          }`}
+        >
+          {statusText}
+        </span>
+
+        {errored && (
+          <button
+            type="button"
+            onClick={player.replayCurrent}
+            className="inline-flex items-center rounded-full border border-amber-200 bg-white px-3 py-1.5 text-sm font-medium text-amber-800 transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-300 dark:border-amber-900/50 dark:bg-slate-950 dark:text-amber-200 dark:hover:bg-amber-950/40"
+          >
+            Retry
+          </button>
         )}
-        <span className="font-semibold text-sm">Shruti</span>
-        <span className="text-xs text-blue-700 dark:text-blue-400">({voice})</span>
+
+        <button
+          type="button"
+          onClick={onShowHelp}
+          aria-keyshortcuts={helpKey.combo}
+          className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-white px-3 py-1.5 text-xs font-medium text-cyan-800 transition hover:bg-cyan-100 focus:outline-none focus:ring-4 focus:ring-cyan-300 dark:border-cyan-900/50 dark:bg-slate-950 dark:text-cyan-200 dark:hover:bg-cyan-950/40"
+          title={`Show keyboard shortcuts (${helpKey.label})`}
+        >
+          <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
+          Shortcuts
+        </button>
+
+        {awaitingFirstGesture ? (
+          <button
+            type="button"
+            onClick={onStart}
+            aria-keyshortcuts={startKey.combo}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus:outline-none focus:ring-4 focus:ring-cyan-300"
+          >
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
+            Start Shruti ({startKey.label})
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={player.mute}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-emerald-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+            aria-label="Mute Shruti"
+            aria-keyshortcuts="Escape"
+          >
+            <VolumeX className="h-4 w-4" aria-hidden="true" />
+            Mute
+          </button>
+        )}
       </div>
 
-      <span
-        aria-live="polite"
-        aria-atomic="true"
-        className={`text-xs px-2 py-1 rounded ${
-          errored
-            ? "text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40"
-            : "text-blue-900 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/40"
-        }`}
-      >
-        {statusText}
-      </span>
-
-      {errored && (
-        <button
-          type="button"
-          onClick={player.replayCurrent}
-          className="rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-sm font-medium px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-amber-400"
-        >
-          Retry
-        </button>
-      )}
-
-      <button
-        type="button"
-        onClick={onShowHelp}
-        aria-keyshortcuts={helpKey.combo}
-        className="inline-flex items-center gap-1 rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-xs font-medium px-2 py-1 focus:outline-none focus:ring-4 focus:ring-blue-400"
-        title={`Show keyboard shortcuts (${helpKey.label})`}
-      >
-        <Keyboard className="w-3.5 h-3.5" aria-hidden="true" />
-        Shortcuts
-      </button>
-
-      {awaitingFirstGesture ? (
-        <button
-          type="button"
-          onClick={onStart}
-          aria-keyshortcuts={startKey.combo}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
-        >
-          <Volume2 className="w-4 h-4" aria-hidden="true" />
-          Start Shruti ({startKey.label})
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={player.mute}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-sm font-medium px-3 py-1.5 focus:outline-none focus:ring-4 focus:ring-blue-400"
-          aria-label="Mute Shruti"
-          aria-keyshortcuts="Escape"
-        >
-          <VolumeX className="w-4 h-4" aria-hidden="true" />
-          Mute
-        </button>
-      )}
-
-      <p className="basis-full text-xs text-blue-800 dark:text-blue-300">
+      <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
         <kbd className="font-mono">{startKey.label}</kbd> start / replay,{" "}
         <kbd className="font-mono">{stemKey.label}</kbd> question,{" "}
         <kbd className="font-mono">{optsKey.label}</kbd> options,{" "}

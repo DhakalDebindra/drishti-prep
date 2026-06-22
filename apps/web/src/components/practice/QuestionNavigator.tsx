@@ -12,11 +12,17 @@ export function QuestionNavigator() {
   return (
     <nav
       aria-label="Question Navigator"
-      className="mt-6 rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm"
+      className="mt-2 rounded-[1.75rem] border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-5"
     >
-      <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-slate-300">
-        Question Navigator
-      </h3>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Question Navigator
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Jump between questions
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: questionCount }).map((_, index) => {
           const qId = questions[index]?.id;
@@ -25,20 +31,19 @@ export function QuestionNavigator() {
           const isSkipped = answer?.selected_option === "skipped";
           const isCurrent = currentIndex === index;
 
-          let variant: "default" | "outline" | "secondary" | "ghost" = "outline";
-          let extraClasses = "";
+          const variant: "default" | "outline" | "secondary" | "ghost" = isAnswered
+            ? "default"
+            : isSkipped
+            ? "secondary"
+            : "outline";
 
-          if (isCurrent) {
-            extraClasses = "ring-2 ring-blue-600 dark:ring-blue-400 ring-offset-2 dark:ring-offset-slate-900 font-bold border-2 border-blue-600 dark:border-blue-400 scale-105 shadow-md z-10";
-          }
-
-          if (isAnswered) {
-            variant = "default";
-          } else if (isSkipped) {
-            variant = "secondary";
-          } else {
-            variant = "outline";
-          }
+          const statusClasses = isCurrent
+            ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 font-semibold"
+            : isAnswered
+            ? "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-white"
+            : isSkipped
+            ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
+            : "bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-emerald-300";
 
           const status = isAnswered ? "answered" : isSkipped ? "skipped" : "unanswered";
           const currentLabel = isCurrent ? "currently active" : "";
@@ -48,7 +53,7 @@ export function QuestionNavigator() {
             <Button
               key={index}
               variant={variant}
-              className={`h-11 w-11 sm:h-10 sm:w-10 p-0 text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${extraClasses}`}
+              className={`h-11 w-11 p-0 text-sm transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-slate-950 ${statusClasses}`}
               aria-label={ariaLabel}
               aria-current={isCurrent ? "true" : undefined}
               onClick={() => jumpToQuestion(index)}

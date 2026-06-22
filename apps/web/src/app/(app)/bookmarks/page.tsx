@@ -53,10 +53,21 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
     console.error("Error fetching bookmarks:", JSON.stringify(error, null, 2));
     // Return empty state or error UI
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-xl font-bold text-red-600 mb-2">Failed to load bookmarks</h2>
-        <p className="text-slate-500">There was an error connecting to the database. Please try again later.</p>
-        <Link href="/dashboard" className="inline-block mt-4 text-blue-600 hover:underline">Return to Dashboard</Link>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/40 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50">
+        <div className="relative mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="rounded-[2rem] border border-rose-200/60 bg-rose-50/80 p-8 shadow-sm dark:border-rose-900/40 dark:bg-rose-950/20">
+            <h2 className="text-xl font-bold text-rose-900 dark:text-rose-100">Failed to load bookmarks</h2>
+            <p className="mt-2 text-sm leading-relaxed text-rose-800/80 dark:text-rose-200/80">
+              There was an error connecting to the database. Please try again later.
+            </p>
+            <Link
+              href="/dashboard"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-rose-900/40 dark:bg-slate-950 dark:text-rose-200 dark:hover:bg-rose-950/30"
+            >
+              Return to dashboard
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -79,15 +90,20 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-slate-50/30 dark:bg-slate-950/30">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/40 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-5rem] top-[-5rem] h-72 w-72 rounded-full bg-emerald-200/20 blur-3xl dark:bg-emerald-500/10" />
+        <div className="absolute right-[-5rem] top-24 h-72 w-72 rounded-full bg-cyan-200/15 blur-3xl dark:bg-cyan-500/10" />
+      </div>
+
       <BookmarkedQuestionList initialQuestions={formattedBookmarks} />
-      
+
       {totalPages > 1 && (
-        <div className="max-w-4xl mx-auto px-4 pb-12 flex justify-center items-center gap-4">
+        <div className="mx-auto flex max-w-[var(--dp-shell-width)] items-center justify-center gap-4 px-4 pb-12 sm:px-6 lg:px-8">
           <Link
             href={`/bookmarks?page=${Math.max(1, page - 1)}`}
             aria-label={`Go to previous page (page ${page - 1})`}
-            className={`p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors ${
+            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
               page <= 1 ? "opacity-30 cursor-not-allowed pointer-events-none" : "hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             aria-disabled={page <= 1}
@@ -96,14 +112,14 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
             <span className="sr-only">Previous Page</span>
           </Link>
           
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
             Page <span className="text-slate-900 dark:text-white">{page}</span> of {totalPages}
           </span>
 
           <Link
             href={`/bookmarks?page=${Math.min(totalPages, page + 1)}`}
             aria-label={`Go to next page (page ${page + 1})`}
-            className={`p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors ${
+            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
               page >= totalPages ? "opacity-30 cursor-not-allowed pointer-events-none" : "hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             aria-disabled={page >= totalPages}

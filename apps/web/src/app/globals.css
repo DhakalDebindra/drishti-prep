@@ -80,6 +80,44 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  --dp-root-font-size: 16px;
+  --dp-shell-width: 76rem;
+  --dp-body-line-height: 1.65;
+  --dp-focus-outline-width: 2px;
+  --dp-focus-outline-offset: 3px;
+}
+
+html[data-dp-font-scale="sm"] {
+  --dp-root-font-size: 15px;
+}
+
+html[data-dp-font-scale="md"] {
+  --dp-root-font-size: 16px;
+}
+
+html[data-dp-font-scale="lg"] {
+  --dp-root-font-size: 17px;
+}
+
+html[data-dp-font-scale="xl"] {
+  --dp-root-font-size: 18px;
+}
+
+html[data-dp-line-spacing="relaxed"] {
+  --dp-body-line-height: 1.8;
+}
+
+html[data-dp-line-spacing="spacious"] {
+  --dp-body-line-height: 1.95;
+}
+
+html[data-dp-density="spacious"] {
+  --dp-shell-width: 84rem;
+}
+
+html[data-dp-focus="enhanced"] {
+  --dp-focus-outline-width: 3px;
+  --dp-focus-outline-offset: 4px;
 }
 
 .dark {
@@ -150,10 +188,14 @@
   * {
     @apply border-border;
   }
+  html {
+    font-size: var(--dp-root-font-size);
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body), "Work Sans", ui-sans-serif, system-ui, -apple-system,
       "Segoe UI", sans-serif;
+    line-height: var(--dp-body-line-height);
   }
   html {
     font-family: var(--font-body), "Work Sans", ui-sans-serif, system-ui, -apple-system,
@@ -171,8 +213,8 @@
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 3px;
+    outline: var(--dp-focus-outline-width) solid var(--ring);
+    outline-offset: var(--dp-focus-outline-offset);
   }
 }
 
@@ -186,5 +228,14 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+html[data-dp-motion="reduced"] *,
+html[data-dp-motion="reduced"] *::before,
+html[data-dp-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 

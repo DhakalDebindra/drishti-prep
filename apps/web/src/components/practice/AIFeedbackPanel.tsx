@@ -31,16 +31,18 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
 
   if (loading) {
     return (
-      <div 
-        aria-live="polite" 
-        aria-atomic="true" 
-        className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 animate-pulse text-center space-y-4"
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="rounded-[2rem] border border-white/70 bg-white/85 p-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8"
       >
-        <Sparkles className="w-8 h-8 text-blue-500 mx-auto animate-bounce" />
-        <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-300">
+          <Sparkles className="h-5 w-5 animate-pulse" />
+        </div>
+        <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
           AI is analyzing your performance...
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           Looking for patterns in your correct and incorrect answers to build personalized feedback.
         </p>
       </div>
@@ -49,14 +51,19 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
 
   if (error || !feedback) {
     return (
-      <div 
-        aria-live="assertive" 
-        aria-atomic="true" 
+      <div
+        aria-live="assertive"
+        aria-atomic="true"
         role="alert"
-        className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/20 rounded-2xl p-6 md:p-8 flex items-center justify-center text-red-600 dark:text-red-400"
+        className="rounded-[2rem] border border-rose-200 bg-rose-50 p-6 text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200 md:p-8"
       >
-        <AlertTriangle className="w-5 h-5 mr-2" />
-        <span>We couldn't generate AI feedback at this time. Please try again later.</span>
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5" />
+          <span className="font-semibold">We couldn&apos;t generate AI feedback right now.</span>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed opacity-90">
+          Please try again later.
+        </p>
       </div>
     );
   }
@@ -64,27 +71,27 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
   const parseWeakZones = (weakZones: Record<string, unknown> | null) => {
     if (!weakZones || typeof weakZones !== "object") return [];
     if (Array.isArray(weakZones)) return weakZones;
-    return Object.keys(weakZones); // basic extraction depending on AI output shape
+    return Object.keys(weakZones);
   };
 
   const weakZones = parseWeakZones(feedback.weak_zones);
 
   return (
-    <div 
-      aria-live="polite" 
-      aria-atomic="true" 
-      className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-indigo-950/20 border border-blue-100 dark:border-indigo-900/30 rounded-2xl p-6 md:p-8 shadow-sm"
+    <div
+      aria-live="polite"
+      aria-atomic="true"
+      className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8"
     >
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-            <BrainCircuit className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+            <BrainCircuit className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">
               AI Analysis & Insights
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               Powered by DrishtiPrep AI
             </p>
           </div>
@@ -93,30 +100,30 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
 
       <div className="space-y-6">
         {feedback.strengths && (
-          <div className="p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl backdrop-blur-sm border border-white dark:border-slate-700/50">
-            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-medium mb-3">
-              <Lightbulb className="w-5 h-5" />
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="mb-3 flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+              <Lightbulb className="h-5 w-5" />
               <h3 className="text-lg font-bold">Overall Performance</h3>
             </div>
-            <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+            <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               <RichText>{feedback.strengths}</RichText>
             </div>
           </div>
         )}
- 
+
         {weakZones.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400 font-medium mb-3">
-              <Sparkles className="w-5 h-5" />
+            <div className="mb-3 flex items-center gap-2 text-cyan-700 dark:text-cyan-300">
+              <Sparkles className="h-5 w-5" />
               <h3 className="text-lg font-bold">Recommended Focus Areas</h3>
             </div>
             <div className="space-y-3">
               {weakZones.map((zone, idx) => (
                 <div
                   key={idx}
-                  className="p-4 bg-orange-50 dark:bg-orange-900/10 text-slate-700 dark:text-slate-300 text-sm leading-relaxed rounded-xl border border-orange-100 dark:border-orange-900/20 flex gap-3"
+                  className="flex gap-3 rounded-[1.4rem] border border-cyan-200 bg-cyan-50/70 p-4 text-sm leading-relaxed text-slate-700 dark:border-cyan-900/40 dark:bg-cyan-950/20 dark:text-slate-200"
                 >
-                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-orange-200 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-200 text-xs font-bold text-cyan-900 dark:bg-cyan-900/50 dark:text-cyan-100">
                     {idx + 1}
                   </span>
                   <div className="flex-1">
