@@ -150,19 +150,19 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
   }, []);
 
   useEffect(() => {
-    const localPrefs = readAccessibilityPreferences();
-    setPrefs(localPrefs);
-    applyAccessibilityPreferences(localPrefs);
-    writeAccessibilityPreferences(localPrefs);
-
     const hydrateFromServer = async () => {
+      // Apply local preferences first (deferred inside the async function to avoid synchronous setState)
+      const localPrefs = readAccessibilityPreferences();
+      setPrefs(localPrefs);
+      applyAccessibilityPreferences(localPrefs);
+      writeAccessibilityPreferences(localPrefs);
+
       if (fetchOnceRef.current) return;
       fetchOnceRef.current = true;
-      
-      // Use a flag to track state updates instead of immediate setState
+
       try {
         setStatus("loading");
-        
+
         const response = await fetch("/api/me/preferences");
         const payload = await response.json();
         const authenticated = Boolean(payload?.authenticated);
@@ -193,8 +193,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
 
         setStatus("saved");
         setStatusMessage("Accessibility settings synced.");
-        
-        // Use setTimeout to schedule the status reset instead of synchronous calls
+
         window.setTimeout(() => {
           setStatus((current) => (current === "error" ? current : "idle"));
         }, 1500);
