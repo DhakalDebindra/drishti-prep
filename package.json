@@ -16,6 +16,8 @@
   "devDependencies": {
     "@lhci/cli": "^0.12.0",
     "@playwright/test": "^1.50.1",
+    "pg": "^8.21.0",
+    "playwright": "^1.61.0",
     "turbo": "^2.5.3"
   },
   "pnpm": {

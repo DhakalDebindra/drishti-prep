@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, XCircle, MinusCircle, Bookmark, Flag, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, Bookmark, Flag, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Lang } from "@/components/ui/Lang";
 import { RichText } from "@/components/ui/RichText";
 import { toggleBookmark } from "@/app/actions/practice-actions";
@@ -33,54 +33,52 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
   const [reportingQuestionId, setReportingQuestionId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
 
-  const filteredQuestions = questions.filter((q) => {
-    const isSkipped = q.selected_option === null || q.selected_option === "skipped";
+  const filteredQuestions = questions.filter((question) => {
+    const isSkipped = question.selected_option === null || question.selected_option === "skipped";
     if (filter === "all") return true;
-    if (filter === "correct") return q.is_correct;
-    if (filter === "incorrect") return !q.is_correct && !isSkipped;
+    if (filter === "correct") return question.is_correct;
+    if (filter === "incorrect") return !question.is_correct && !isSkipped;
     if (filter === "skipped") return isSkipped;
     return true;
   });
 
   const handleBookmark = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const isCurrentlyBookmarked = bookmarkedIds.has(id);
-    
-    // Optimistic toggle
+
     if (isCurrentlyBookmarked) {
-      setBookmarkedIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
       });
       setAnnouncement("Bookmark removed");
     } else {
-      setBookmarkedIds(prev => {
-        const newSet = new Set(prev);
-        newSet.add(id);
-        return newSet;
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
       });
       setAnnouncement("Question bookmarked");
     }
 
     const result = await toggleBookmark(id);
     if (!result.success) {
-      // Revert on failure
       if (isCurrentlyBookmarked) {
-         setBookmarkedIds(prev => {
-            const newSet = new Set(prev);
-            newSet.add(id);
-            return newSet;
-         });
-         setAnnouncement("Failed to remove bookmark");
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+        setAnnouncement("Failed to remove bookmark");
       } else {
-         setBookmarkedIds(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(id);
-            return newSet;
-         });
-         setAnnouncement("Failed to bookmark question");
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        setAnnouncement("Failed to bookmark question");
       }
       alert(result.error || "Failed to update bookmark status");
     }
@@ -92,25 +90,38 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
   };
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-6">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Question Review</h3>
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-          {(["all", "correct", "incorrect", "skipped"] as const).map((f) => (
+
+      <div className="flex flex-col gap-4 rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+            Review
+          </p>
+          <h3 className="mt-1 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+            Question Review
+          </h3>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Review what you answered, what you skipped, and where to focus next.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 rounded-full border border-slate-200 bg-slate-50 p-1.5 dark:border-slate-800 dark:bg-slate-900/60">
+          {(["all", "correct", "incorrect", "skipped"] as const).map((item) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              aria-pressed={filter === f}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 ${
-                filter === f
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              key={item}
+              onClick={() => setFilter(item)}
+              aria-pressed={filter === item}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 ${
+                filter === item
+                  ? "bg-white text-emerald-800 shadow-sm dark:bg-slate-950 dark:text-emerald-200"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
               }`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {item === "all" && <Filter className="h-4 w-4" />}
+              {item.charAt(0).toUpperCase() + item.slice(1)}
             </button>
           ))}
         </div>
@@ -118,157 +129,159 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
 
       <div className="space-y-4">
         {filteredQuestions.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">No questions match this filter.</div>
+          <div className="rounded-[1.75rem] border border-slate-200 bg-white/85 px-6 py-10 text-center text-slate-600 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-300">
+            No questions match this filter.
+          </div>
         ) : (
-          filteredQuestions.map((q, index) => {
-            const isSkipped = q.selected_option === null || q.selected_option === "skipped";
-            const isExpanded = expandedId === q.id;
-            const statusColor = q.is_correct
-              ? "text-green-600 dark:text-green-400"
+          filteredQuestions.map((question, index) => {
+            const isSkipped = question.selected_option === null || question.selected_option === "skipped";
+            const isExpanded = expandedId === question.id;
+            const statusColor = question.is_correct
+              ? "text-emerald-600 dark:text-emerald-400"
               : isSkipped
               ? "text-slate-400 dark:text-slate-500"
-              : "text-red-600 dark:text-red-400";
+              : "text-rose-600 dark:text-rose-400";
 
             return (
-              <div
-                key={q.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-all duration-200"
+              <article
+                key={question.id}
+                className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white/85 shadow-sm backdrop-blur-xl transition dark:border-slate-800 dark:bg-slate-950/70"
               >
-                <div
-                  className="p-5 flex items-start gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                >
+                <div className="flex items-start gap-4 p-5 transition hover:bg-slate-50/80 dark:hover:bg-slate-900/50">
                   <div className={`mt-0.5 ${statusColor}`} aria-hidden="true">
-                    {q.is_correct ? (
-                      <CheckCircle2 className="w-5 h-5" />
+                    {question.is_correct ? (
+                      <CheckCircle2 className="h-5 w-5" />
                     ) : isSkipped ? (
-                      <MinusCircle className="w-5 h-5" />
+                      <MinusCircle className="h-5 w-5" />
                     ) : (
-                      <XCircle className="w-5 h-5" />
+                      <XCircle className="h-5 w-5" />
                     )}
                   </div>
-                  
-                  <div className="flex-1 text-left">
-                     <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Question {index + 1}
-                        </span>
-                     </div>
-                     <button
-                        onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                        aria-expanded={isExpanded}
-                        aria-controls={`question-panel-${q.id}`}
-                        className="w-full text-left font-medium pr-8 focus:outline-none focus:underline"
-                     >
-                        {/*
-                          The collapsed button only shows the first line of the stem
-                          (everything before the first newline) so a table/list
-                          structure isn't crammed into an interactive control. The
-                          fully formatted stem renders inside the expanded panel
-                          below, where block-level elements are valid.
-                        */}
-                        <p className="text-slate-900 dark:text-white inline"><Lang>{q.content.split(/\r?\n/, 1)[0]}</Lang></p>
-                     </button>
-                  </div>
 
-                  <div className="mt-1" aria-hidden="true">
+                  <div className="min-w-0 flex-1 text-left">
+                    <span className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-400">
+                      Question {index + 1}
+                    </span>
                     <button
-                        onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                        tabIndex={-1}
-                        className="focus:outline-none"
+                      onClick={() => setExpandedId(isExpanded ? null : question.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`question-panel-${question.id}`}
+                      className="w-full text-left focus:outline-none"
                     >
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
-                      )}
+                      <p className="inline text-base font-semibold leading-relaxed text-slate-950 dark:text-white">
+                        <Lang>{question.content.split(/\r?\n/, 1)[0]}</Lang>
+                      </p>
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : question.id)}
+                    aria-label={isExpanded ? "Collapse question" : "Expand question"}
+                    className="mt-1 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
 
                 {isExpanded && (
-                  <div id={`question-panel-${q.id}`} className="border-t border-slate-100 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-900/50 space-y-4">
-                    {/* Full stem with accessible table / list rendering for
-                        match-pair and numbered-list question shapes. */}
-                    {q.content.includes("\n") ? (
+                  <div
+                    id={`question-panel-${question.id}`}
+                    className="space-y-4 border-t border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-900/50"
+                  >
+                    {question.content.includes("\n") ? (
                       <QuestionContent
-                        content={q.content}
-                        className="text-slate-900 dark:text-white text-base leading-relaxed"
+                        content={question.content}
+                        className="text-base leading-relaxed text-slate-900 dark:text-white"
                       />
                     ) : null}
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3" aria-label="Question options">
+
+                    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-label="Question options">
                       {["a", "b", "c", "d"].map((opt) => {
                         const optKey = `option_${opt}` as keyof ReviewQuestion;
-                        const optText = q[optKey] as string;
-                        
-                        const currentOptId = opt.toUpperCase(); // 'A', 'B', 'C', 'D'
-                        const isSelected = q.selected_option === currentOptId;
-                        const isCorrectOpt = q.correct_option === currentOptId;
+                        const optText = question[optKey] as string;
+                        const currentOptId = opt.toUpperCase();
+                        const isSelected = question.selected_option === currentOptId;
+                        const isCorrectOpt = question.correct_option === currentOptId;
 
-                        let optClass = "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300";
-                        let statusAriaLabel = "";
-                        
-                        if (isCorrectOpt) {
-                           optClass = "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 ring-1 ring-green-500";
-                           statusAriaLabel = isSelected ? "Correct option, selected" : "Correct option";
-                        } else if (isSelected && !isCorrectOpt) {
-                           optClass = "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300";
-                           statusAriaLabel = "Incorrect option, selected";
-                        } else {
-                           statusAriaLabel = "Unselected option";
-                        }
+                        const optionClass = isCorrectOpt
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+                          : isSelected
+                          ? "border-rose-200 bg-rose-50 text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+                          : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300";
 
                         return (
-                          <li key={opt} aria-label={statusAriaLabel} className={`p-3 rounded-lg border text-sm flex items-center gap-3 ${optClass}`}>
-                             <div className="flex-1"><Lang>{optText}</Lang></div>
-                             {isCorrectOpt && <CheckCircle2 aria-hidden="true" className="w-4 h-4 text-green-500" />}
-                             {isSelected && !isCorrectOpt && <XCircle aria-hidden="true" className="w-4 h-4 text-red-500" />}
+                          <li
+                            key={opt}
+                            className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-sm ${optionClass}`}
+                            aria-label={
+                              isCorrectOpt
+                                ? isSelected
+                                  ? "Correct option, selected"
+                                  : "Correct option"
+                                : isSelected
+                                ? "Incorrect option, selected"
+                                : "Unselected option"
+                            }
+                          >
+                            <div className="flex-1">
+                              <Lang>{optText}</Lang>
+                            </div>
+                            {isCorrectOpt && <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-emerald-500" />}
+                            {isSelected && !isCorrectOpt && <XCircle aria-hidden="true" className="h-4 w-4 text-rose-500" />}
                           </li>
                         );
                       })}
                     </ul>
 
-                    <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Explanation</span>
-                      <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {q.explanation
-                          ? <RichText>{q.explanation}</RichText>
+                    <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+                      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                        Explanation
+                      </span>
+                      <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                        {question.explanation
+                          ? <RichText>{question.explanation}</RichText>
                           : "No specific database explanation provided. Check the AI feedback for insights."}
                       </div>
                     </div>
 
-                    <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
-                       <button 
-                         onClick={(e) => handleBookmark(q.id, e)} 
-                         aria-label={`${bookmarkedIds.has(q.id) ? "Remove bookmark for" : "Bookmark"} question ${index + 1}`}
-                         aria-pressed={bookmarkedIds.has(q.id)}
-                         className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                       >
-                         <Bookmark aria-hidden="true" className={`w-3.5 h-3.5 ${bookmarkedIds.has(q.id) ? "fill-current text-blue-500" : ""}`} />
-                         <span>{bookmarkedIds.has(q.id) ? "Bookmarked" : "Bookmark"}</span>
-                       </button>
-                       <button 
-                         onClick={(e) => handleReport(q.id, e)} 
-                         aria-label={`Report issue with question ${index + 1}`}
-                         className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/10 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                       >
-                         <Flag className="w-3.5 h-3.5" />
-                         <span>Report Issue</span>
-                       </button>
+                    <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                      <button
+                        onClick={(e) => handleBookmark(question.id, e)}
+                        aria-label={`${bookmarkedIds.has(question.id) ? "Remove bookmark for" : "Bookmark"} question ${index + 1}`}
+                        aria-pressed={bookmarkedIds.has(question.id)}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-emerald-300"
+                      >
+                        <Bookmark aria-hidden="true" className={`h-3.5 w-3.5 ${bookmarkedIds.has(question.id) ? "fill-current text-emerald-500" : ""}`} />
+                        <span>{bookmarkedIds.has(question.id) ? "Bookmarked" : "Bookmark"}</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleReport(question.id, e)}
+                        aria-label={`Report issue with question ${index + 1}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-amber-50 hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-amber-300"
+                      >
+                        <Flag className="h-3.5 w-3.5" />
+                        <span>Report issue</span>
+                      </button>
                     </div>
                   </div>
                 )}
-              </div>
+              </article>
             );
           })
         )}
       </div>
+
       {reportingQuestionId && (
-        <ReportIssueModal 
-          isOpen={true} 
-          onClose={() => setReportingQuestionId(null)} 
-          questionId={reportingQuestionId} 
+        <ReportIssueModal
+          isOpen={true}
+          onClose={() => setReportingQuestionId(null)}
+          questionId={reportingQuestionId}
         />
       )}
-    </div>
+    </section>
   );
 }

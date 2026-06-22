@@ -67,9 +67,60 @@ export default function RootLayout({
     (function() {
       try {
         const root = document.documentElement;
-        const storedContrast = localStorage.getItem('drishtiprep-contrast');
+        const defaults = {
+          fontScale: 'md',
+          contrast: 'normal',
+          lineSpacing: 'normal',
+          motion: 'full',
+          density: 'comfortable',
+          focusMode: 'standard',
+        };
+        const fontScaleMap = { sm: '15px', md: '16px', lg: '17px', xl: '18px' };
+        const densityWidthMap = { comfortable: '76rem', spacious: '84rem' };
+        const lineSpacingMap = { normal: '1.65', relaxed: '1.8', spacious: '1.95' };
+        const accessibilityRaw = localStorage.getItem('drishtiprep-accessibility');
+        const legacyContrast = localStorage.getItem('drishtiprep-contrast');
         const prefersMoreContrast = window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches;
-        if (storedContrast === 'high-contrast' || (!storedContrast && prefersMoreContrast)) root.classList.add('hc');
+        const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let stored = {};
+
+        if (accessibilityRaw) {
+          const parsed = JSON.parse(accessibilityRaw);
+          if (parsed && typeof parsed === 'object') {
+            stored = parsed;
+          }
+        }
+
+        const prefs = {
+          fontScale: ['sm', 'md', 'lg', 'xl'].includes(stored.fontScale) ? stored.fontScale : defaults.fontScale,
+          contrast:
+            stored.contrast === 'high-contrast'
+              ? 'high-contrast'
+              : legacyContrast === 'high-contrast'
+                ? 'high-contrast'
+                : (!accessibilityRaw && prefersMoreContrast)
+                  ? 'high-contrast'
+                  : defaults.contrast,
+          lineSpacing:
+            stored.lineSpacing === 'relaxed' || stored.lineSpacing === 'spacious'
+              ? stored.lineSpacing
+              : defaults.lineSpacing,
+          motion: stored.motion === 'reduced' ? 'reduced' : (!accessibilityRaw && prefersReducedMotion ? 'reduced' : defaults.motion),
+          density: stored.density === 'spacious' ? 'spacious' : defaults.density,
+          focusMode: stored.focusMode === 'enhanced' ? 'enhanced' : defaults.focusMode,
+        };
+
+        root.dataset.dpFontScale = prefs.fontScale;
+        root.dataset.dpLineSpacing = prefs.lineSpacing;
+        root.dataset.dpDensity = prefs.density;
+        root.dataset.dpMotion = prefs.motion;
+        root.dataset.dpFocus = prefs.focusMode;
+        root.classList.toggle('hc', prefs.contrast === 'high-contrast');
+        root.style.setProperty('--dp-root-font-size', fontScaleMap[prefs.fontScale]);
+        root.style.setProperty('--dp-shell-width', densityWidthMap[prefs.density]);
+        root.style.setProperty('--dp-body-line-height', lineSpacingMap[prefs.lineSpacing]);
+        root.style.setProperty('--dp-focus-outline-width', prefs.focusMode === 'enhanced' ? '3px' : '2px');
+        root.style.setProperty('--dp-focus-outline-offset', prefs.focusMode === 'enhanced' ? '4px' : '3px');
       } catch (e) {
         // noop
       }

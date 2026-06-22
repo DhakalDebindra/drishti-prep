@@ -11,6 +11,7 @@ import { SubmitLoader } from "@/components/practice/SubmitLoader";
 import { ConfirmSubmitDialog } from "@/components/practice/ConfirmSubmitDialog";
 import { TutorVoicePanel } from "@/components/practice/TutorVoicePanel";
 import { TutorHotkeyHelp } from "@/components/practice/TutorHotkeyHelp";
+import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
 import { AttemptProvider, useAttemptStore } from "@/features/practice/store/attempt-store";
 import { useTutorAudio, prefetchQuestionAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
@@ -24,7 +25,7 @@ import type {
 } from "@repo/types";
 import { QuestionOptions, optionKeys } from "@/components/practice/QuestionOptions";
 import { QuestionContent } from "@/components/practice/QuestionContent";
-import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
 type Props = {
   setInfo: {
@@ -76,10 +77,10 @@ function PracticeSetView() {
   const questionCount = derived.questionCount;
   const currentIndex = state.currentIndex;
   const answeredCount = derived.answeredCount;
-  const skippedCount = derived.skippedCount;
   const canSubmit = derived.canSubmit;
   const minToSubmit = derived.minToSubmit;
   const questionTitleId = `question-${currentQuestion?.id}-title`;
+  const answeredProgress = questionCount > 0 ? Math.round((answeredCount / questionCount) * 100) : 0;
 
   const currentHandled = currentQuestion ? Boolean(state.answers[currentQuestion.id]) : false;
 
@@ -217,204 +218,234 @@ function PracticeSetView() {
 
   if (!currentQuestion) {
     return (
-      <section className="space-y-4">
-        <p className="text-gray-700">No questions available for this practice set.</p>
+      <section className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+        <p className="text-slate-700 dark:text-slate-300">No questions available for this practice set.</p>
       </section>
     );
   }
 
-  // ── Listening mode ─────────────────────────────────────────────────────
-  // An audio-first layout: minimal visuals, large controls, keyboard-driven.
   if (listenMode) {
     return (
-      <section className="max-w-2xl mx-auto space-y-6">
-        <div
-          aria-live="polite"
-          aria-atomic="true"
-          role="status"
-          className="sr-only"
-        >
-          {state.announcementText}
+      <main className="relative min-h-screen overflow-x-clip bg-gradient-to-b from-slate-50 via-white to-teal-50/60 px-4 py-4 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50 sm:px-6 sm:py-6">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-500/10" />
+          <div className="absolute right-[-5rem] top-1/3 h-64 w-64 rounded-full bg-cyan-200/25 blur-3xl dark:bg-cyan-500/10" />
+          <div className="absolute bottom-[-5rem] left-[-4rem] h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl dark:bg-emerald-500/10" />
         </div>
 
-        <header className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-            Shruti · Listening mode
-          </p>
-          <h1 className="text-2xl font-bold text-slate-900">
-            <Lang>{setInfo.title}</Lang>
-          </h1>
-          <Link
-            href={pathname}
-            className="inline-block text-sm text-blue-700 hover:text-blue-900 underline underline-offset-4"
-          >
-            Switch to standard view
-          </Link>
-        </header>
+        <section className="relative mx-auto flex max-w-2xl flex-col gap-6">
+          <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
+            {state.announcementText}
+          </div>
 
-        {!tutorEnabled && (
-          <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-            Listening mode needs Shruti. Enable it in{" "}
-            <Link href="/profile/preferences" className="underline font-medium">
-              your preferences
+          <header className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+              Shruti · Listening mode
+            </p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+              <Lang>{setInfo.title}</Lang>
+            </h1>
+            <Link
+              href={pathname}
+              className="mt-3 inline-flex text-sm font-medium text-emerald-700 underline underline-offset-4 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-200"
+            >
+              Switch to standard view
             </Link>
-            , then return here.
-          </p>
-        )}
+          </header>
 
-        {tutorEnabled && audio.status === "ready" && (
-          <TutorVoicePanel
-            player={player}
-            voice={audio.voice}
-            awaitingFirstGesture={awaitingGesture}
-            onStart={handleStartTutor}
-            onShowHelp={() => setShowHotkeyHelp(true)}
-          />
-        )}
-        <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
-        {tutorEnabled && audio.status === "not_generated" && (
-          <p className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-            Shruti audio isn&apos;t available for this question yet.
-          </p>
-        )}
-
-        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
-          <p className="text-sm font-semibold text-slate-700">
-            Question {currentIndex + 1} of {questionCount}
-          </p>
-          <QuestionContent
-            content={currentQuestion.content}
-            className="text-lg sm:text-xl font-medium text-slate-900 leading-relaxed"
-            ariaHidden={tutorActive}
-          />
-          <QuestionOptions
-            questionId={currentQuestion.id}
-            options={optionsList}
-            selectedAnswer={selectedAnswer}
-            onSelect={handleOptionSelect}
-            isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
-            correctAnswer={selectedAnswer && selectedAnswer.selected_option !== "skipped" ? currentQuestion.correct_option : null}
-          />
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            aria-label="Previous question"
-            variant="secondary"
-            size="lg"
-            className="border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800/80 shadow-sm font-semibold focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 gap-2 [&_svg]:size-4"
-            onClick={goPrev}
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft aria-hidden="true" />
-            Previous
-          </Button>
-          <span className="text-sm text-slate-700 dark:text-slate-300">
-            Answered {answeredCount}/{questionCount}
-          </span>
-          <Button
-            aria-label="Next question"
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-400 text-white font-semibold shadow-sm gap-2 [&_svg]:size-4"
-            onClick={goNext}
-            disabled={currentIndex === questionCount - 1}
-          >
-            Next
-            <ChevronRight aria-hidden="true" />
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Button
-            size="lg"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={state.status === "submitted" || state.isSubmitting || !canSubmit}
-          >
-            {state.isSubmitting
-              ? "Submitting..."
-              : state.status === "submitted"
-                ? "Submitted"
-                : "Submit"}
-          </Button>
-          {!canSubmit && state.status !== "submitted" && (
-            <p className="text-sm text-slate-700">
-              Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
-              Any unanswered questions will be marked as skipped.
+          {!tutorEnabled && (
+            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              Listening mode needs Shruti. Enable it in{" "}
+              <Link href="/profile/preferences" className="font-semibold underline underline-offset-4">
+                your preferences
+              </Link>
+              , then return here.
             </p>
           )}
-        </div>
 
-        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700">
-          <p className="font-semibold mb-1 text-slate-700">Keyboard shortcuts</p>
-          <p className="leading-relaxed">
-            <kbd className="font-mono">Alt+S</kbd> start ·{" "}
-            <kbd className="font-mono">Alt+Q</kbd> question ·{" "}
-            <kbd className="font-mono">Alt+O</kbd> options ·{" "}
-            <kbd className="font-mono">Alt+E</kbd> explanation ·{" "}
-            <kbd className="font-mono">1-4</kbd> answer ·{" "}
-            <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
-            <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
-            <kbd className="font-mono">Alt+/</kbd> all shortcuts
-          </p>
-        </div>
+          {tutorEnabled && audio.status === "ready" && (
+            <TutorVoicePanel
+              player={player}
+              voice={audio.voice}
+              awaitingFirstGesture={awaitingGesture}
+              onStart={handleStartTutor}
+              onShowHelp={() => setShowHotkeyHelp(true)}
+            />
+          )}
+          <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
+          {tutorEnabled && audio.status === "not_generated" && (
+            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              Shruti audio isn&apos;t available for this question yet.
+            </p>
+          )}
 
-        <ConfirmSubmitDialog />
-        <SubmitLoader />
-      </section>
+          <div className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-6">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  Question {currentIndex + 1} of {questionCount}
+                </p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Audio-first practice with clean visuals.</p>
+              </div>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                {answeredCount}/{questionCount}
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-5">
+              <QuestionContent
+                id={questionTitleId}
+                content={currentQuestion.content}
+                className="text-xl font-semibold leading-relaxed tracking-tight text-slate-950 dark:text-slate-50 sm:text-2xl"
+                tabIndex={-1}
+                ariaHidden={tutorActive}
+              />
+              <QuestionOptions
+                questionId={currentQuestion.id}
+                options={optionsList}
+                selectedAnswer={selectedAnswer}
+                onSelect={handleOptionSelect}
+                isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
+                correctAnswer={selectedAnswer && selectedAnswer.selected_option !== "skipped" ? currentQuestion.correct_option : null}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              aria-label="Previous question"
+              variant="secondary"
+              size="lg"
+              className="h-14 gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              onClick={goPrev}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft aria-hidden="true" />
+              Previous
+            </Button>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+              Answered {answeredCount}/{questionCount}
+            </span>
+            <Button
+              aria-label="Next question"
+              size="lg"
+              className="h-14 gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500"
+              onClick={goNext}
+              disabled={currentIndex === questionCount - 1}
+            >
+              Next
+              <ChevronRight aria-hidden="true" />
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              size="lg"
+              className="h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={state.status === "submitted" || state.isSubmitting || !canSubmit}
+            >
+              {state.isSubmitting
+                ? "Submitting..."
+                : state.status === "submitted"
+                  ? "Submitted"
+                  : "Submit"}
+            </Button>
+            {!canSubmit && state.status !== "submitted" && (
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}). Any unanswered questions will be marked as skipped.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+            <p className="mb-2 font-semibold text-slate-700 dark:text-slate-200">Keyboard shortcuts</p>
+            <p className="leading-relaxed">
+              <kbd className="font-mono">Alt+S</kbd> start ·{" "}
+              <kbd className="font-mono">Alt+Q</kbd> question ·{" "}
+              <kbd className="font-mono">Alt+O</kbd> options ·{" "}
+              <kbd className="font-mono">Alt+E</kbd> explanation ·{" "}
+              <kbd className="font-mono">1-4</kbd> answer ·{" "}
+              <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
+              <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
+              <kbd className="font-mono">Alt+/</kbd> all shortcuts
+            </p>
+          </div>
+
+          <ConfirmSubmitDialog />
+          <SubmitLoader />
+        </section>
+      </main>
     );
   }
 
   return (
-    <main className="fixed inset-0 z-[100] overflow-y-auto bg-yellow-400 dark:bg-black font-sans text-black dark:text-yellow-400 selection:bg-black selection:text-yellow-400 dark:selection:bg-yellow-400 dark:selection:text-black">
-      <div className="max-w-4xl mx-auto min-h-screen flex flex-col p-4 sm:p-6 md:p-8 gap-6 pb-40 md:pb-12">
-        
-        {/* Screen-reader announcement region */}
+    <main className="fixed inset-0 z-[100] overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-teal-50/60 text-slate-900 selection:bg-teal-200 selection:text-slate-950 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-500/10" />
+        <div className="absolute right-[-5rem] top-1/3 h-64 w-64 rounded-full bg-cyan-200/25 blur-3xl dark:bg-cyan-500/10" />
+        <div className="absolute bottom-[-5rem] left-[-4rem] h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl dark:bg-emerald-500/10" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-4 py-4 pb-36 sm:px-6 sm:py-6 md:px-8 md:py-8 md:pb-12">
         <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
           {state.announcementText}
         </div>
 
-        {/* Immersive Top Navigation Bar */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-[#111] px-6 py-5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,1)] border-[3px] border-black dark:border-yellow-400 gap-4">
-          <div className="space-y-1.5">
-            <h1 id="main-heading" className="text-xl sm:text-2xl font-black text-black dark:text-yellow-400 tracking-tight">
-              {setInfo.title}
-            </h1>
-            <nav aria-label="Breadcrumb">
-              <ol className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-black/70 dark:text-yellow-400/70">
-                <li className="uppercase tracking-widest"><Lang>{setInfo.subjectName}</Lang></li>
-                <li aria-hidden="true" className="text-black/30 dark:text-yellow-400/30">•</li>
-                <li className="uppercase tracking-widest font-black text-black dark:text-yellow-400"><Lang>{setInfo.topicName}</Lang></li>
-              </ol>
-            </nav>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {tutorEnabled && (
+        <header className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:px-6 sm:py-6">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                Practice Studio
+              </div>
+              <div className="space-y-1">
+                <h1 id="main-heading" className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+                  {setInfo.title}
+                </h1>
+                <nav aria-label="Breadcrumb">
+                  <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
+                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                      <Lang>{setInfo.subjectName}</Lang>
+                    </li>
+                    <li aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</li>
+                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                      <Lang>{setInfo.topicName}</Lang>
+                    </li>
+                  </ol>
+                </nav>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <PracticeAccessibilityMenu buttonMode="compact" />
+              {tutorEnabled && (
+                <Link
+                  href={`${pathname}?view=listen`}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
+                >
+                  🎧 Listen mode
+                </Link>
+              )}
               <Link
-                href={`${pathname}?view=listen`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 rounded-xl text-sm font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-all active:scale-95"
+                href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                🎧 Listen Mode
+                Exit set
               </Link>
-            )}
-            <Link 
-              href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
-              className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95"
-            >
-              Exit
-            </Link>
+            </div>
           </div>
         </header>
 
         {state.message && (
-          <p className="rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 border-2 border-emerald-200 dark:border-emerald-800 px-5 py-4 text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm">{state.message}</p>
+          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{state.message}</p>
         )}
         {state.error && (
-          <p className="rounded-2xl bg-red-100 dark:bg-red-900/40 border-2 border-red-200 dark:border-red-800 px-5 py-4 text-sm font-bold text-red-800 dark:text-red-300 shadow-sm">{state.error}</p>
+          <p className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">{state.error}</p>
         )}
         {state.authRequired && (
-          <p className="rounded-2xl bg-amber-100 dark:bg-amber-900/40 border-2 border-amber-200 dark:border-amber-800 px-5 py-4 text-sm font-bold text-amber-800 dark:text-amber-300 shadow-sm">
+          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
             Please log in to save your progress.
           </p>
         )}
@@ -430,284 +461,304 @@ function PracticeSetView() {
         )}
         <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
         {tutorEnabled && audio.status === "not_generated" && (
-          <p className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 px-5 py-4 text-sm font-bold text-amber-800 dark:text-amber-300 shadow-sm">
+          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
             Shruti isn&apos;t available for this question yet. Using your screen reader instead.
           </p>
         )}
 
-      <div className={`practice-experience-container flex flex-col bg-white dark:bg-[#111] rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(250,204,21,1)] border-[4px] border-black dark:border-yellow-400 overflow-hidden ${state.status === "submitted" ? "opacity-90" : ""}`}>
-        {/* Prominent Progress Ribbon */}
-        <div className="bg-yellow-400 dark:bg-black border-b-[4px] border-black dark:border-yellow-400 px-6 sm:px-10 py-5 sm:py-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black tracking-widest uppercase text-black dark:text-yellow-400 mb-1">
-                Question {currentIndex + 1} of {questionCount}
-              </span>
-              <span className="text-base sm:text-lg font-black text-black dark:text-yellow-400">
-                Practice Session
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-sm font-black text-black dark:text-yellow-400">
-            <div className="w-24 sm:w-40 h-4 bg-white dark:bg-[#222] rounded-full overflow-hidden border-[3px] border-black dark:border-yellow-400">
-              <div 
-                className="h-full bg-black dark:bg-yellow-400 transition-all duration-500 ease-out"
-                style={{ width: `${Math.max(5, (answeredCount / questionCount) * 100)}%` }}
-              />
-            </div>
-            <span className="min-w-[3rem] text-right text-black dark:text-yellow-400">{Math.round((answeredCount / questionCount) * 100)}%</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-10 flex-1 p-6 sm:p-10 md:p-12">
-          {/*
-            When tutor mode is actively reading aloud, the stem is hidden
-            from screen readers to prevent simultaneous English-SR + Nepali-TTS
-            narration. The visible text is unchanged so sighted users and
-            anyone with tutor muted keep their full UX.
-          */}
-          <QuestionContent
-            key={currentQuestion.id}
-            id={questionTitleId}
-            content={currentQuestion.content}
-            className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-50 leading-snug md:leading-relaxed tracking-tight outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:focus-visible:outline-[Highlight] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
-            tabIndex={-1}
-            ariaHidden={tutorActive}
-          />
-
-          <QuestionOptions
-            questionId={currentQuestion.id}
-            options={optionsList}
-            selectedAnswer={selectedAnswer}
-            onSelect={handleOptionSelect}
-            isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
-            correctAnswer={selectedAnswer && selectedAnswer.selected_option !== 'skipped' ? currentQuestion.correct_option : null}
-          />
-
-          {state.answers[currentQuestion.id] &&
-            state.answers[currentQuestion.id]?.selected_option !== "skipped" &&
-            state.status !== "submitted" && (
-              <p
-                className={`text-lg font-bold px-4 py-2 rounded-lg inline-block self-start ${state.answers[currentQuestion.id]?.is_correct ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
-                  }`}
-              >
-                {state.answers[currentQuestion.id]?.is_correct ? "Correct!" : "Incorrect"}
-              </p>
-            )}
-
-          {(state.status === "submitted" || (state.answers[currentQuestion.id] && state.answers[currentQuestion.id].selected_option !== "skipped")) && (
-            <div className="border-t border-slate-200 dark:border-slate-800 pt-8 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="inline-flex min-h-12 sm:min-h-14 items-center justify-between gap-3 px-6 py-3 text-base font-bold text-indigo-700 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-100/70 dark:hover:bg-indigo-950/40 rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 transition-all [&_svg]:size-5"
-                aria-expanded={state.showExplanation[currentQuestion.id]}
-                aria-controls={`explanation-${currentQuestion.id}`}
-                onClick={() => toggleExplanation(currentQuestion.id)}
-              >
-                <span className="flex items-center gap-3">
-                  <BookOpen aria-hidden="true" className="w-5 h-5" />
-                  <span>
-                    {state.showExplanation[currentQuestion.id] ? "Hide Explanation" : "Show Explanation"}
-                  </span>
+        <div className={`practice-experience-container flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 ${state.status === "submitted" ? "opacity-95" : ""}`}>
+          <div className="border-b border-slate-200/80 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  Practice Session
+                </p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Answer at your own pace. The layout stays calm, readable, and responsive.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-950">
+                  {Math.max(5, answeredProgress)}% answered
                 </span>
-                {state.showExplanation[currentQuestion.id] ? (
-                  <ChevronUp className="text-indigo-500 dark:text-indigo-400 w-5 h-5" aria-hidden="true" />
-                ) : (
-                  <ChevronDown className="text-indigo-500 dark:text-indigo-400 w-5 h-5" aria-hidden="true" />
-                )}
-              </Button>
-              {state.showExplanation[currentQuestion.id] && (
-                <div
-                  id={`explanation-${currentQuestion.id}`}
-                  className="mt-6 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-l-8 border-l-indigo-500 p-6 md:p-8 text-slate-800 dark:text-slate-200 shadow-inner motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-300"
-                  role="region"
-                  aria-live="polite"
-                >
-                  <p className="font-black text-xl text-slate-900 dark:text-slate-100 mb-4 tracking-tight">Explanation</p>
-                  <div className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
-                    {currentQuestion.explanation
-                      ? <RichText className="space-y-3">{currentQuestion.explanation}</RichText>
-                      : "No explanation available for this question."}
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-950">
+                  {questionCount - answeredCount} left
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-8 p-5 sm:p-6 md:p-8">
+            <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                      Question {currentIndex + 1} of {questionCount}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-300">
+                      Practice session
+                    </p>
                   </div>
-                  <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 text-base font-medium">
-                    <span className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
-                      Your choice: <span className="font-bold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
-                    </span>
-                    <span className="px-3 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
-                      Correct Answer: <span className="font-bold">{currentQuestion.correct_option}</span>
-                    </span>
+                  <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:w-40">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-500"
+                      style={{ width: `${Math.max(5, answeredProgress)}%` }}
+                    />
                   </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/*
-            Desktop action row. On mobile, the sticky MobileActionBar below
-            replaces this so the primary actions stay within thumb reach
-            without scrolling past long questions and option lists.
-          */}
-          {/*
-            Desktop action row. 
-          */}
-          <div className="mt-8 pt-8 border-t-2 border-slate-100 dark:border-slate-800 hidden md:flex md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center justify-start gap-4">
-              <Button
-                aria-label="Previous question"
-                variant="secondary"
-                size="lg"
-                className="h-16 px-8 border-b-4 active:border-b-0 active:translate-y-1 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-lg focus-visible:ring-4 focus-visible:ring-indigo-600/50 dark:focus-visible:ring-indigo-400/50 gap-3 [&_svg]:size-6 rounded-2xl transition-all"
-                onClick={goPrev}
-                disabled={currentIndex === 0}
-              >
-                <ChevronLeft aria-hidden="true" strokeWidth={3} />
-                Previous
-              </Button>
-              {currentIndex === questionCount - 1 ? (
-                <Button
-                  size="lg"
-                  className="h-16 px-10 bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-500/50 text-white font-black text-lg shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 rounded-2xl transition-all"
-                  onClick={async () => {
-                    if (!currentHandled) {
-                      await handleSkip(currentQuestion.id);
-                    }
-                    setShowConfirmDialog(true);
-                  }}
-                  disabled={
-                    state.status === "submitted" ||
-                    state.isSubmitting ||
-                    state.saving ||
-                    !canSubmit
-                  }
+                <div className="mt-5">
+                  <QuestionContent
+                    key={currentQuestion.id}
+                    id={questionTitleId}
+                    content={currentQuestion.content}
+                    className="text-xl font-semibold leading-relaxed tracking-tight text-slate-950 outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-500 dark:text-slate-50 sm:text-2xl md:text-3xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
+                    tabIndex={-1}
+                    ariaHidden={tutorActive}
+                  />
+                </div>
+              </div>
+
+              <aside className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  Session tips
+                </p>
+                <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    Use the option cards or{" "}
+                    <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                      1-4
+                    </kbd>{" "}
+                    to answer quickly.
+                  </li>
+                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    The bottom action bar stays within thumb reach on mobile.
+                  </li>
+                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    Explanations stay collapsed until you need them.
+                  </li>
+                </ul>
+              </aside>
+            </section>
+
+            <QuestionOptions
+              questionId={currentQuestion.id}
+              options={optionsList}
+              selectedAnswer={selectedAnswer}
+              onSelect={handleOptionSelect}
+              isSubmitted={state.status === "submitted" || (selectedAnswer !== null && selectedAnswer.selected_option !== "skipped")}
+              correctAnswer={selectedAnswer && selectedAnswer.selected_option !== "skipped" ? currentQuestion.correct_option : null}
+            />
+
+            {state.answers[currentQuestion.id] &&
+              state.answers[currentQuestion.id]?.selected_option !== "skipped" &&
+              state.status !== "submitted" && (
+                <p
+                  className={`inline-flex self-start rounded-full px-4 py-2 text-sm font-semibold shadow-sm ${
+                    state.answers[currentQuestion.id]?.is_correct
+                      ? "border border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+                      : "border border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+                  }`}
                 >
-                  {state.isSubmitting
-                    ? "Submitting..."
-                    : state.status === "submitted"
-                      ? "Submitted"
-                      : !userEmail
-                        ? !currentHandled
-                          ? "Skip & See Demo Feedback"
-                          : "Submit & Get Feedback"
-                        : !currentHandled
-                          ? "Skip & Submit"
+                  {state.answers[currentQuestion.id]?.is_correct ? "Correct!" : "Incorrect"}
+                </p>
+              )}
+
+            {(state.status === "submitted" || (state.answers[currentQuestion.id] && state.answers[currentQuestion.id].selected_option !== "skipped")) && (
+              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-3 text-base font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-teal-900/60 dark:bg-slate-950 dark:text-teal-200 dark:hover:bg-slate-900 [&_svg]:size-5"
+                  aria-expanded={state.showExplanation[currentQuestion.id]}
+                  aria-controls={`explanation-${currentQuestion.id}`}
+                  onClick={() => toggleExplanation(currentQuestion.id)}
+                >
+                  <span className="flex items-center gap-3">
+                    <BookOpen aria-hidden="true" className="h-5 w-5" />
+                    <span>{state.showExplanation[currentQuestion.id] ? "Hide Explanation" : "Show Explanation"}</span>
+                  </span>
+                  {state.showExplanation[currentQuestion.id] ? (
+                    <ChevronUp className="h-5 w-5 text-teal-500 dark:text-teal-300" aria-hidden="true" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-teal-500 dark:text-teal-300" aria-hidden="true" />
+                  )}
+                </Button>
+                {state.showExplanation[currentQuestion.id] && (
+                  <div
+                    id={`explanation-${currentQuestion.id}`}
+                    className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 text-slate-800 shadow-inner dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200 sm:p-6"
+                    role="region"
+                    aria-live="polite"
+                  >
+                    <p className="mb-3 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+                      Explanation
+                    </p>
+                    <div className="text-base leading-relaxed text-slate-700 dark:text-slate-300">
+                      {currentQuestion.explanation
+                        ? <RichText className="space-y-3">{currentQuestion.explanation}</RichText>
+                        : "No explanation available for this question."}
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-200 pt-4 text-sm font-medium dark:border-slate-800">
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                        Your choice: <span className="font-semibold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
+                      </span>
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+                        Correct Answer: <span className="font-semibold">{currentQuestion.correct_option}</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="hidden flex-col gap-4 border-t border-slate-200 pt-6 md:flex dark:border-slate-800">
+              <div className="flex items-center justify-between gap-4">
+                <Button
+                  aria-label="Previous question"
+                  variant="secondary"
+                  size="lg"
+                  className="h-14 gap-3 rounded-2xl border border-slate-200 bg-white px-6 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-emerald-500 [&_svg]:size-5"
+                  onClick={goPrev}
+                  disabled={currentIndex === 0}
+                >
+                  <ChevronLeft aria-hidden="true" strokeWidth={3} />
+                  Previous
+                </Button>
+                {currentIndex === questionCount - 1 ? (
+                  <Button
+                    size="lg"
+                    className="h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    onClick={async () => {
+                      if (!currentHandled) {
+                        await handleSkip(currentQuestion.id);
+                      }
+                      setShowConfirmDialog(true);
+                    }}
+                    disabled={
+                      state.status === "submitted" ||
+                      state.isSubmitting ||
+                      state.saving ||
+                      !canSubmit
+                    }
+                  >
+                    {state.isSubmitting
+                      ? "Submitting..."
+                      : state.status === "submitted"
+                        ? "Submitted"
+                        : !userEmail
+                          ? !currentHandled
+                            ? "Skip & See Demo Feedback"
+                            : "Submit & Get Feedback"
+                          : !currentHandled
+                            ? "Skip & Submit"
+                            : "Done"}
+                  </Button>
+                ) : (
+                  <Button
+                    aria-label="Next question"
+                    size="lg"
+                    className="h-14 gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-7 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500 [&_svg]:size-5"
+                    onClick={async () => {
+                      if (!currentHandled) {
+                        await handleSkip(currentQuestion.id);
+                      } else {
+                        goNext();
+                      }
+                    }}
+                    disabled={currentIndex === questionCount - 1}
+                  >
+                    Next
+                    <ChevronRight aria-hidden="true" strokeWidth={3} />
+                  </Button>
+                )}
+              </div>
+
+              {currentIndex !== questionCount - 1 && (
+                <>
+                  <Button
+                    size="lg"
+                    className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500 sm:w-auto"
+                    onClick={() => setShowConfirmDialog(true)}
+                    disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
+                  >
+                    {state.isSubmitting
+                      ? "Submitting..."
+                      : state.status === "submitted"
+                        ? "Submitted"
+                        : !userEmail
+                          ? "Submit & See Demo Feedback"
                           : "Done"}
-                </Button>
-              ) : (
-                <Button
-                  aria-label="Next question"
-                  size="lg"
-                  className="h-16 px-10 bg-indigo-500 hover:bg-indigo-400 focus-visible:ring-4 focus-visible:ring-indigo-500/50 text-white font-black text-lg shadow-lg border-b-4 border-indigo-700 active:border-b-0 active:translate-y-1 gap-3 [&_svg]:size-6 rounded-2xl transition-all"
-                  onClick={async () => {
-                    if (!currentHandled) {
-                      await handleSkip(currentQuestion.id);
-                    } else {
-                      goNext();
-                    }
-                  }}
-                  disabled={currentIndex === questionCount - 1}
-                >
-                  Next
-                  <ChevronRight aria-hidden="true" strokeWidth={3} />
-                </Button>
+                  </Button>
+                  {!canSubmit && state.status !== "submitted" && (
+                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}). Any unanswered questions will be marked as skipped.
+                    </p>
+                  )}
+                </>
               )}
             </div>
-            
-            {/* The right-side stats block (Answered/Skipped) was removed to declutter the UI. */}
           </div>
         </div>
-      </div>
-      
-      {/* Modern Floating Mobile Pill */}
-      {/* Placed BEFORE QuestionNavigator in the DOM so TalkBack users hit Next/Prev immediately after options, instead of tabbing through 20+ question numbers first. */}
-      <div
-        className="md:hidden fixed inset-x-4 bottom-6 z-[110] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] rounded-[2rem] border-2 border-slate-200/50 dark:border-slate-700/50 p-2 transition-transform duration-300"
-        style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <Button
-            aria-label="Previous question"
-            variant="ghost"
-            className="flex-1 h-14 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-black focus-visible:ring-4 focus-visible:ring-indigo-600 gap-1 rounded-2xl"
-            onClick={goPrev}
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft aria-hidden="true" strokeWidth={3} />
-            <span className="hidden sm:inline">Prev</span>
-          </Button>
 
-          {currentIndex === questionCount - 1 ? (
+        <div
+          className="md:hidden fixed inset-x-4 bottom-4 z-[110] rounded-[1.75rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-transform duration-300 dark:border-slate-700/80 dark:bg-slate-950/95"
+          style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex items-center justify-between gap-2">
             <Button
-              className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-400 text-white font-black shadow-md rounded-2xl border-b-[3px] border-emerald-700 active:border-b-0 active:translate-y-[3px]"
-              onClick={async () => {
-                if (!currentHandled) {
-                  await handleSkip(currentQuestion.id);
+              aria-label="Previous question"
+              variant="ghost"
+              className="flex-1 h-14 gap-1 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              onClick={goPrev}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft aria-hidden="true" strokeWidth={3} />
+              <span className="hidden sm:inline">Prev</span>
+            </Button>
+
+            {currentIndex === questionCount - 1 ? (
+              <Button
+                className="flex-1 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                onClick={async () => {
+                  if (!currentHandled) {
+                    await handleSkip(currentQuestion.id);
+                  }
+                  setShowConfirmDialog(true);
+                }}
+                disabled={
+                  state.status === "submitted" ||
+                  state.isSubmitting ||
+                  state.saving ||
+                  !canSubmit
                 }
-                setShowConfirmDialog(true);
-              }}
-              disabled={
-                state.status === "submitted" ||
-                state.isSubmitting ||
-                state.saving ||
-                !canSubmit
-              }
-            >
-              {state.isSubmitting ? "Wait" : state.status === "submitted" ? "Done" : "Submit"}
-            </Button>
-          ) : (
-            <Button
-              aria-label="Next question"
-              className="flex-1 h-14 bg-indigo-500 hover:bg-indigo-400 text-white font-black shadow-md gap-1 rounded-2xl border-b-[3px] border-indigo-700 active:border-b-0 active:translate-y-[3px]"
-              onClick={async () => {
-                if (!currentHandled) {
-                  await handleSkip(currentQuestion.id);
-                } else {
-                  goNext();
-                }
-              }}
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight aria-hidden="true" strokeWidth={3} />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <QuestionNavigator />
-
-      {/* Early-submit shortcut — kept on desktop only. On mobile users
-          navigate to the last question and use the sticky-bar Submit. */}
-      <div className="hidden md:flex flex-col gap-2 w-full">
-        {currentIndex !== questionCount - 1 && (
-          <>
-            <Button
-              size="lg"
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-400 text-white font-semibold shadow-sm"
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
-            >
-              {state.isSubmitting
-                ? "Submitting..."
-                : state.status === "submitted"
-                  ? "Submitted"
-                  : !userEmail
-                    ? "Submit & See Demo Feedback"
-                    : "Done"}
-            </Button>
-            {!canSubmit && state.status !== "submitted" && (
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
-                Any unanswered questions will be marked as skipped.
-              </p>
+              >
+                {state.isSubmitting ? "Wait" : state.status === "submitted" ? "Done" : "Submit"}
+              </Button>
+            ) : (
+              <Button
+                aria-label="Next question"
+                className="flex-1 h-14 gap-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500"
+                onClick={async () => {
+                  if (!currentHandled) {
+                    await handleSkip(currentQuestion.id);
+                  } else {
+                    goNext();
+                  }
+                }}
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight aria-hidden="true" strokeWidth={3} />
+              </Button>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>
 
+        <QuestionNavigator />
+        <ConfirmSubmitDialog />
+        <SubmitLoader />
       </div>
-      
-      <ConfirmSubmitDialog />
-      <SubmitLoader />
     </main>
   );
 }
