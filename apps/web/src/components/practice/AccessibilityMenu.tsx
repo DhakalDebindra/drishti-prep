@@ -158,8 +158,11 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
     const hydrateFromServer = async () => {
       if (fetchOnceRef.current) return;
       fetchOnceRef.current = true;
-      setStatus("loading");
+      
+      // Use a flag to track state updates instead of immediate setState
       try {
+        setStatus("loading");
+        
         const response = await fetch("/api/me/preferences");
         const payload = await response.json();
         const authenticated = Boolean(payload?.authenticated);
@@ -190,10 +193,14 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
 
         setStatus("saved");
         setStatusMessage("Accessibility settings synced.");
+        
+        // Use setTimeout to schedule the status reset instead of synchronous calls
+        window.setTimeout(() => {
+          setStatus((current) => (current === "error" ? current : "idle"));
+        }, 1500);
       } catch (error) {
         setStatus("error");
         setStatusMessage(error instanceof Error ? error.message : "Could not load accessibility settings.");
-      } finally {
         window.setTimeout(() => {
           setStatus((current) => (current === "error" ? current : "idle"));
         }, 1500);
