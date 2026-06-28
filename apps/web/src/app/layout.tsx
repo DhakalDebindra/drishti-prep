@@ -98,9 +98,7 @@ export default function RootLayout({
               ? 'high-contrast'
               : legacyContrast === 'high-contrast'
                 ? 'high-contrast'
-                : (!accessibilityRaw && prefersMoreContrast)
-                  ? 'high-contrast'
-                  : defaults.contrast,
+                : defaults.contrast,
           lineSpacing:
             stored.lineSpacing === 'relaxed' || stored.lineSpacing === 'spacious'
               ? stored.lineSpacing
@@ -136,7 +134,7 @@ export default function RootLayout({
       <body
         className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-slate-100 focus:px-3 focus:py-2 focus:text-slate-900"
