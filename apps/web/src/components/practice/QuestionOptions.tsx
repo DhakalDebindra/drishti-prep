@@ -73,18 +73,18 @@ export const QuestionOptions = memo(
 
           const optionClasses = (() => {
             if (isSelected && selectedAnswer?.is_correct === true) {
-              return "border-emerald-200 bg-emerald-50 text-emerald-950 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-50";
+              return "border-success/30 bg-success/10 text-success-foreground shadow-sm";
             }
             if (isSelected && selectedAnswer?.is_correct === false) {
-              return "border-rose-200 bg-rose-50 text-rose-950 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-50";
+              return "border-destructive/30 bg-destructive/10 text-destructive-foreground shadow-sm";
             }
             if (isCorrectOption && selectedAnswer) {
-              return "border-emerald-200 bg-emerald-50 text-emerald-950 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-50";
+              return "border-success/30 bg-success/10 text-success-foreground shadow-sm";
             }
             if (isSelected) {
-              return "border-cyan-200 bg-cyan-50 text-cyan-950 shadow-sm dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-50";
+              return "border-primary/30 bg-primary/10 text-primary-foreground shadow-sm";
             }
-            return "border-slate-200 bg-white text-slate-800 shadow-sm hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/70 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100 dark:hover:border-emerald-900/50 dark:hover:bg-slate-900";
+            return "border-slate-200 bg-white text-slate-800 shadow-sm hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/10 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100 dark:hover:border-primary/50 dark:hover:bg-primary/10";
           })();
 
           return (
@@ -101,7 +101,7 @@ export const QuestionOptions = memo(
                 if (isSubmitted) return;
                 onSelect(option.value);
               }}
-              className={`group relative w-full rounded-[1.5rem] border p-4 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-emerald-500 dark:focus-visible:outline-cyan-400 forced-colors:focus-visible:outline-[Highlight] sm:p-5 ${optionClasses} ${
+              className={`group relative w-full rounded-[1.5rem] border p-4 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ring forced-colors:focus-visible:outline-[Highlight] sm:p-5 ${optionClasses} ${
                 isSubmitted ? "cursor-not-allowed opacity-95" : "cursor-pointer"
               }`}
             >
@@ -110,14 +110,14 @@ export const QuestionOptions = memo(
                   aria-hidden="true"
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-base font-semibold transition-colors sm:h-12 sm:w-12 sm:text-lg ${
                     isSelected && selectedAnswer?.is_correct === true
-                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      ? "border-success bg-success text-success-foreground"
                       : isSelected && selectedAnswer?.is_correct === false
-                      ? "border-rose-500 bg-rose-500 text-white"
+                      ? "border-destructive bg-destructive text-destructive-foreground"
                       : isCorrectOption && selectedAnswer
-                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      ? "border-success bg-success text-success-foreground"
                       : isSelected
-                      ? "border-cyan-500 bg-cyan-500 text-white"
-                      : "border-slate-300 bg-white text-slate-700 group-hover:border-emerald-300 group-hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:group-hover:border-emerald-700 dark:group-hover:text-emerald-300"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-slate-300 bg-white text-slate-700 group-hover:border-primary group-hover:text-primary dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:group-hover:border-primary dark:group-hover:text-primary"
                   }`}
                 >
                   {option.value}
@@ -140,10 +140,10 @@ export const QuestionOptions = memo(
                       <div
                         className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
                           selectedAnswer?.is_correct === false
-                            ? "bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                            ? "bg-destructive/20 text-destructive-foreground"
                             : selectedAnswer?.is_correct === true
-                            ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
-                            : "bg-cyan-100 text-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-200"
+                            ? "bg-success/20 text-success-foreground"
+                            : "bg-primary/20 text-primary-foreground"
                         }`}
                       >
                         {selectedAnswer?.is_correct === false && <XCircle className="h-4 w-4" />}
@@ -160,7 +160,7 @@ export const QuestionOptions = memo(
                       </div>
                     )}
                     {isCorrectOption && selectedAnswer && (
-                      <div className="flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                      <div className="flex items-center gap-2 rounded-full bg-success/20 px-3 py-1.5 text-sm font-semibold text-success-foreground">
                         <CheckCircle2 className="h-4 w-4" />
                         Correct Answer
                       </div>

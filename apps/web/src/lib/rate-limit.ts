@@ -44,3 +44,31 @@ export const aiRatelimit = createLimiter(20, "1 m", "ai");
 
 /** General API endpoints: 60 requests per minute */
 export const apiRatelimit = createLimiter(60, "1 m", "api");
+
+const IP_V4_OCTET = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+const IP_V6_CHUNK = /^[0-9a-fA-F]{1,4}$/;
+
+function isValidIp(value: string): boolean {
+  const v4 = value.split(".");
+  if (v4.length === 4) return v4.every((o) => IP_V4_OCTET.test(o));
+  if (value.startsWith("[")) return false;
+  const v6 = value.split(":");
+  if (v6.length >= 2 && v6.length <= 8) return v6.every((c) => !c || IP_V6_CHUNK.test(c));
+  return false;
+}
+
+/**
+ * Extracts the client IP from a Request, hardening against header spoofing
+ * by validating the extracted value is a real IP address before passing it
+ * to the rate limiter. Falls back to `"anonymous"` for invalid or missing IPs.
+ *
+ * On Vercel the `x-forwarded-for` header is set by the platform proxy and is
+ * trustworthy; this validation is defense-in-depth for self-hosted deploys.
+ */
+export function extractClientIp(req: Request): string {
+  const raw =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "";
+  return raw && isValidIp(raw) ? raw : "anonymous";
+}

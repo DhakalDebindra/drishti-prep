@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { authRatelimit } from '@/lib/rate-limit'
+import { authRatelimit, extractClientIp } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    request.headers.get("x-real-ip") ??
-    "anonymous";
-
-  const { success } = await authRatelimit.limit(ip);
+  const { success } = await authRatelimit.limit(extractClientIp(request));
 
   if (!success) {
     return NextResponse.redirect(`${new URL(request.url).origin}/login?error=Too+many+requests.+Please+wait.`)
