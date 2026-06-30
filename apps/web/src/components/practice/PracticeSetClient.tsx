@@ -572,7 +572,7 @@ function PracticeSetView() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-3 text-base font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 focus-visible:ring-2 focus-visible:ring-ring dark:border-teal-900/60 dark:bg-slate-950 dark:text-teal-200 dark:hover:bg-slate-900 [&_svg]:size-5"
+                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-white px-5 py-3 text-base font-semibold text-primary shadow-sm transition hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring dark:border-primary/50 dark:bg-slate-950 dark:text-primary-foreground dark:hover:bg-slate-900 [&_svg]:size-5"
                   aria-expanded={state.showExplanation[currentQuestion.id]}
                   aria-controls={`explanation-${currentQuestion.id}`}
                   onClick={() => toggleExplanation(currentQuestion.id)}
@@ -582,9 +582,9 @@ function PracticeSetView() {
                     <span>{state.showExplanation[currentQuestion.id] ? "Hide Explanation" : "Show Explanation"}</span>
                   </span>
                   {state.showExplanation[currentQuestion.id] ? (
-                    <ChevronUp className="h-5 w-5 text-teal-500 dark:text-teal-300" aria-hidden="true" />
+                    <ChevronUp className="h-5 w-5 text-primary" aria-hidden="true" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-teal-500 dark:text-teal-300" aria-hidden="true" />
+                    <ChevronDown className="h-5 w-5 text-primary" aria-hidden="true" />
                   )}
                 </Button>
                 {state.showExplanation[currentQuestion.id] && (
@@ -606,7 +606,7 @@ function PracticeSetView() {
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                         Your choice: <span className="font-semibold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
                       </span>
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+                      <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-success-foreground">
                         Correct Answer: <span className="font-semibold">{currentQuestion.correct_option}</span>
                       </span>
                     </div>
