@@ -1,4 +1,5 @@
 import { Mp3Encoder } from "@breezystack/lamejs";
+import { resolveGeminiApiKey } from "@/lib/env-keys";
 
 // ─── TTS model IDs ────────────────────────────────────────────────────────
 // Both 2.5 preview TTS models are scheduled for retirement (no exact date
@@ -266,10 +267,7 @@ export async function synthesizeNepali(
   voice: TutorVoice,
   opts: SynthesizeOptions = {}
 ): Promise<SynthesizeResult> {
-  const key =
-    process.env.GEMINI_API_KEY ??
-    process.env.DRISHTI_API_KEY ??
-    process.env.DrishtiApiKey;
+  const key = resolveGeminiApiKey();
   if (!key) throw new Error("Missing GEMINI_API_KEY");
 
   // Gemini's multilingual voice drifts into Hindi phonemes on short

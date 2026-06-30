@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, type ResponseSchema } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
 import type { FewShotExample } from "@/config/prompts/index";
+import { resolveGeminiApiKey } from "@/lib/env-keys";
 
 export type GroundingChunk = {
   web?: { uri?: string; title?: string };
@@ -36,11 +37,7 @@ const AIConfig = {
   },
 };
 
-const geminiApiKey =
-  process.env.GEMINI_API_KEY ??
-  process.env.DRISHTI_API_KEY ??
-  process.env.DrishtiApiKey ??
-  "";
+const geminiApiKey = resolveGeminiApiKey();
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
 const REQUEST_TIMEOUT_MS = 25_000;
