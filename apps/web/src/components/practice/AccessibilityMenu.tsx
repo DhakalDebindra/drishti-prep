@@ -92,9 +92,9 @@ function OptionGroup<T extends string>({
               onClick={() => onChange(option.value)}
               aria-pressed={active}
               className={cn(
-                "rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950",
+                "rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950",
                 active
-                  ? "border-emerald-200 bg-white text-slate-950 shadow-sm dark:border-emerald-900/50 dark:bg-slate-950 dark:text-white"
+                  ? "border-primary/30 bg-primary/10 text-primary-foreground shadow-sm"
                   : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300 dark:hover:bg-slate-950"
               )}
             >
@@ -267,7 +267,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
         type="button"
         variant="outline"
         className={cn(
-          "inline-flex items-center gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
+          "inline-flex items-center gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
           buttonMode === "compact" ? "h-10 px-3 text-sm" : "h-11 px-4 text-sm font-semibold",
           className
         )}
@@ -380,7 +380,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
               <button
                 type="button"
                 onClick={resetPreferences}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 Reset

@@ -57,7 +57,7 @@ export default function ForgotPasswordScreen() {
           <Pressable
             onPress={() => router.replace('/(auth)/login')}
             style={({ pressed }) => ({
-              backgroundColor: pressed ? '#4f46e5' : '#6366f1',
+              backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
               borderRadius: 12,
               paddingVertical: 14,
               paddingHorizontal: 32,
@@ -122,7 +122,7 @@ export default function ForgotPasswordScreen() {
           onPress={handleReset}
           disabled={loading}
           style={({ pressed }) => ({
-            backgroundColor: pressed ? '#4f46e5' : '#6366f1',
+            backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
             borderRadius: 12,
             padding: 16,
             alignItems: 'center',

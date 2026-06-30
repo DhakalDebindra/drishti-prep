@@ -447,7 +447,7 @@ export default function ShrutiDictationPage() {
         )}
 
         <textarea
-          className="w-full h-80 rounded-xl border border-slate-300 bg-white px-5 py-4 text-sm leading-relaxed text-slate-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 resize-y transition-all tracking-wide"
+          className="w-full h-80 rounded-xl border border-slate-300 bg-white px-5 py-4 text-sm leading-relaxed text-slate-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 resize-y transition-all tracking-wide"
           placeholder="Type or paste text here (Nepali or English) to begin dictation..."
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -735,7 +735,7 @@ export default function ShrutiDictationPage() {
                 ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
                 : runtime.state.status === "WAITING_FOR_USER" || runtime.state.status === "PAUSED"
                   ? "bg-blue-600 hover:bg-blue-700 text-white border-transparent"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent")
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground border-transparent")
             }
           >
             {runtime.state.status === "PLAYING" ? (
@@ -776,9 +776,9 @@ export default function ShrutiDictationPage() {
           </p>
         )}
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-2">
-          <Button onClick={runtime.next} variant="outline" size="lg" className="hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm active:scale-95" aria-label="Next chunk (Space)">Next</Button>
-          <Button onClick={runtime.repeat} variant="outline" size="lg" className="hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm active:scale-95" aria-label="Repeat (R)">Repeat</Button>
-          <Button onClick={runtime.back} variant="outline" size="lg" className="hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm active:scale-95" aria-label="Back (B)">Back</Button>
+          <Button onClick={runtime.next} variant="outline" size="lg" className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 dark:hover:bg-primary/20 dark:hover:text-primary dark:hover:border-primary/50 transition-all shadow-sm active:scale-95" aria-label="Next chunk (Space)">Next</Button>
+          <Button onClick={runtime.repeat} variant="outline" size="lg" className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 dark:hover:bg-primary/20 dark:hover:text-primary dark:hover:border-primary/50 transition-all shadow-sm active:scale-95" aria-label="Repeat (R)">Repeat</Button>
+          <Button onClick={runtime.back} variant="outline" size="lg" className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 dark:hover:bg-primary/20 dark:hover:text-primary dark:hover:border-primary/50 transition-all shadow-sm active:scale-95" aria-label="Back (B)">Back</Button>
           <Button onClick={runtime.spell} variant="outline" size="lg" className="hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-all shadow-sm active:scale-95" aria-label="Spell (S)">Spell</Button>
           <Button onClick={runtime.where} variant="outline" size="lg" className="hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-all shadow-sm active:scale-95" aria-label="Where am I (W)">Where?</Button>
           {hasStarted && (

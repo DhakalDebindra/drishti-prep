@@ -191,7 +191,7 @@ export default function SignUpScreen() {
           onPress={handleSignUp}
           disabled={loading}
           style={({ pressed }) => ({
-            backgroundColor: pressed ? '#4f46e5' : '#6366f1',
+            backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
             borderRadius: 12,
             padding: 16,
             alignItems: 'center',
