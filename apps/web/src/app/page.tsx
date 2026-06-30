@@ -83,13 +83,6 @@ function HomeContent() {
 
   return (
     <div className={containerClass}>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-slate-100 focus:px-3 focus:py-2 focus:text-slate-900"
-      >
-        Skip to main content
-      </a>
-
       <div className="mx-auto flex max-w-6xl flex-col px-6 pb-20 pt-10 lg:px-10">
         <PublicHeader />
 
