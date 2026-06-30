@@ -36,8 +36,9 @@ export function ConfirmSubmitDialog() {
             Cancel
           </Button>
           <Button
+            variant="default"
             onClick={submitPracticeSet}
-            className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600"
+            className="rounded-full bg-primary shadow-md shadow-primary/20 transition hover:bg-primary/90"
           >
             Confirm and submit
           </Button>

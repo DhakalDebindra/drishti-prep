@@ -316,7 +316,7 @@ function PracticeSetView() {
               aria-label="Previous question"
               variant="secondary"
               size="lg"
-              className="h-14 gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="h-14 gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900               focus-visible:ring-2 focus-visible:ring-ring"
               onClick={goPrev}
               disabled={currentIndex === 0}
             >
@@ -328,8 +328,9 @@ function PracticeSetView() {
             </span>
             <Button
               aria-label="Next question"
+              variant="default"
               size="lg"
-              className="h-14 gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500"
+              className="h-14 gap-2 rounded-2xl px-5 shadow-md shadow-primary/25 transition hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
               onClick={goNext}
               disabled={currentIndex === questionCount - 1}
             >
@@ -340,8 +341,9 @@ function PracticeSetView() {
 
           <div className="flex flex-col gap-2">
             <Button
+              variant="default"
               size="lg"
-              className="h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="h-14 rounded-2xl bg-success text-success-foreground shadow-md shadow-success/25 transition hover:bg-success/90 focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setShowConfirmDialog(true)}
               disabled={state.status === "submitted" || state.isSubmitting || !canSubmit}
             >
@@ -423,14 +425,14 @@ function PracticeSetView() {
               {tutorEnabled && (
                 <Link
                   href={`${pathname}?view=listen`}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
                 >
                   🎧 Listen mode
                 </Link>
               )}
               <Link
                 href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Exit set
               </Link>
@@ -513,7 +515,7 @@ function PracticeSetView() {
                     key={currentQuestion.id}
                     id={questionTitleId}
                     content={currentQuestion.content}
-                    className="text-xl font-semibold leading-relaxed tracking-tight text-slate-950 outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-500 dark:text-slate-50 sm:text-2xl md:text-3xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
+                    className="text-xl font-semibold leading-relaxed tracking-tight text-slate-950 outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring dark:text-slate-50 sm:text-2xl md:text-3xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300"
                     tabIndex={-1}
                     ariaHidden={tutorActive}
                   />
@@ -570,7 +572,7 @@ function PracticeSetView() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-3 text-base font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-teal-900/60 dark:bg-slate-950 dark:text-teal-200 dark:hover:bg-slate-900 [&_svg]:size-5"
+                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-3 text-base font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 focus-visible:ring-2 focus-visible:ring-ring dark:border-teal-900/60 dark:bg-slate-950 dark:text-teal-200 dark:hover:bg-slate-900 [&_svg]:size-5"
                   aria-expanded={state.showExplanation[currentQuestion.id]}
                   aria-controls={`explanation-${currentQuestion.id}`}
                   onClick={() => toggleExplanation(currentQuestion.id)}
@@ -619,7 +621,7 @@ function PracticeSetView() {
                   aria-label="Previous question"
                   variant="secondary"
                   size="lg"
-                  className="h-14 gap-3 rounded-2xl border border-slate-200 bg-white px-6 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-emerald-500 [&_svg]:size-5"
+                  className="h-14 gap-3 rounded-2xl border border-slate-200 bg-white px-6 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-5"
                   onClick={goPrev}
                   disabled={currentIndex === 0}
                 >
@@ -628,8 +630,9 @@ function PracticeSetView() {
                 </Button>
                 {currentIndex === questionCount - 1 ? (
                   <Button
+                    variant="default"
                     size="lg"
-                    className="h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    className="h-14 rounded-2xl bg-primary px-7 shadow-md shadow-primary/25 transition hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={async () => {
                       if (!currentHandled) {
                         await handleSkip(currentQuestion.id);
@@ -658,8 +661,9 @@ function PracticeSetView() {
                 ) : (
                   <Button
                     aria-label="Next question"
+                    variant="default"
                     size="lg"
-                    className="h-14 gap-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-7 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500 [&_svg]:size-5"
+                    className="h-14 gap-3 rounded-2xl px-7 shadow-md shadow-primary/25 transition hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-5"
                     onClick={async () => {
                       if (!currentHandled) {
                         await handleSkip(currentQuestion.id);
@@ -678,8 +682,9 @@ function PracticeSetView() {
               {currentIndex !== questionCount - 1 && (
                 <>
                   <Button
+                    variant="default"
                     size="lg"
-                    className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500 sm:w-auto"
+                    className="w-full rounded-2xl bg-success text-success-foreground shadow-md shadow-success/25 transition hover:bg-success/90 focus-visible:ring-2 focus-visible:ring-ring sm:w-auto"
                     onClick={() => setShowConfirmDialog(true)}
                     disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
                   >
@@ -710,7 +715,7 @@ function PracticeSetView() {
             <Button
               aria-label="Previous question"
               variant="ghost"
-              className="flex-1 h-14 gap-1 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="flex-1 h-14 gap-1 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-ring"
               onClick={goPrev}
               disabled={currentIndex === 0}
             >
@@ -720,7 +725,8 @@ function PracticeSetView() {
 
             {currentIndex === questionCount - 1 ? (
               <Button
-                className="flex-1 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-teal-600 focus-visible:ring-2 focus-visible:ring-emerald-500"
+                variant="default"
+                className="flex-1 h-14 rounded-2xl bg-primary shadow-md shadow-primary/25 transition hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={async () => {
                   if (!currentHandled) {
                     await handleSkip(currentQuestion.id);
@@ -739,7 +745,8 @@ function PracticeSetView() {
             ) : (
               <Button
                 aria-label="Next question"
-                className="flex-1 h-14 gap-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus-visible:ring-2 focus-visible:ring-cyan-500"
+                variant="default"
+                className="flex-1 h-14 gap-1 rounded-2xl shadow-md shadow-primary/25 transition hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={async () => {
                   if (!currentHandled) {
                     await handleSkip(currentQuestion.id);

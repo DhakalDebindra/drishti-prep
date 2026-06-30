@@ -114,9 +114,9 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
               key={item}
               onClick={() => setFilter(item)}
               aria-pressed={filter === item}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 ${
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950 ${
                 filter === item
-                  ? "bg-white text-emerald-800 shadow-sm dark:bg-slate-950 dark:text-emerald-200"
+                  ? "bg-primary/10 text-primary shadow-sm"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
               }`}
             >
@@ -137,10 +137,10 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
             const isSkipped = question.selected_option === null || question.selected_option === "skipped";
             const isExpanded = expandedId === question.id;
             const statusColor = question.is_correct
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-success"
               : isSkipped
               ? "text-slate-400 dark:text-slate-500"
-              : "text-rose-600 dark:text-rose-400";
+              : "text-destructive";
 
             return (
               <article
@@ -177,7 +177,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : question.id)}
                     aria-label={isExpanded ? "Collapse question" : "Expand question"}
-                    className="mt-1 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                    className="mt-1 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-slate-900 dark:hover:text-slate-200"
                   >
                     {isExpanded ? (
                       <ChevronUp className="h-5 w-5" />
@@ -208,9 +208,9 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                         const isCorrectOpt = question.correct_option === currentOptId;
 
                         const optionClass = isCorrectOpt
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+                          ? "border-success/30 bg-success/10 text-success-foreground"
                           : isSelected
-                          ? "border-rose-200 bg-rose-50 text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+                          ? "border-destructive/30 bg-destructive/10 text-destructive-foreground"
                           : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300";
 
                         return (
@@ -230,8 +230,8 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                             <div className="flex-1">
                               <Lang>{optText}</Lang>
                             </div>
-                            {isCorrectOpt && <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-emerald-500" />}
-                            {isSelected && !isCorrectOpt && <XCircle aria-hidden="true" className="h-4 w-4 text-rose-500" />}
+                            {isCorrectOpt && <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-success" />}
+                            {isSelected && !isCorrectOpt && <XCircle aria-hidden="true" className="h-4 w-4 text-destructive" />}
                           </li>
                         );
                       })}
@@ -253,15 +253,15 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                         onClick={(e) => handleBookmark(question.id, e)}
                         aria-label={`${bookmarkedIds.has(question.id) ? "Remove bookmark for" : "Bookmark"} question ${index + 1}`}
                         aria-pressed={bookmarkedIds.has(question.id)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-emerald-300"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-primary/10 dark:hover:text-primary"
                       >
-                        <Bookmark aria-hidden="true" className={`h-3.5 w-3.5 ${bookmarkedIds.has(question.id) ? "fill-current text-emerald-500" : ""}`} />
+                        <Bookmark aria-hidden="true" className={`h-3.5 w-3.5 ${bookmarkedIds.has(question.id) ? "fill-current text-primary" : ""}`} />
                         <span>{bookmarkedIds.has(question.id) ? "Bookmarked" : "Bookmark"}</span>
                       </button>
                       <button
                         onClick={(e) => handleReport(question.id, e)}
                         aria-label={`Report issue with question ${index + 1}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-amber-50 hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-amber-300"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-amber-50 hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-amber-300"
                       >
                         <Flag className="h-3.5 w-3.5" />
                         <span>Report issue</span>

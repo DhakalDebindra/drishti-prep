@@ -71,13 +71,13 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
       <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary dark:border-primary/50 dark:bg-primary/20 dark:text-primary-foreground">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               Bookmarks
             </div>
             <div>
               <h1 id="main-heading" className="flex items-center gap-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
-                <BookOpen className="h-6 w-6 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                <BookOpen className="h-6 w-6 text-primary" aria-hidden="true" />
                 Saved for review
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -88,7 +88,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-              <Bookmark className="h-4 w-4 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+              <Bookmark className="h-4 w-4 text-primary" aria-hidden="true" />
               <span>{questions.length} saved</span>
             </div>
             <PracticeAccessibilityMenu buttonMode="compact" />
@@ -108,7 +108,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
             </p>
             <Link
               href="/practice"
-              className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:-translate-y-0.5 hover:from-emerald-400 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Start practicing
             </Link>
@@ -124,7 +124,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                 key={question.question_id}
                 className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/90 shadow-[0_14px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-950/70"
               >
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
+                <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
                 <button
                   id={headerId}
@@ -139,7 +139,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                   aria-expanded={isExpanded}
                   aria-controls={panelId}
                 >
-                  <div className="mt-0.5 rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300" aria-hidden="true">
+                  <div className="mt-0.5 rounded-full bg-primary/10 p-2 text-primary" aria-hidden="true">
                     <Bookmark className="h-4 w-4 fill-current" />
                   </div>
 
@@ -195,7 +195,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                             className={cn(
                               "rounded-2xl border px-4 py-3 text-sm leading-relaxed transition",
                               isCorrectOption
-                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-950 ring-1 ring-emerald-200 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-100 dark:ring-emerald-900/40"
+                                ? "border-success/30 bg-success/10 text-success-foreground ring-1 ring-success/30"
                                 : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300"
                             )}
                           >
@@ -207,7 +207,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                                 <Lang>{optionText}</Lang>
                               </div>
                               {isCorrectOption && (
-                                <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                               )}
                             </div>
                           </li>
