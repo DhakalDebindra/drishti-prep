@@ -2,18 +2,15 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { aiRatelimit } from "@/lib/rate-limit";
+import { aiRatelimit, extractClientIp } from "@/lib/rate-limit";
+import { resolveGeminiApiKey } from "@/lib/env-keys";
 
 // Shruti voice-command classification. Accepts a short audio blob, asks
 // Gemini to pick a single command word, returns it. Plain text output
 // (JSON schema mode is unreliable for audio inputs — Gemini wraps the
 // answer in preambles like "Here is the JSON requested").
 
-const geminiApiKey =
-  process.env.GEMINI_API_KEY ??
-  process.env.DRISHTI_API_KEY ??
-  process.env.DrishtiApiKey ??
-  "";
+const geminiApiKey = resolveGeminiApiKey();
 
 const COMMAND_PROMPT = [
   "Listen to the audio. The speaker is using a dictation app and said ONE",
@@ -45,11 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "no_api_key" }, { status: 500 });
   }
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "anonymous";
-  const { success } = await aiRatelimit.limit(ip);
+  const { success } = await aiRatelimit.limit(extractClientIp(req));
   if (!success) {
     return NextResponse.json(
       { error: "rate_limited" },

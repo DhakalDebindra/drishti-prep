@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { LoksewaGKFacilitatorGrounded } from "@/config/prompts/index";
 import { generateGroundedProse } from "@/lib/ai-service";
 import { createClient } from "@/lib/supabase/server";
-import { aiRatelimit } from "@/lib/rate-limit";
+import { aiRatelimit, extractClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      req.headers.get("x-real-ip") ??
-      "anonymous";
-
-    const { success } = await aiRatelimit.limit(ip);
+    const { success } = await aiRatelimit.limit(extractClientIp(req));
 
     if (!success) {
       return NextResponse.json(

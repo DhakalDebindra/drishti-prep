@@ -1,3 +1,5 @@
+import { resolveGeminiApiKey } from "@/lib/env-keys";
+
 const DEFAULT_LYRIA_MODEL = "lyria-3-clip-preview";
 const REQUEST_TIMEOUT_MS = 120_000;
 
@@ -9,10 +11,7 @@ export type GeminiMusicOptions = {
 export async function generateGeminiInstrumentalClip(
   opts: GeminiMusicOptions,
 ): Promise<Buffer> {
-  const key =
-    process.env.GEMINI_API_KEY ??
-    process.env.DRISHTI_API_KEY ??
-    process.env.DrishtiApiKey;
+  const key = resolveGeminiApiKey();
   if (!key) throw new Error("Missing GEMINI_API_KEY");
 
   const controller = new AbortController();

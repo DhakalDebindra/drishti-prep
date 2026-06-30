@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { apiRatelimit } from "@/lib/rate-limit";
+import { apiRatelimit, extractClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "anonymous";
-
-  const { success } = await apiRatelimit.limit(ip);
+  const { success } = await apiRatelimit.limit(extractClientIp(req));
 
   if (!success) {
     return NextResponse.json(
