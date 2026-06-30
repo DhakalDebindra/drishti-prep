@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { aiRatelimit } from "@/lib/rate-limit";
 
 // Shruti voice-command classification. Accepts a short audio blob, asks
@@ -101,14 +102,14 @@ export async function POST(req: Request) {
     }
     const text = command && command !== "none" ? command : "";
 
-    console.log(
+    logger.info(
       `[Shruti] classify: bytes=${audio.size} raw=${JSON.stringify(raw.slice(0, 120))} command=${JSON.stringify(command)} → ${JSON.stringify(text)}`,
     );
 
     return NextResponse.json({ transcript: text });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown";
-    console.error("[Shruti] classify failed:", msg);
+    logger.error("[Shruti] classify failed:", msg);
     return NextResponse.json({ transcript: "", error: msg });
   }
 }

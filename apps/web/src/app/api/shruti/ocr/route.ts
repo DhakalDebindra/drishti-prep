@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { aiRatelimit } from "@/lib/rate-limit";
 
 // Image OCR via Gemini Vision. Used by Shruti when the user uploads
@@ -76,11 +77,11 @@ export async function POST(req: Request) {
       { inlineData: { data: base64, mimeType } },
     ]);
     const text = result.response.text().trim();
-    console.log(`[Shruti] ocr: bytes=${image.size} chars=${text.length}`);
+    logger.info(`[Shruti] ocr: bytes=${image.size} chars=${text.length}`);
     return NextResponse.json({ text });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "ocr_failed";
-    console.error("[Shruti] ocr failed:", msg);
+    logger.error("[Shruti] ocr failed:", msg);
     return NextResponse.json({ error: "ocr_failed", detail: msg }, { status: 502 });
   }
 }
