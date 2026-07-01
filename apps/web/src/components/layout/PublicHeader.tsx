@@ -11,12 +11,13 @@ export function PublicHeader() {
   const [contrast, setContrast] = useContrast();
   const { resolvedTheme } = useTheme();
   const pathname = usePathname();
-  const [currentHash, setCurrentHash] = useState("");
+  const [currentHash, setCurrentHash] = useState(() =>
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
 
   useEffect(() => {
     const onHashChange = () => setCurrentHash(window.location.hash);
     window.addEventListener("hashchange", onHashChange);
-    setCurrentHash(window.location.hash);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
