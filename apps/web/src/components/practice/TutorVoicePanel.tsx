@@ -107,7 +107,7 @@ export function TutorVoicePanel({
             type="button"
             onClick={onStart}
             aria-keyshortcuts={startKey.combo}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-cyan-500/25 transition hover:from-cyan-600 hover:to-emerald-600 focus:outline-none focus:ring-4 focus:ring-cyan-300"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-ring"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
             Start Shruti ({startKey.label})
@@ -116,7 +116,7 @@ export function TutorVoicePanel({
           <button
             type="button"
             onClick={player.mute}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-emerald-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
             aria-label="Mute Shruti"
             aria-keyshortcuts="Escape"
           >

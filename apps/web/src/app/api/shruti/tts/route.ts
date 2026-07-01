@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { synthesizeWithEdge, DEFAULT_EDGE_VOICE } from "@/lib/edge-tts-service";
 
 // Server-side Nepali TTS for Shruti. Single engine: Microsoft Edge TTS.
@@ -123,11 +124,11 @@ export async function POST(req: Request) {
           ? Buffer.from(JSON.stringify(result.wordBoundaries)).toString('base64') 
           : undefined;
         putInLru(key, bytes, metadataBase64);
-        console.log(`[Shruti] tts ok via edge (${result.latencyMs}ms, ${bytes.length}B)`);
+        logger.info(`[Shruti] tts ok via edge (${result.latencyMs}ms, ${bytes.length}B)`);
         return { bytes, metadataBase64 };
       } catch (edgeErr) {
         const msg = edgeErr instanceof Error ? edgeErr.message : String(edgeErr);
-        console.error("[Shruti] edge tts failed:", msg);
+        logger.error("[Shruti] edge tts failed:", msg);
         return null;
       } finally {
         inflight.delete(key);

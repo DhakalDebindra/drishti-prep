@@ -38,12 +38,12 @@ export function QuestionNavigator() {
             : "outline";
 
           const statusClasses = isCurrent
-            ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 font-semibold"
+            ? "ring-2 ring-ring ring-offset-2 ring-offset-white dark:ring-offset-slate-950 font-semibold"
             : isAnswered
-            ? "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-white"
+            ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : isSkipped
             ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
-            : "bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-emerald-300";
+            : "bg-white text-slate-700 hover:bg-primary/10 hover:text-primary dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-primary";
 
           const status = isAnswered ? "answered" : isSkipped ? "skipped" : "unanswered";
           const currentLabel = isCurrent ? "currently active" : "";
@@ -53,7 +53,7 @@ export function QuestionNavigator() {
             <Button
               key={index}
               variant={variant}
-              className={`h-11 w-11 p-0 text-sm transition-all focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-slate-950 ${statusClasses}`}
+              className={`h-11 w-11 p-0 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-ring dark:focus-visible:ring-offset-slate-950 ${statusClasses}`}
               aria-label={ariaLabel}
               aria-current={isCurrent ? "true" : undefined}
               onClick={() => jumpToQuestion(index)}

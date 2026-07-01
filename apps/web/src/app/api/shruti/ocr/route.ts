@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
-import { aiRatelimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import { aiRatelimit, extractClientIp } from "@/lib/rate-limit";
+import { resolveGeminiApiKey } from "@/lib/env-keys";
 
 // Image OCR via Gemini Vision. Used by Shruti when the user uploads
 // photos of handwritten notes or printed pages. Gemini handles Devanagari
@@ -9,11 +11,7 @@ import { aiRatelimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
-const geminiApiKey =
-  process.env.GEMINI_API_KEY ??
-  process.env.DRISHTI_API_KEY ??
-  process.env.DrishtiApiKey ??
-  "";
+const geminiApiKey = resolveGeminiApiKey();
 
 const OCR_PROMPT = [
   "You are an OCR assistant for a visually impaired learner. Extract ALL",
@@ -35,11 +33,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "no_api_key" }, { status: 500 });
   }
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    req.headers.get("x-real-ip") ??
-    "anonymous";
-  const { success } = await aiRatelimit.limit(ip);
+  const { success } = await aiRatelimit.limit(extractClientIp(req));
   if (!success) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -76,11 +70,11 @@ export async function POST(req: Request) {
       { inlineData: { data: base64, mimeType } },
     ]);
     const text = result.response.text().trim();
-    console.log(`[Shruti] ocr: bytes=${image.size} chars=${text.length}`);
+    logger.info(`[Shruti] ocr: bytes=${image.size} chars=${text.length}`);
     return NextResponse.json({ text });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "ocr_failed";
-    console.error("[Shruti] ocr failed:", msg);
+    logger.error("[Shruti] ocr failed:", msg);
     return NextResponse.json({ error: "ocr_failed", detail: msg }, { status: 502 });
   }
 }

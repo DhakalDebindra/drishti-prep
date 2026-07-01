@@ -103,7 +103,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
           <Link
             href={`/bookmarks?page=${Math.max(1, page - 1)}`}
             aria-label={`Go to previous page (page ${page - 1})`}
-            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
+            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
               page <= 1 ? "opacity-30 cursor-not-allowed pointer-events-none" : "hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             aria-disabled={page <= 1}
@@ -119,7 +119,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
           <Link
             href={`/bookmarks?page=${Math.min(totalPages, page + 1)}`}
             aria-label={`Go to next page (page ${page + 1})`}
-            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
+            className={`inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 ${
               page >= totalPages ? "opacity-30 cursor-not-allowed pointer-events-none" : "hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             aria-disabled={page >= totalPages}

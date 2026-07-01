@@ -52,7 +52,7 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
         </div>
       ) : (
         <div className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 text-center shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </div>
           <div className="space-y-1">
@@ -65,7 +65,7 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
           </div>
           <Link
             href="/practice"
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             Browse available sets
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -75,7 +75,7 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
 
       <div className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70">
         <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
-          <Bookmark className="h-5 w-5 text-emerald-500" />
+          <Bookmark className="h-5 w-5 text-primary" />
           <span className="text-lg font-bold">My Bookmarks</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -83,7 +83,7 @@ export function PracticeBanners({ attempts }: { attempts: AttemptWithSet[] }) {
         </p>
         <Link
           href="/bookmarks"
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           View bookmarks
           <ArrowRight className="h-4 w-4" aria-hidden="true" />

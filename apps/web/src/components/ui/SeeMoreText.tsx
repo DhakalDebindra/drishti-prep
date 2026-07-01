@@ -27,7 +27,7 @@ export function SeeMoreText({ text, maxLength = 100 }: SeeMoreTextProps) {
           e.preventDefault();
           setIsExpanded(!isExpanded);
         }}
-        className="ml-1 text-blue-600 hover:text-blue-800 font-medium text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+        className="ml-1 text-primary font-medium text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
       >
         {isExpanded ? "See Less" : "See More"}
       </button>
