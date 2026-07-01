@@ -64,7 +64,7 @@ export function PublicHeader() {
         </Link>
       </div>
 
-      <nav aria-label="Main navigation" className={cn("hidden items-center gap-6 text-sm font-medium sm:flex", palette.navText)}>
+      <nav aria-label="primary" className={cn("hidden items-center gap-6 text-sm font-medium sm:flex", palette.navText)}>
         {navLinks.map((link) => (
           <Link
             key={link.href}
