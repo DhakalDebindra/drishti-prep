@@ -1,33 +1,47 @@
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View } from 'react-native'
+import { Text } from '../src/components/ui'
 
 const NEPALI_SAMPLE = `
 नेपाल एक सुन्दर देश हो।
 परीक्षा तयारी गर्नुहोस्।
 विज्ञान • गणित • इतिहास • भूगोल
 संयुक्त व्यञ्जन: क्ष त्र ज्ञ श्र
-`;
+`
 
 export default function SmokeTest() {
   return (
-    <ScrollView style={{ flex: 1, padding: 24, backgroundColor: '#fff' }}>
-      <Text style={styles.label}>Regular (400)</Text>
-      <Text style={styles.nepali400}>{NEPALI_SAMPLE}</Text>
+    <ScrollView className="flex-1 bg-background px-6 pt-12">
+      <Text variant="label" color="muted" className="mb-2">
+        Regular (400)
+      </Text>
+      <Text
+        className="text-[18px] leading-8"
+        style={{ fontFamily: 'NotoSansDevanagari_400Regular' }}
+      >
+        {NEPALI_SAMPLE}
+      </Text>
 
-      <Text style={[styles.label, { marginTop: 24 }]}>Bold (700)</Text>
-      <Text style={styles.nepali700}>{NEPALI_SAMPLE}</Text>
+      <Text variant="label" color="muted" className="mb-2 mt-6">
+        Bold (700)
+      </Text>
+      <Text
+        className="text-[18px] leading-8"
+        style={{ fontFamily: 'NotoSansDevanagari_700Bold' }}
+      >
+        {NEPALI_SAMPLE}
+      </Text>
 
-      <Text style={[styles.label, { marginTop: 24, color: '#fff', backgroundColor: '#111' }]}>
+      <Text variant="label" color="muted" className="mb-2 mt-6">
         Dark mode simulation
       </Text>
-      <View style={{ backgroundColor: '#111', padding: 16, borderRadius: 8 }}>
-        <Text style={[styles.nepali400, { color: '#f5f5f5' }]}>{NEPALI_SAMPLE}</Text>
+      <View className="bg-card rounded-xl p-4 border border-border">
+        <Text
+          className="text-[18px] leading-8 text-foreground"
+          style={{ fontFamily: 'NotoSansDevanagari_400Regular' }}
+        >
+          {NEPALI_SAMPLE}
+        </Text>
       </View>
     </ScrollView>
-  );
+  )
 }
-
-const styles = StyleSheet.create({
-  label: { fontSize: 12, fontWeight: 'bold', color: '#888', marginBottom: 8 },
-  nepali400: { fontSize: 18, fontFamily: 'NotoSansDevanagari_400Regular', lineHeight: 32, color: '#111' },
-  nepali700: { fontSize: 18, fontFamily: 'NotoSansDevanagari_700Bold', lineHeight: 32, color: '#111' },
-});

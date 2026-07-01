@@ -6,14 +6,13 @@ export default function AuthLayout() {
 
   // Already authenticated — send to app
   if (session) {
-    return <Redirect href="/(app)/dashboard" />;
+    return <Redirect href="/(app)/(tabs)/dashboard" />;
   }
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0f172a' },
         animation: 'slide_from_right',
       }}
     />
