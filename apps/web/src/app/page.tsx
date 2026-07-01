@@ -99,7 +99,6 @@ function HomeContent() {
                   <span
                     key={exam}
                     className="rounded-full border border-emerald-200/50 bg-emerald-200/10 px-3 py-1 text-sm font-medium text-emerald-900 dark:text-emerald-100"
-                    aria-label={`Exam: ${exam}`}
                   >
                     {exam}
                   </span>

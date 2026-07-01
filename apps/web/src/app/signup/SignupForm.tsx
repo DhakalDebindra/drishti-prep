@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { logger } from "@/lib/logger";
@@ -129,149 +130,159 @@ export default function SignupForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Check your email</CardTitle>
-            <CardDescription className="text-center">
-              We've sent a confirmation link to <span className="font-semibold">{email}</span>.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {visibleError && (
-              <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {visibleError}
-              </div>
-            )}
-            {resendMessage && (
-              <div role="alert" aria-live="polite" className="bg-green-50 text-green-600 p-3 rounded-md text-sm">
-                {resendMessage}
-              </div>
-            )}
-            <p className="text-sm text-center text-gray-600">
-              Please click the link in that email to activate your account.
-            </p>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button onClick={handleResend} variant="outline" className="w-full" disabled={isResending}>
-              {isResending ? "Resending..." : "Resend confirmation email"}
-            </Button>
-            <Link href="/login" className="text-sm text-blue-600 hover:underline text-center w-full block">
-              Return to login
-            </Link>
-          </CardFooter>
-        </Card>
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
+          <PublicHeader />
+          <div className="flex justify-center pt-14">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center">Check your email</CardTitle>
+                <CardDescription className="text-center">
+                  We've sent a confirmation link to <span className="font-semibold">{email}</span>.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {visibleError && (
+                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                    {visibleError}
+                  </div>
+                )}
+                {resendMessage && (
+                  <div role="alert" aria-live="polite" className="bg-green-50 text-green-600 p-3 rounded-md text-sm">
+                    {resendMessage}
+                  </div>
+                )}
+                <p className="text-sm text-center text-gray-600">
+                  Please click the link in that email to activate your account.
+                </p>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <Button onClick={handleResend} variant="outline" className="w-full" disabled={isResending}>
+                  {isResending ? "Resending..." : "Resend confirmation email"}
+                </Button>
+                <Link href="/login" className="text-sm text-blue-600 hover:underline text-center w-full block">
+                  Return to login
+                </Link>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            <h1 id="signup-heading">Create Account</h1>
-          </CardTitle>
-          <CardDescription className="text-center">Join DrishtiPrep to track your progress</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSignup} aria-labelledby="signup-heading">
-          <CardContent className="space-y-4">
-            {visibleError && (
-              <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {visibleError}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="John Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="learner@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {password && (
-                <div className="flex items-center space-x-2 mt-2">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${strengthColor} transition-all duration-300`} 
-                      style={{ width: `${(strengthScore / 5) * 100}%` }}
-                    />
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
+        <PublicHeader />
+        <div className="flex justify-center pt-14">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">
+                <h1 id="signup-heading">Create Account</h1>
+              </CardTitle>
+              <CardDescription className="text-center">Join DrishtiPrep to track your progress</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSignup} aria-labelledby="signup-heading">
+              <CardContent className="space-y-4">
+                {visibleError && (
+                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                    {visibleError}
                   </div>
-                  <span className="text-xs text-gray-500 w-12">{strengthText}</span>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    autoComplete="name"
+                  />
                 </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing Up..." : "Sign Up"}
-            </Button>
-            <div className="text-sm text-center text-gray-500">
-               Already have an account? <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="learner@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {password && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${strengthColor} transition-all duration-300`} 
+                          style={{ width: `${(strengthScore / 5) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 w-12">{strengthText}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing Up..." : "Sign Up"}
+                </Button>
+                <div className="text-sm text-center text-gray-500">
+                   Already have an account? <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
+                </div>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { cn } from "@repo/utils";
 import { useTheme } from "next-themes";
 import { useContrast } from "@/hooks/use-theme";
@@ -9,7 +10,17 @@ import { useContrast } from "@/hooks/use-theme";
 export function PublicHeader() {
   const [contrast, setContrast] = useContrast();
   const { resolvedTheme } = useTheme();
-  
+  const pathname = usePathname();
+  const [currentHash, setCurrentHash] = useState(() =>
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
+
+  useEffect(() => {
+    const onHashChange = () => setCurrentHash(window.location.hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
   const isDark = resolvedTheme === "dark";
 
   const toggleContrast = () => {
@@ -64,16 +75,20 @@ export function PublicHeader() {
         </Link>
       </div>
 
-      <nav aria-label="Main navigation" className={cn("hidden items-center gap-6 text-sm font-medium sm:flex", palette.navText)}>
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded-md px-2 py-1 transition hover:text-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-300"
-          >
-            {link.label}
-          </Link>
-        ))}
+      <nav aria-label="primary" className={cn("hidden items-center gap-6 text-sm font-medium sm:flex", palette.navText)}>
+        {navLinks.map((link) => {
+          const isActive = pathname === "/" && link.href === currentHash;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={isActive ? "page" : undefined}
+              className="rounded-md px-2 py-1 transition hover:text-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-300"
+            >
+              {link.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="flex items-center gap-3">
