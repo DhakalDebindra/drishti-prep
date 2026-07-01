@@ -44,27 +44,21 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', padding: 24 }}>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontSize: 48, marginBottom: 16 }}>📧</Text>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: '#f8fafc', marginBottom: 12, textAlign: 'center' }}>
+      <View className="flex-1 bg-background justify-center p-6">
+        <View className="items-center">
+          <Text className="text-5xl mb-4">📧</Text>
+          <Text className="text-[22px] font-bold text-foreground mb-3 text-center">
             Check Your Email
           </Text>
-          <Text style={{ fontSize: 15, color: '#94a3b8', textAlign: 'center', lineHeight: 22 }}>
+          <Text className="text-[15px] text-muted-foreground text-center leading-6">
             We sent a password reset link to{'\n'}
-            <Text style={{ color: '#818cf8', fontWeight: '600' }}>{email.trim()}</Text>
+            <Text className="text-primary font-semibold">{email.trim()}</Text>
           </Text>
           <Pressable
             onPress={() => router.replace('/(auth)/login')}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? '#4f46e5' : '#6366f1',
-              borderRadius: 12,
-              paddingVertical: 14,
-              paddingHorizontal: 32,
-              marginTop: 32,
-            })}
+            className="rounded-xl px-8 py-3.5 mt-8 items-center bg-primary active:opacity-80"
           >
-            <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
+            <Text className="text-primary-foreground text-[15px] font-semibold">
               Back to Login
             </Text>
           </Pressable>
@@ -76,41 +70,32 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      className="flex-1 bg-background"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={{ marginBottom: 32, alignItems: 'center' }}>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: '#f8fafc', letterSpacing: -0.5 }}>
+        <View className="mb-8 items-center">
+          <Text className="text-[28px] font-extrabold text-foreground tracking-tight">
             Reset Password
           </Text>
-          <Text style={{ fontSize: 15, color: '#94a3b8', marginTop: 8, textAlign: 'center' }}>
+          <Text className="text-[15px] text-muted-foreground mt-2 text-center">
             Enter your email and we'll send you a link to reset your password
           </Text>
         </View>
 
         {/* Email */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Email Address
         </Text>
         <TextInput
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 12,
-            padding: 14,
-            fontSize: 16,
-            color: '#f1f5f9',
-            borderWidth: 1,
-            borderColor: '#334155',
-            marginBottom: 24,
-          }}
+          className="bg-card rounded-xl p-3.5 text-base text-foreground border border-border mb-6"
           value={email}
           onChangeText={setEmail}
           placeholder="email@example.com"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
@@ -121,18 +106,12 @@ export default function ForgotPasswordScreen() {
         <Pressable
           onPress={handleReset}
           disabled={loading}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#4f46e5' : '#6366f1',
-            borderRadius: 12,
-            padding: 16,
-            alignItems: 'center',
-            opacity: loading ? 0.7 : 1,
-          })}
+          className={`rounded-xl p-4 items-center bg-primary ${loading ? 'opacity-70' : 'active:opacity-80'}`}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+            <Text className="text-primary-foreground text-base font-bold">
               Send Reset Link
             </Text>
           )}
@@ -141,9 +120,9 @@ export default function ForgotPasswordScreen() {
         {/* Back to Login */}
         <Pressable
           onPress={() => router.back()}
-          style={{ alignItems: 'center', marginTop: 20 }}
+          className="items-center mt-5"
         >
-          <Text style={{ color: '#818cf8', fontSize: 14, fontWeight: '500' }}>
+          <Text className="text-primary text-sm font-medium">
             ← Back to Login
           </Text>
         </Pressable>

@@ -75,145 +75,133 @@ export default function SignUpScreen() {
     }
   };
 
-  const inputStyle = (field: keyof SignupFormValues) => ({
-    backgroundColor: '#1e293b' as const,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: '#f1f5f9' as const,
-    borderWidth: 1,
-    borderColor: errors[field] ? '#ef4444' : '#334155',
-    marginBottom: 4,
-  });
+  const inputClassName = (field: keyof SignupFormValues) =>
+    `bg-card rounded-xl p-3.5 text-base text-foreground border mb-1 ${
+      errors[field] ? 'border-destructive' : 'border-border'
+    }`;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      className="flex-1 bg-background"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={{ marginBottom: 32, alignItems: 'center' }}>
-          <Text style={{ fontSize: 32, fontWeight: '800', color: '#f8fafc', letterSpacing: -0.5 }}>
+        <View className="mb-8 items-center">
+          <Text className="text-[32px] font-extrabold text-foreground tracking-tight">
             Create Account
           </Text>
-          <Text style={{ fontSize: 15, color: '#94a3b8', marginTop: 8 }}>
+          <Text className="text-[15px] text-muted-foreground mt-2">
             Start your exam preparation journey
           </Text>
         </View>
 
         {/* Full Name */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Full Name
         </Text>
         <TextInput
-          style={inputStyle('fullName')}
+          className={inputClassName('fullName')}
           value={form.fullName}
           onChangeText={(v) => updateField('fullName', v)}
           placeholder="Your full name"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           autoCapitalize="words"
           autoComplete="name"
           textContentType="name"
         />
         {errors.fullName ? (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{errors.fullName}</Text>
+          <Text className="text-destructive text-xs mb-3">{errors.fullName}</Text>
         ) : (
-          <View style={{ height: 16 }} />
+          <View className="h-4" />
         )}
 
         {/* Email */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Email
         </Text>
         <TextInput
-          style={inputStyle('email')}
+          className={inputClassName('email')}
           value={form.email}
           onChangeText={(v) => updateField('email', v)}
           placeholder="email@example.com"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
           textContentType="emailAddress"
         />
         {errors.email ? (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{errors.email}</Text>
+          <Text className="text-destructive text-xs mb-3">{errors.email}</Text>
         ) : (
-          <View style={{ height: 16 }} />
+          <View className="h-4" />
         )}
 
         {/* Password */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Password
         </Text>
         <TextInput
-          style={inputStyle('password')}
+          className={inputClassName('password')}
           value={form.password}
           onChangeText={(v) => updateField('password', v)}
           placeholder="Minimum 6 characters"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           secureTextEntry
           autoCapitalize="none"
           textContentType="newPassword"
         />
         {errors.password ? (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{errors.password}</Text>
+          <Text className="text-destructive text-xs mb-3">{errors.password}</Text>
         ) : (
-          <View style={{ height: 16 }} />
+          <View className="h-4" />
         )}
 
         {/* Confirm Password */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Confirm Password
         </Text>
         <TextInput
-          style={inputStyle('confirmPassword')}
+          className={inputClassName('confirmPassword')}
           value={form.confirmPassword}
           onChangeText={(v) => updateField('confirmPassword', v)}
           placeholder="Re-enter your password"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           secureTextEntry
           autoCapitalize="none"
           textContentType="newPassword"
         />
         {errors.confirmPassword ? (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 16 }}>{errors.confirmPassword}</Text>
+          <Text className="text-destructive text-xs mb-4">{errors.confirmPassword}</Text>
         ) : (
-          <View style={{ height: 20 }} />
+          <View className="h-5" />
         )}
 
         {/* Submit */}
         <Pressable
           onPress={handleSignUp}
           disabled={loading}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#4f46e5' : '#6366f1',
-            borderRadius: 12,
-            padding: 16,
-            alignItems: 'center',
-            opacity: loading ? 0.7 : 1,
-          })}
+          className={`rounded-xl p-4 items-center bg-primary ${loading ? 'opacity-70' : 'active:opacity-80'}`}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+            <Text className="text-primary-foreground text-base font-bold">
               Create Account
             </Text>
           )}
         </Pressable>
 
         {/* Login Link */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>
+        <View className="flex-row justify-center mt-6">
+          <Text className="text-muted-foreground text-sm">
             Already have an account?{' '}
           </Text>
           <Pressable onPress={() => router.push('/(auth)/login')}>
-            <Text style={{ color: '#818cf8', fontSize: 14, fontWeight: '600' }}>
+            <Text className="text-primary text-sm font-semibold">
               Sign In
             </Text>
           </Pressable>

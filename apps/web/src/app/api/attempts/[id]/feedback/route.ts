@@ -8,9 +8,17 @@ type RouteParams = { params: Promise<{ id: string }> };
 export async function GET(req: Request, { params }: RouteParams) {
   const supabase = await createClient();
   const attemptId = (await params).id;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const authHeader = req.headers.get("Authorization");
+  let user = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data } = await supabase.auth.getUser(token);
+    user = data.user;
+  } else {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
