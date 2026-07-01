@@ -61,89 +61,75 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0f172a' }}
+      className="flex-1 bg-background"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={{ marginBottom: 40, alignItems: 'center' }}>
-          <Text style={{ fontSize: 32, fontWeight: '800', color: '#f8fafc', letterSpacing: -0.5 }}>
+        <View className="mb-10 items-center">
+          <Text className="text-[32px] font-extrabold text-foreground tracking-tight">
             DrishtiPrep
           </Text>
-          <Text style={{ fontSize: 15, color: '#94a3b8', marginTop: 8 }}>
+          <Text className="text-[15px] text-muted-foreground mt-2">
             Sign in to continue your preparation
           </Text>
         </View>
 
         {/* Email */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Email
         </Text>
         <TextInput
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 12,
-            padding: 14,
-            fontSize: 16,
-            color: '#f1f5f9',
-            borderWidth: 1,
-            borderColor: errors.email ? '#ef4444' : '#334155',
-            marginBottom: 4,
-          }}
+          className={`bg-card rounded-xl p-3.5 text-base text-foreground border mb-1 ${
+            errors.email ? 'border-destructive' : 'border-border'
+          }`}
           value={form.email}
           onChangeText={(v) => updateField('email', v)}
           placeholder="email@example.com"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
           textContentType="emailAddress"
         />
         {errors.email && (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>
+          <Text className="text-destructive text-xs mb-3">
             {errors.email}
           </Text>
         )}
-        {!errors.email && <View style={{ height: 16 }} />}
+        {!errors.email && <View className="h-4" />}
 
         {/* Password */}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#cbd5e1', marginBottom: 6 }}>
+        <Text className="text-[13px] font-semibold text-foreground mb-1.5">
           Password
         </Text>
         <TextInput
-          style={{
-            backgroundColor: '#1e293b',
-            borderRadius: 12,
-            padding: 14,
-            fontSize: 16,
-            color: '#f1f5f9',
-            borderWidth: 1,
-            borderColor: errors.password ? '#ef4444' : '#334155',
-            marginBottom: 4,
-          }}
+          className={`bg-card rounded-xl p-3.5 text-base text-foreground border mb-1 ${
+            errors.password ? 'border-destructive' : 'border-border'
+          }`}
           value={form.password}
           onChangeText={(v) => updateField('password', v)}
           placeholder="Enter your password"
-          placeholderTextColor="#475569"
+          placeholderTextColor="#94a3b8"
           secureTextEntry
           autoCapitalize="none"
           textContentType="password"
         />
         {errors.password && (
-          <Text style={{ color: '#ef4444', fontSize: 12, marginBottom: 8 }}>
+          <Text className="text-destructive text-xs mb-2">
             {errors.password}
           </Text>
         )}
-        {!errors.password && <View style={{ height: 12 }} />}
+        {!errors.password && <View className="h-3" />}
 
         {/* Forgot Password */}
         <Pressable
           onPress={() => router.push('/(auth)/forgot-password')}
-          style={{ alignSelf: 'flex-end', marginBottom: 24 }}
+          className="self-end mb-6"
         >
-          <Text style={{ color: '#818cf8', fontSize: 13, fontWeight: '500' }}>
+          <Text className="text-primary text-[13px] font-medium">
             Forgot password?
           </Text>
         </Pressable>
@@ -152,30 +138,24 @@ export default function LoginScreen() {
         <Pressable
           onPress={handleLogin}
           disabled={loading}
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? '#1d4ed8' : '#2563eb',
-            borderRadius: 12,
-            padding: 16,
-            alignItems: 'center',
-            opacity: loading ? 0.7 : 1,
-          })}
+          className={`rounded-xl p-4 items-center bg-primary ${loading ? 'opacity-70' : 'active:opacity-80'}`}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+            <Text className="text-primary-foreground text-base font-bold">
               Sign In
             </Text>
           )}
         </Pressable>
 
         {/* Sign Up Link */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
-          <Text style={{ color: '#94a3b8', fontSize: 14 }}>
+        <View className="flex-row justify-center mt-6">
+          <Text className="text-muted-foreground text-sm">
             Don't have an account?{' '}
           </Text>
           <Pressable onPress={() => router.push('/(auth)/signup')}>
-            <Text style={{ color: '#818cf8', fontSize: 14, fontWeight: '600' }}>
+            <Text className="text-primary text-sm font-semibold">
               Sign Up
             </Text>
           </Pressable>

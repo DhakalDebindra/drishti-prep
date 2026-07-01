@@ -80,7 +80,6 @@ export default function RootLayout({
         const lineSpacingMap = { normal: '1.65', relaxed: '1.8', spacious: '1.95' };
         const accessibilityRaw = localStorage.getItem('drishtiprep-accessibility');
         const legacyContrast = localStorage.getItem('drishtiprep-contrast');
-        const prefersMoreContrast = window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches;
         const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let stored = {};
 
