@@ -1,5 +1,5 @@
 -- Idempotent UPSERT import: निमावि प्रथम पत्र — unit घ-२ शिक्षा ऐन, २०२८ (Level I topic-wise sets)
--- Override same-identity sets/questions; never deletes. Generated 2026-07-02T11:04:28.925Z.
+-- Override same-identity sets/questions; never deletes. Generated 2026-07-02T11:21:15.499Z.
 DO $$
 DECLARE
   v_module_id uuid := '6695669a-f40e-421a-a4ec-b09bbeaf56c4'::uuid;
@@ -217,5 +217,46 @@ BEGIN
   VALUES (extensions.uuid_generate_v5(v_set_id, E'junction:स्थानीय निकाय वा व्यवस्थापन समितिले कुनै सामुदायिक विद्यालयको व्यवस्थापन जिम्मा लिन चाहेमा आवश्यक कागजातसहित कहाँ निवेदन दिनुपर्ने व्यवस्था शिक्षा ऐन, २०२८ ले गरेको छ?'), v_set_id, v_q_id, 16)
   ON CONFLICT (question_set_id, question_id) DO NOTHING;
 
-  RAISE NOTICE 'Unit घ-२ upsert complete: 2 sets, 24 questions.';
+  -- Set: शिक्षा ऐन, २०२८: प्रमुख संशोधनहरूले थपेका व्यवस्थाहरू (आधारभूत तह) (4 Q)
+  v_set_id := extensions.uuid_generate_v5('209f1c03-55a8-4a24-83d2-394016971f86'::uuid, E'शिक्षा ऐन, २०२८: प्रमुख संशोधनहरूले थपेका व्यवस्थाहरू (आधारभूत तह)');
+  INSERT INTO public.question_sets (id, topic_id, subtopic_id, title, difficulty_level, set_type, is_verified)
+  VALUES (v_set_id, '4e931234-3a51-422d-b861-caf5849aafc8'::uuid, '209f1c03-55a8-4a24-83d2-394016971f86'::uuid, E'शिक्षा ऐन, २०२८: प्रमुख संशोधनहरूले थपेका व्यवस्थाहरू (आधारभूत तह)', 1, 'learning', true)
+  ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, difficulty_level = EXCLUDED.difficulty_level, set_type = EXCLUDED.set_type, is_verified = true;
+  INSERT INTO public.question_set_modules (question_set_id, module_id, subtopic_id)
+  VALUES (v_set_id, v_module_id, '209f1c03-55a8-4a24-83d2-394016971f86'::uuid)
+  ON CONFLICT (question_set_id, module_id) DO NOTHING;
+
+  v_q_id := extensions.uuid_generate_v5(v_set_id, E'शिक्षा ऐन, २०२८ को सातौं संशोधनले गरेको व्यवस्था तलकामध्ये कुन हो?');
+  INSERT INTO public.questions (id, set_id, order_number, content, option_a, option_b, option_c, option_d, correct_option, explanation, language, is_verified, audio_version, audio_ready)
+  VALUES (v_q_id, v_set_id, 1, E'शिक्षा ऐन, २०२८ को सातौं संशोधनले गरेको व्यवस्था तलकामध्ये कुन हो?', E'विद्यालयलाई सामुदायिक र संस्थागत गरी दुई प्रकारमा वर्गीकरण', E'शिक्षक युनियनको सट्टा नेपाल शिक्षक महासंघको व्यवस्था', E'प्रारम्भिक बाल शिक्षालाई विद्यालय शिक्षाको संरचनामा पहिलोपटक समावेश', E'राष्ट्रिय शिक्षा बोर्डको स्थापना', E'A', E'**सातौं संशोधनले विद्यालयलाई सामुदायिक र संस्थागत गरी दुई प्रकारमा वर्गीकरण गर्‍यो (दफा २ मा ''सामुदायिक विद्यालय'' र ''संस्थागत विद्यालय'' को परिभाषा थप्दै)।**\\nनोट: संस्थागत विद्यालय पुनः कम्पनी र गुठी गरी दुई प्रकारका हुन्छन्; गुठी विद्यालय सार्वजनिक र निजी गरी दुई प्रकारका हुन्छन्।', 'nepali', true, 1, false)
+  ON CONFLICT (id) DO UPDATE SET order_number = EXCLUDED.order_number, content = EXCLUDED.content, option_a = EXCLUDED.option_a, option_b = EXCLUDED.option_b, option_c = EXCLUDED.option_c, option_d = EXCLUDED.option_d, correct_option = EXCLUDED.correct_option, explanation = EXCLUDED.explanation, is_verified = true;
+  INSERT INTO public.question_set_questions (id, question_set_id, question_id, position)
+  VALUES (extensions.uuid_generate_v5(v_set_id, E'junction:शिक्षा ऐन, २०२८ को सातौं संशोधनले गरेको व्यवस्था तलकामध्ये कुन हो?'), v_set_id, v_q_id, 1)
+  ON CONFLICT (question_set_id, question_id) DO NOTHING;
+
+  v_q_id := extensions.uuid_generate_v5(v_set_id, E'गाउँ शिक्षा वा नगर शिक्षा समितिको व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?');
+  INSERT INTO public.questions (id, set_id, order_number, content, option_a, option_b, option_c, option_d, correct_option, explanation, language, is_verified, audio_version, audio_ready)
+  VALUES (v_q_id, v_set_id, 2, E'गाउँ शिक्षा वा नगर शिक्षा समितिको व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?', E'छैटौं संशोधन', E'सातौं संशोधन', E'आठौं संशोधन', E'नवौं संशोधन', E'B', E'**गाउँ शिक्षा वा नगर शिक्षा समितिको व्यवस्था (दफा ११ट) सातौं संशोधनले थपेको हो।**\\nनोट: यो समितिले गाउँपालिका वा नगरपालिका क्षेत्रभित्र सञ्चालन हुने विद्यालयको व्यवस्थापन, रेखदेख र समन्वय गर्दछ।', 'nepali', true, 1, false)
+  ON CONFLICT (id) DO UPDATE SET order_number = EXCLUDED.order_number, content = EXCLUDED.content, option_a = EXCLUDED.option_a, option_b = EXCLUDED.option_b, option_c = EXCLUDED.option_c, option_d = EXCLUDED.option_d, correct_option = EXCLUDED.correct_option, explanation = EXCLUDED.explanation, is_verified = true;
+  INSERT INTO public.question_set_questions (id, question_set_id, question_id, position)
+  VALUES (extensions.uuid_generate_v5(v_set_id, E'junction:गाउँ शिक्षा वा नगर शिक्षा समितिको व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?'), v_set_id, v_q_id, 2)
+  ON CONFLICT (question_set_id, question_id) DO NOTHING;
+
+  v_q_id := extensions.uuid_generate_v5(v_set_id, E'अध्यापन अनुमतिपत्र अनिवार्य गर्ने व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?');
+  INSERT INTO public.questions (id, set_id, order_number, content, option_a, option_b, option_c, option_d, correct_option, explanation, language, is_verified, audio_version, audio_ready)
+  VALUES (v_q_id, v_set_id, 3, E'अध्यापन अनुमतिपत्र अनिवार्य गर्ने व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?', E'छैटौं संशोधन', E'सातौं संशोधन', E'आठौं संशोधन', E'नवौं संशोधन', E'B', E'**अध्यापन अनुमतिपत्र अनिवार्य गर्ने व्यवस्था सातौं संशोधनले थपेको हो।**', 'nepali', true, 1, false)
+  ON CONFLICT (id) DO UPDATE SET order_number = EXCLUDED.order_number, content = EXCLUDED.content, option_a = EXCLUDED.option_a, option_b = EXCLUDED.option_b, option_c = EXCLUDED.option_c, option_d = EXCLUDED.option_d, correct_option = EXCLUDED.correct_option, explanation = EXCLUDED.explanation, is_verified = true;
+  INSERT INTO public.question_set_questions (id, question_set_id, question_id, position)
+  VALUES (extensions.uuid_generate_v5(v_set_id, E'junction:अध्यापन अनुमतिपत्र अनिवार्य गर्ने व्यवस्था शिक्षा ऐन, २०२८ को कतिऔं संशोधनले थपेको हो?'), v_set_id, v_q_id, 3)
+  ON CONFLICT (question_set_id, question_id) DO NOTHING;
+
+  v_q_id := extensions.uuid_generate_v5(v_set_id, E'शिक्षक बन्न रुचि भएका व्यक्तिहरूलाई अध्यापन अनुमतिपत्र दिने विषयमा आयोगलाई सुझाव दिन गठन हुने शिक्षक काउन्सिलको व्यवस्था शिक्षा ऐनको कतिऔं संशोधनले गरेको हो?');
+  INSERT INTO public.questions (id, set_id, order_number, content, option_a, option_b, option_c, option_d, correct_option, explanation, language, is_verified, audio_version, audio_ready)
+  VALUES (v_q_id, v_set_id, 4, E'शिक्षक बन्न रुचि भएका व्यक्तिहरूलाई अध्यापन अनुमतिपत्र दिने विषयमा आयोगलाई सुझाव दिन गठन हुने शिक्षक काउन्सिलको व्यवस्था शिक्षा ऐनको कतिऔं संशोधनले गरेको हो?', E'छैटौं संशोधन', E'सातौं संशोधन', E'आठौं संशोधन', E'नवौं संशोधन', E'C', E'**शिक्षक काउन्सिलको व्यवस्था (दफा ६ङ) आठौं संशोधनले गरेको हो।**\\nनोट: यस काउन्सिलमा नेपाल शिक्षक महासंघबाट सिफारिस भएका विशेषज्ञ पनि सदस्यका रूपमा रहन्छन्।', 'nepali', true, 1, false)
+  ON CONFLICT (id) DO UPDATE SET order_number = EXCLUDED.order_number, content = EXCLUDED.content, option_a = EXCLUDED.option_a, option_b = EXCLUDED.option_b, option_c = EXCLUDED.option_c, option_d = EXCLUDED.option_d, correct_option = EXCLUDED.correct_option, explanation = EXCLUDED.explanation, is_verified = true;
+  INSERT INTO public.question_set_questions (id, question_set_id, question_id, position)
+  VALUES (extensions.uuid_generate_v5(v_set_id, E'junction:शिक्षक बन्न रुचि भएका व्यक्तिहरूलाई अध्यापन अनुमतिपत्र दिने विषयमा आयोगलाई सुझाव दिन गठन हुने शिक्षक काउन्सिलको व्यवस्था शिक्षा ऐनको कतिऔं संशोधनले गरेको हो?'), v_set_id, v_q_id, 4)
+  ON CONFLICT (question_set_id, question_id) DO NOTHING;
+
+  RAISE NOTICE 'Unit घ-२ upsert complete: 3 sets, 28 questions.';
 END $$;
