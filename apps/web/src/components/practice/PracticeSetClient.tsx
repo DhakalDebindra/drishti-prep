@@ -404,17 +404,19 @@ function PracticeSetView() {
                 <h1 id="main-heading" className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-3xl">
                   {setInfo.title}
                 </h1>
-                <nav aria-label="Breadcrumb">
-                  <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
-                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <Lang>{setInfo.subjectName}</Lang>
-                    </li>
-                    <li aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</li>
-                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <Lang>{setInfo.topicName}</Lang>
-                    </li>
-                  </ol>
-                </nav>
+                {setInfo.subjectName && setInfo.topicName && (
+                  <nav aria-label="Breadcrumb">
+                    <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
+                      <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <Lang>{setInfo.subjectName}</Lang>
+                      </li>
+                      <li aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</li>
+                      <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <Lang>{setInfo.topicName}</Lang>
+                      </li>
+                    </ol>
+                  </nav>
+                )}
               </div>
             </div>
 
