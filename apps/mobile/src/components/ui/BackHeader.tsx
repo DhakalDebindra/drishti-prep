@@ -21,7 +21,7 @@ export function BackHeader({ title }: { title: string }) {
         accessibilityRole="button"
         accessibilityLabel="Go back"
         hitSlop={8}
-        className="h-11 w-11 items-center justify-center rounded-xl border-2 border-foreground/40 bg-card active:bg-muted"
+        className="h-11 w-11 items-center justify-center rounded-xl border-2 border-foreground/40 bg-card active:bg-muted focus:border-ring"
       >
         <Feather name="arrow-left" size={20} className="text-foreground" />
       </Pressable>

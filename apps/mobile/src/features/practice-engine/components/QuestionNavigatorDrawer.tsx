@@ -1,6 +1,9 @@
-import { ScrollView, Pressable, View, Modal, TouchableWithoutFeedback } from 'react-native'
+import { useEffect } from 'react'
+import { ScrollView, Pressable, View, Modal, TouchableWithoutFeedback, AccessibilityInfo } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { Text } from '../../../components/ui/Text'
+import { useAccessibilityFocus } from '../../../hooks/useAccessibilityFocus'
+import { usePreferences } from '../../../providers/PreferencesProvider'
 
 type QuestionNavigatorDrawerProps = {
   visible: boolean
@@ -30,15 +33,27 @@ export function QuestionNavigatorDrawer({
   answeredIndices,
   onSelect,
 }: QuestionNavigatorDrawerProps) {
+  const { ref: closeRef, focus: focusClose } = useAccessibilityFocus()
+  const { reduceMotion } = usePreferences()
+
+  useEffect(() => {
+    if (visible) {
+      const answered = answeredIndices.size
+      AccessibilityInfo.announceForAccessibility(`Jump to question. ${answered} of ${totalQuestions} answered.`)
+      requestAnimationFrame(() => focusClose())
+    }
+  }, [visible, focusClose, answeredIndices, totalQuestions])
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 justify-end bg-black/60">
           <TouchableWithoutFeedback>
-            <View className="max-h-[80%] rounded-t-3xl border-t-2 border-border bg-card pb-12 pt-6">
+            <View accessibilityViewIsModal className="max-h-[80%] rounded-t-3xl border-t-2 border-border bg-card pb-12 pt-6">
               <View className="mb-4 flex-row items-center justify-between px-6">
                 <Text variant="h3">Jump to question</Text>
                 <Pressable
+                  ref={closeRef}
                   onPress={onClose}
                   accessibilityRole="button"
                   accessibilityLabel="Close"
@@ -83,7 +98,7 @@ export function QuestionNavigatorDrawer({
                         accessibilityLabel={`Question ${i + 1}${isCurrent ? ', current' : ''}. ${
                           isAnswered ? 'Answered' : 'Not answered'
                         }.`}
-                        className={`h-14 w-14 items-center justify-center rounded-xl border-2 ${cellClass} active:opacity-80`}
+                        className={`h-14 w-14 items-center justify-center rounded-xl border-2 ${cellClass} active:opacity-80 focus:border-ring`}
                       >
                         <Text className={`text-[17px] font-bold ${textClass}`}>{i + 1}</Text>
                       </Pressable>

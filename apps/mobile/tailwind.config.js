@@ -9,40 +9,46 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      // Colours resolve CSS variables at runtime so the in-app theme switch
+      // (normal / high-contrast, see src/config/highContrastTheme.ts) can
+      // recolor the whole app by swapping vars — no remount, no rebuild.
+      // NOTE: Do not use :root fallback tokens in global.css, as css-interop
+      // resolves :root before parent-inherited vars and breaks the theme switch.
+      // <alpha-value> keeps bg-primary/15 etc. working.
       colors: {
-        background: '#F8FAFC',
-        foreground: '#0F172A',
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
         card: {
-          DEFAULT: '#FFFFFF',
-          foreground: '#0F172A',
+          DEFAULT: 'rgb(var(--card) / <alpha-value>)',
+          foreground: 'rgb(var(--card-foreground) / <alpha-value>)',
         },
         popover: {
-          DEFAULT: '#FFFFFF',
-          foreground: '#0F172A',
+          DEFAULT: 'rgb(var(--popover) / <alpha-value>)',
+          foreground: 'rgb(var(--popover-foreground) / <alpha-value>)',
         },
         primary: {
-          DEFAULT: '#2563EB',
-          foreground: '#FFFFFF',
+          DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+          foreground: 'rgb(var(--primary-foreground) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: '#E2E8F0',
-          foreground: '#0F172A',
+          DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--secondary-foreground) / <alpha-value>)',
         },
         muted: {
-          DEFAULT: '#F1F5F9',
-          foreground: '#64748B',
+          DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
+          foreground: 'rgb(var(--muted-foreground) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#DBEAFE',
-          foreground: '#1E3A8A',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
         },
         destructive: {
-          DEFAULT: '#EF4444',
-          foreground: '#FFFFFF',
+          DEFAULT: 'rgb(var(--destructive) / <alpha-value>)',
+          foreground: 'rgb(var(--destructive-foreground) / <alpha-value>)',
         },
-        border: '#CBD5E1',
-        input: '#CBD5E1',
-        ring: '#3B82F6',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        input: 'rgb(var(--input) / <alpha-value>)',
+        ring: 'rgb(var(--ring) / <alpha-value>)',
       },
       borderRadius: {
         lg: '12px',

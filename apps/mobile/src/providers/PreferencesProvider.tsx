@@ -28,6 +28,9 @@ export type Contrast = 'normal' | 'high-contrast'
 export type Preferences = {
   fontScale: FontScale
   contrast: Contrast
+  answerSound: boolean
+  reduceMotion: boolean
+  haptics: boolean
 }
 
 const FONT_SCALE_MULTIPLIERS: Record<FontScale, number> = {
@@ -44,13 +47,20 @@ export function fontScaleMultiplier(scale: FontScale): number {
 const DEFAULT_PREFERENCES: Preferences = {
   fontScale: 'md',
   contrast: 'normal',
+  answerSound: true,
+  reduceMotion: false,
+  haptics: true,
 }
 
-const STORAGE_KEY = 'dp.preferences.v1'
+const STORAGE_KEY = 'dp.preferences.v3'
+const LEGACY_STORAGE_KEY_V2 = 'dp.preferences.v2'
 
 type PreferencesContextValue = Preferences & {
   setFontScale: (value: FontScale) => void
   setContrast: (value: Contrast) => void
+  setAnswerSound: (value: boolean) => void
+  setReduceMotion: (value: boolean) => void
+  setHaptics: (value: boolean) => void
   /** Convenience multiplier derived from fontScale. */
   fontMultiplier: number
 }
@@ -61,6 +71,9 @@ const PreferencesContext = createContext<PreferencesContextValue>({
   ...DEFAULT_PREFERENCES,
   setFontScale: () => {},
   setContrast: () => {},
+  setAnswerSound: () => {},
+  setReduceMotion: () => {},
+  setHaptics: () => {},
   fontMultiplier: 1,
 })
 
@@ -76,29 +89,59 @@ function isContrast(value: unknown): value is Contrast {
   return value === 'normal' || value === 'high-contrast'
 }
 
+function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean'
+}
+
 export function PreferencesProvider({ children }: PropsWithChildren) {
   const [preferences, setPreferences] = useState<Preferences>(DEFAULT_PREFERENCES)
 
-  // Hydrate from AsyncStorage on mount. The read is async (not a synchronous
-  // setState in the effect body), so it does not trip react-hooks/set-state-in-effect.
   useEffect(() => {
     let cancelled = false
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (cancelled || !raw) return
-        try {
-          const parsed = JSON.parse(raw) as Partial<Preferences>
-          setPreferences({
-            fontScale: isFontScale(parsed.fontScale) ? parsed.fontScale : DEFAULT_PREFERENCES.fontScale,
-            contrast: isContrast(parsed.contrast) ? parsed.contrast : DEFAULT_PREFERENCES.contrast,
-          })
-        } catch {
-          // Corrupt value — keep defaults.
+    
+    // Future profile sync mapping note:
+    // reduceMotion ↔ web profile "motion: 'reduced'"
+
+    const loadPrefs = async () => {
+      try {
+        const rawV3 = await AsyncStorage.getItem(STORAGE_KEY)
+        if (rawV3) {
+          const parsed = JSON.parse(rawV3) as Partial<Preferences>
+          if (!cancelled) {
+            setPreferences({
+              fontScale: isFontScale(parsed.fontScale) ? parsed.fontScale : DEFAULT_PREFERENCES.fontScale,
+              contrast: isContrast(parsed.contrast) ? parsed.contrast : DEFAULT_PREFERENCES.contrast,
+              answerSound: isBoolean(parsed.answerSound) ? parsed.answerSound : DEFAULT_PREFERENCES.answerSound,
+              reduceMotion: isBoolean(parsed.reduceMotion) ? parsed.reduceMotion : DEFAULT_PREFERENCES.reduceMotion,
+              haptics: isBoolean(parsed.haptics) ? parsed.haptics : DEFAULT_PREFERENCES.haptics,
+            })
+          }
+          return
         }
-      })
-      .catch(() => {
-        // Storage unavailable — keep defaults.
-      })
+
+        // Migration from v2
+        const rawV2 = await AsyncStorage.getItem(LEGACY_STORAGE_KEY_V2)
+        if (rawV2) {
+          const parsedV2 = JSON.parse(rawV2) as Partial<Preferences>
+          const migrated: Preferences = {
+            fontScale: isFontScale(parsedV2.fontScale) ? parsedV2.fontScale : DEFAULT_PREFERENCES.fontScale,
+            contrast: isContrast(parsedV2.contrast) ? parsedV2.contrast : DEFAULT_PREFERENCES.contrast,
+            answerSound: isBoolean(parsedV2.answerSound) ? parsedV2.answerSound : DEFAULT_PREFERENCES.answerSound,
+            reduceMotion: DEFAULT_PREFERENCES.reduceMotion,
+            haptics: DEFAULT_PREFERENCES.haptics,
+          }
+          if (!cancelled) {
+            setPreferences(migrated)
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(migrated))
+          }
+        }
+      } catch {
+        // Storage unavailable or corrupt — keep defaults.
+      }
+    }
+    
+    loadPrefs()
+
     return () => {
       cancelled = true
     }
@@ -121,14 +164,32 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
     [persist, preferences],
   )
 
+  const setAnswerSound = useCallback(
+    (value: boolean) => persist({ ...preferences, answerSound: value }),
+    [persist, preferences],
+  )
+
+  const setReduceMotion = useCallback(
+    (value: boolean) => persist({ ...preferences, reduceMotion: value }),
+    [persist, preferences],
+  )
+
+  const setHaptics = useCallback(
+    (value: boolean) => persist({ ...preferences, haptics: value }),
+    [persist, preferences],
+  )
+
   const value = useMemo<PreferencesContextValue>(
     () => ({
       ...preferences,
       setFontScale,
       setContrast,
+      setAnswerSound,
+      setReduceMotion,
+      setHaptics,
       fontMultiplier: fontScaleMultiplier(preferences.fontScale),
     }),
-    [preferences, setFontScale, setContrast],
+    [preferences, setFontScale, setContrast, setAnswerSound, setReduceMotion, setHaptics],
   )
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

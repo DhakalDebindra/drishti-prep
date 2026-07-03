@@ -29,7 +29,7 @@ export function SessionProgress({
           accessibilityRole="button"
           accessibilityLabel="Go back"
           hitSlop={8}
-          className="mr-3 h-11 flex-row items-center rounded-xl border-2 border-foreground/40 bg-background px-3 active:bg-muted"
+          className="mr-3 h-11 flex-row items-center rounded-xl border-2 border-foreground/40 bg-background px-3 active:bg-muted focus:border-ring"
         >
           <Feather name="arrow-left" size={20} className="text-foreground" />
           <Text className="ml-1 font-bold text-foreground">Back</Text>
@@ -43,7 +43,7 @@ export function SessionProgress({
           </Text>
         </View>
       </View>
-      <ProgressBar value={progress} className="h-4" />
+      <ProgressBar value={progress} className="h-4" accessibilityLabel={`${answeredCount} of ${totalCount} answered`} />
     </View>
   )
 }

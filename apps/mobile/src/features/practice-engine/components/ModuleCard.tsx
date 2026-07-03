@@ -11,9 +11,15 @@ type ModuleCardProps = {
 
 export function ModuleCard({ name, subjectCount, setCount, onPress }: ModuleCardProps) {
   return (
-    <Pressable onPress={onPress} className="mb-3 rounded-2xl border border-border bg-card p-5 active:opacity-80">
+    <Pressable
+      onPress={onPress}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`${name}, ${setCount} sets, ${subjectCount} subjects`}
+      className="group/card mb-3 rounded-2xl border border-border bg-card p-5 active:opacity-80 focus:border-ring focus:bg-ring/5"
+    >
       <View className="flex-row items-center justify-between">
-        <Text variant="h3" className="flex-1">{name}</Text>
+        <Text variant="h3" className="flex-1 group-focus/card:text-primary">{name}</Text>
         <Text variant="caption" color="muted">{setCount} sets</Text>
       </View>
       <Text variant="caption" color="muted" className="mt-1">{subjectCount} subjects</Text>
@@ -29,9 +35,15 @@ type SubjectCardProps = {
 
 export function SubjectCard({ name, setCount, onPress }: SubjectCardProps) {
   return (
-    <Pressable onPress={onPress} className="mb-3 rounded-2xl border border-border bg-card p-4 active:opacity-80">
+    <Pressable
+      onPress={onPress}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`${name}, ${setCount} sets`}
+      className="group/card mb-3 rounded-2xl border border-border bg-card p-4 active:opacity-80 focus:border-ring focus:bg-ring/5"
+    >
       <View className="flex-row items-center justify-between">
-        <Text variant="body" className="flex-1">{name}</Text>
+        <Text variant="body" className="flex-1 group-focus/card:text-primary">{name}</Text>
         <Badge variant="free" label={`${setCount}`} />
       </View>
     </Pressable>
@@ -56,10 +68,17 @@ const statusLabel: Record<string, string> = {
 
 export function SetCard({ title, setType, difficultyLevel, questionCount, status, scorePct, onPress }: SetCardProps) {
   const difficulty = difficultyLevel === 1 ? 'Basic' : difficultyLevel === 2 ? 'Intermediate' : 'Advanced'
+  const scoreLabel = scorePct != null ? `Score ${scorePct} percent. ` : ''
 
   return (
-    <Pressable onPress={onPress} className="mb-3 rounded-2xl border border-border bg-card p-4 active:opacity-80">
-      <Text variant="body" className="font-medium">{title}</Text>
+    <Pressable
+      onPress={onPress}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${setType}. ${difficulty}. ${questionCount} questions. ${scoreLabel}${statusLabel[status]}.`}
+      className="group/card mb-3 rounded-2xl border border-border bg-card p-4 active:opacity-80 focus:border-ring focus:bg-ring/5"
+    >
+      <Text variant="body" className="font-medium group-focus/card:text-primary">{title}</Text>
       <View className="mt-1 flex-row items-center gap-3">
         <Text variant="caption" color="muted">{setType}</Text>
         <Text variant="caption" color="muted">{difficulty}</Text>

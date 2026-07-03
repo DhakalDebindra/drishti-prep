@@ -5,6 +5,7 @@ import {
   ScrollView,
   Alert,
   BackHandler,
+  AccessibilityInfo,
   StyleSheet,
   useWindowDimensions,
   type GestureResponderEvent,
@@ -18,6 +19,7 @@ import { useSession } from '../../providers/SessionProvider'
 import { useActiveCourse } from '../../providers/ActiveCourseProvider'
 import { useProfile } from '../../features/profile'
 import { useCourses } from '../../features/courses'
+import { useAccessibilityFocus } from '../../hooks/useAccessibilityFocus'
 
 type MenuItem = { icon: keyof typeof Feather.glyphMap; label: string; route: string }
 
@@ -34,7 +36,7 @@ function MenuRow({ item, onNavigate }: { item: MenuItem; onNavigate: (route: str
       onPress={() => onNavigate(item.route)}
       accessibilityRole="button"
       accessibilityLabel={item.label}
-      className="mb-2 flex-row items-center rounded-2xl border-2 border-border bg-background px-4 py-4 active:bg-muted"
+      className="mb-2 flex-row items-center rounded-2xl border-2 border-border bg-background px-4 py-4 active:bg-muted focus:border-ring"
     >
       <Feather name={item.icon} size={22} className="text-primary" />
       <Text variant="body" className="ml-3 flex-1 font-semibold">
@@ -47,6 +49,14 @@ function MenuRow({ item, onNavigate }: { item: MenuItem; onNavigate: (route: str
 
 export function AppDrawer() {
   const { isOpen, close } = useDrawer()
+  const { ref: closeBtnRef, focus: focusCloseBtn } = useAccessibilityFocus()
+
+  useEffect(() => {
+    if (isOpen) {
+      AccessibilityInfo.announceForAccessibility('Navigation menu opened')
+      requestAnimationFrame(() => focusCloseBtn())
+    }
+  }, [isOpen, focusCloseBtn])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
@@ -105,7 +115,7 @@ export function AppDrawer() {
   // of the NativeWind theme scope, so its `bg-card`/`bg-background` would lose
   // the app's (light) theme. An overlay inside ThemedRoot inherits it correctly.
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 50, elevation: 50 }]}>
+    <View accessibilityViewIsModal style={[StyleSheet.absoluteFill, { zIndex: 50, elevation: 50 }]}>
       {/* Scrim — bg via concrete style (className bg utilities don't apply on a
           View that also has an inline style prop). */}
       <Pressable
@@ -117,6 +127,7 @@ export function AppDrawer() {
 
       {/* Left panel — concrete light-theme background/border via style. */}
       <View
+        className="bg-card border-r-2 border-border"
         style={{
           position: 'absolute',
           left: 0,
@@ -125,9 +136,6 @@ export function AppDrawer() {
           width: PANEL_WIDTH,
           paddingTop: insets.top + 12,
           paddingBottom: insets.bottom + 12,
-          backgroundColor: '#ffffff',
-          borderRightWidth: 2,
-          borderRightColor: '#e2e8f0',
         }}
       >
         {/* Profile header */}
@@ -135,11 +143,12 @@ export function AppDrawer() {
           <View className="flex-row items-center justify-between">
             <Text variant="h2">Profile</Text>
             <Pressable
+              ref={closeBtnRef}
               onPress={close}
               accessibilityRole="button"
               accessibilityLabel="Close menu"
               hitSlop={8}
-              className="h-10 w-10 items-center justify-center rounded-full border-2 border-foreground/30 bg-background active:bg-muted"
+              className="h-10 w-10 items-center justify-center rounded-full border-2 border-foreground/30 bg-background active:bg-muted focus:border-ring"
             >
               <Feather name="x" size={20} className="text-foreground" />
             </Pressable>
@@ -181,7 +190,7 @@ export function AppDrawer() {
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
                     accessibilityLabel={`${course.name}${active ? ', current course' : ''}`}
-                    className={`mb-2 flex-row items-center rounded-2xl border-2 px-4 py-3.5 ${
+                    className={`mb-2 flex-row items-center rounded-2xl border-2 px-4 py-3.5 focus:border-ring ${
                       active ? 'border-primary bg-primary/10' : 'border-border bg-background'
                     }`}
                   >

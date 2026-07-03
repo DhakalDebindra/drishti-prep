@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from './Text'
 import { useSession } from '../../providers/SessionProvider'
 import { useDrawer } from '../../providers/DrawerProvider'
+import { useAccessibilityFocus } from '../../hooks/useAccessibilityFocus'
 
 type ScreenHeaderProps = {
   title: string
@@ -19,6 +20,7 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets()
   const { user } = useSession()
   const { open } = useDrawer()
+  const { ref: avatarRef, focus: focusAvatar } = useAccessibilityFocus()
   const initial = (user?.email?.trim()?.[0] ?? '?').toUpperCase()
 
   return (
@@ -27,11 +29,12 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
       style={{ paddingTop: insets.top + 8 }}
     >
       <Pressable
-        onPress={open}
+        ref={avatarRef}
+        onPress={() => open(focusAvatar)}
         accessibilityRole="button"
         accessibilityLabel="Open profile menu"
         hitSlop={8}
-        className="mr-3 h-11 w-11 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/15 active:opacity-80"
+        className="mr-3 h-11 w-11 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/15 active:opacity-80 focus:border-ring"
       >
         <Text variant="h3" color="accent">
           {initial}

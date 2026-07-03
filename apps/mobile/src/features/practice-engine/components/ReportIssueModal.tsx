@@ -12,6 +12,8 @@ import { Feather } from '@expo/vector-icons'
 import { Text } from '../../../components/ui/Text'
 import { Button } from '../../../components/ui/Button'
 import { useReportIssue } from '../hooks/useReportIssue'
+import { useAccessibilityFocus } from '../../../hooks/useAccessibilityFocus'
+import { usePreferences } from '../../../providers/PreferencesProvider'
 
 const ISSUE_TYPES = [
   'Incorrect Answer Key',
@@ -29,10 +31,12 @@ type ReportIssueModalProps = {
 
 export function ReportIssueModal({ visible, questionId, onClose }: ReportIssueModalProps) {
   const reportIssue = useReportIssue()
+  const { ref: closeRef, focus: focusClose } = useAccessibilityFocus()
   const [issueType, setIssueType] = useState<string | null>(null)
   const [description, setDescription] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { reduceMotion } = usePreferences()
 
   // Reset transient state each time the modal opens for a (possibly different) question.
   useEffect(() => {
@@ -41,8 +45,9 @@ export function ReportIssueModal({ visible, questionId, onClose }: ReportIssueMo
       setDescription('')
       setSubmitted(false)
       setErrorMessage(null)
+      requestAnimationFrame(() => focusClose())
     }
-  }, [visible, questionId])
+  }, [visible, questionId, focusClose])
 
   // Auto-close shortly after a successful submission.
   useEffect(() => {
@@ -71,7 +76,7 @@ export function ReportIssueModal({ visible, questionId, onClose }: ReportIssueMo
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1 items-center justify-center bg-black/50 px-4"
@@ -86,6 +91,7 @@ export function ReportIssueModal({ visible, questionId, onClose }: ReportIssueMo
               Report Issue
             </Text>
             <Pressable
+              ref={closeRef}
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel="Close dialog"
@@ -169,13 +175,14 @@ export function ReportIssueModal({ visible, questionId, onClose }: ReportIssueMo
               </View>
 
               <View className="flex-row gap-3 pt-1">
-                <Button title="Cancel" variant="outline" onPress={onClose} className="flex-1" />
+                <Button title="Cancel" variant="outline" onPress={onClose} className="flex-1" accessibilityLabel="Cancel, return to results" />
                 <Button
                   title="Submit Report"
                   onPress={handleSubmit}
                   loading={reportIssue.isPending}
                   disabled={!issueType || reportIssue.isPending}
                   className="flex-1"
+                  accessibilityLabel="Submit report now"
                 />
               </View>
             </View>

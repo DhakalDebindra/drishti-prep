@@ -8,7 +8,7 @@ export { useReportIssue } from './hooks/useReportIssue'
 export { useAIFeedback } from './hooks/useAIFeedback'
 
 export { ModuleCard } from './components/ModuleCard'
-export { QuestionCard } from './components/QuestionCard'
+export { QuestionCard, type QuestionCardHandle } from './components/QuestionCard'
 export { SessionProgress } from './components/SessionProgress'
 export { SessionResults } from './components/SessionResults'
 export { AIFeedbackPanel } from './components/AIFeedbackPanel'

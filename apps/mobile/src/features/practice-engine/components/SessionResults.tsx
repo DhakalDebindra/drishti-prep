@@ -10,6 +10,8 @@ import { useBookmarkedIds } from '../hooks/useBookmarkedIds'
 import { AIFeedbackPanel } from './AIFeedbackPanel'
 import { ReportIssueModal } from './ReportIssueModal'
 import { toLatinNumerals } from '../../../lib/devanagari'
+import { useAccessibilityFocus } from '../../../hooks/useAccessibilityFocus'
+import { useModalFocusReturn } from '../../../hooks/useModalFocusReturn'
 
 type AnswerResult = {
   questionId: string
@@ -65,6 +67,16 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
     }
   }, [savedIds])
 
+  const { ref: scoreRef, focus: focusScore } = useAccessibilityFocus()
+  useEffect(() => {
+    // Focus score on mount for screen readers
+    setTimeout(focusScore, 500)
+  }, [focusScore])
+
+  const reportRefs = useRef<Record<string, any>>({})
+  const activeReportRef = useRef<any>(null)
+  useModalFocusReturn(reportingQuestionId !== null, activeReportRef)
+
   const handleBookmark = (id: string) => {
     const isBookmarked = bookmarkedIds.has(id)
     setBookmarkedIds(prev => {
@@ -91,6 +103,7 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
   }
 
   const handleReport = (id: string) => {
+    activeReportRef.current = reportRefs.current[id]
     setReportingQuestionId(id)
   }
 
@@ -112,6 +125,7 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
     <>
     <ScrollView className="flex-1 bg-background" contentContainerClassName="px-4 pb-8 pt-14">
       <View 
+        ref={scoreRef}
         accessible={true}
         accessibilityRole="header"
         accessibilityLabel={`Score ${scorePct}%. ${scoreRaw} out of ${questionCount} correct. ${passed ? 'Passed' : 'Needs Improvement'}`}
@@ -166,7 +180,7 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
             accessible={true}
             accessibilityRole="button"
             accessibilityState={{ selected: filter === f }}
-            className={`rounded-full px-4 py-2 border ${
+            className={`rounded-full px-4 py-2 border focus:border-ring ${
               filter === f 
                 ? 'bg-primary border-primary' 
                 : 'bg-card border-border'
@@ -203,7 +217,7 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
                   accessible={true}
                   accessibilityRole="button"
                   accessibilityLabel={a11ySummary}
-                  className="flex-row items-center justify-between p-4 active:bg-secondary/50"
+                  className="flex-row items-center justify-between p-4 active:bg-secondary/50 focus:border-ring focus:bg-secondary/30"
                 >
                   <View className="flex-row items-center flex-1 pr-4">
                     <Text variant="h3" className="mr-3">Q{answer.position}</Text>
@@ -238,6 +252,7 @@ export function SessionResults({ attemptId, scoreRaw, scorePct, questionCount, a
                         </Text>
                       </Pressable>
                       <Pressable 
+                        ref={(r) => { if (r) reportRefs.current[answer.questionId] = r }}
                         onPress={() => handleReport(answer.questionId)}
                         accessible={true}
                         accessibilityRole="button"

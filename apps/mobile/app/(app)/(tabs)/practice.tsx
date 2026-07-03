@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { View, ScrollView, RefreshControl, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter, type Router } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
@@ -63,9 +63,19 @@ function AttemptRow({ attempt, onPress }: { attempt: RecentAttempt; onPress: () 
     ? `${attempt.question_count ?? 0} questions${attempt.submitted_at ? ` · ${formatDate(attempt.submitted_at)}` : ''}`
     : 'In progress'
 
+  const navigatingRef = useRef(false)
+  const handlePress = () => {
+    if (navigatingRef.current) return
+    navigatingRef.current = true
+    setTimeout(() => {
+      navigatingRef.current = false
+    }, 1000)
+    onPress()
+  }
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={toLatinNumerals(
         `${title}. ${isSubmitted ? `Completed, score ${attempt.score_pct ?? 0} percent. Tap to review.` : 'In progress. Tap to resume.'}`,

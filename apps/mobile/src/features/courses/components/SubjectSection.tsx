@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { View, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
@@ -33,7 +33,14 @@ function SetRow({ set }: { set: SetWithAttempt }) {
       ? 'In progress, tap to resume'
       : 'Tap to start practice'
 
+  const navigatingRef = useRef(false)
   const onPress = () => {
+    if (navigatingRef.current) return
+    navigatingRef.current = true
+    setTimeout(() => {
+      navigatingRef.current = false
+    }, 1000)
+
     if (isSubmitted && set.attempt_id) {
       router.push(`/(app)/practice/${set.id}/review?attemptId=${set.attempt_id}`)
     } else {
