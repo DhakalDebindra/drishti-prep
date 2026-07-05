@@ -56,6 +56,9 @@ pnpm-lock.yaml.*
 # scratch / dev artifacts
 scratch/
 
+# Expo CLI local cache (device-specific, regenerable)
+/.expo/
+
 # Playwright test artifacts
 test-results/
 playwright-report/
