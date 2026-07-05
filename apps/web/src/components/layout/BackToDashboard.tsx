@@ -17,8 +17,8 @@ export function BackToDashboard() {
         href="/dashboard"
         className={cn(
           "inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
-          "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50",
-          "dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20"
+          "text-slate-600 hover:text-primary hover:bg-primary/10",
+          "dark:text-slate-400 dark:hover:text-primary dark:hover:bg-primary/20"
         )}
       >
         <ArrowLeft className="w-4 h-4" />

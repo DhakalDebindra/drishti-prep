@@ -40,7 +40,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
         <div className="flex h-16 justify-between">
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shadow-lg shadow-primary/20">
                 DP
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -59,7 +59,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
                     className={cn(
                       "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                        ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200"
                     )}
                   >
@@ -127,7 +127,7 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors",
                     isActive
-                      ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                      ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200"
                   )}
                 >
