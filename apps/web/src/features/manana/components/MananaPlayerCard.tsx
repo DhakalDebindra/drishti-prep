@@ -164,17 +164,17 @@ export function MananaPlayerCard({ episodeId, audioUrl }: MananaPlayerCardProps)
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg text-white flex flex-col items-center gap-6">
+    <div className="bg-primary rounded-xl p-6 shadow-lg text-primary-foreground flex flex-col items-center gap-6">
       <div className="text-center">
         <h3 className="text-xl font-bold">Weekly Revision</h3>
-        <p className="text-sm text-indigo-100 mt-1">
+        <p className="text-sm text-primary-foreground/80 mt-1">
           A guided audio review of the questions you should revisit this week.
         </p>
       </div>
 
       <button
         onClick={togglePlay}
-        className="w-16 h-16 bg-white text-indigo-600 rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-500"
+        className="w-16 h-16 bg-primary-foreground text-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
         aria-label={isPlaying ? "Pause Weekly Revision" : "Play Weekly Revision"}
         aria-pressed={isPlaying}
       >
@@ -194,7 +194,7 @@ export function MananaPlayerCard({ episodeId, audioUrl }: MananaPlayerCardProps)
           value={currentTime}
           onChange={handleScrub}
           aria-label="Audio progress"
-          className="flex-1 h-2 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white focus:outline-none focus-visible:ring-4 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-500"
+          className="flex-1 h-2 bg-primary-foreground/30 rounded-lg appearance-none cursor-pointer accent-primary-foreground focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
         />
         <span className="w-10" aria-hidden="true">{formatTime(duration)}</span>
       </div>
