@@ -16,8 +16,17 @@ export function ConfirmSubmitDialog() {
     actions: { setShowConfirmDialog, submitPracticeSet },
   } = useAttemptStore();
 
+  // Rendered only while open, rather than passing `open={showConfirmDialog}`
+  // to an always-mounted Dialog: this page re-renders frequently enough
+  // (attempt state, tutor hooks, etc.) that Base UI's close animation kept
+  // restarting mid-flight and never reached its end event, leaving the
+  // dialog stuck fully visible and screen-blocking after Cancel. Mounting
+  // only while open forces an immediate, reliable unmount -- no close
+  // animation, but a stuck-forever modal is a worse trade.
+  if (!showConfirmDialog) return null;
+
   return (
-    <Dialog open={showConfirmDialog} onOpenChange={(open) => setShowConfirmDialog(open)}>
+    <Dialog open onOpenChange={(open) => setShowConfirmDialog(open)}>
       <DialogContent className="sm:max-w-[460px] rounded-[1.75rem] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">
