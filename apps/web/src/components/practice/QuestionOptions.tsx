@@ -73,16 +73,16 @@ export const QuestionOptions = memo(
 
           const optionClasses = (() => {
             if (isSelected && selectedAnswer?.is_correct === true) {
-              return "border-success/30 bg-success/10 text-success-foreground shadow-sm";
+              return "border-success/30 bg-success/10 text-success shadow-sm";
             }
             if (isSelected && selectedAnswer?.is_correct === false) {
-              return "border-destructive/30 bg-destructive/10 text-destructive-foreground shadow-sm";
+              return "border-destructive/30 bg-destructive/10 text-destructive shadow-sm";
             }
             if (isCorrectOption && selectedAnswer) {
-              return "border-success/30 bg-success/10 text-success-foreground shadow-sm";
+              return "border-success/30 bg-success/10 text-success shadow-sm";
             }
             if (isSelected) {
-              return "border-primary/30 bg-primary/10 text-primary-foreground shadow-sm";
+              return "border-primary/30 bg-primary/10 text-primary shadow-sm";
             }
             return "border-border bg-card text-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/10";
           })();
@@ -136,10 +136,10 @@ export const QuestionOptions = memo(
                       <div
                         className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
                           selectedAnswer?.is_correct === false
-                            ? "bg-destructive/20 text-destructive-foreground"
+                            ? "bg-destructive/20 text-destructive"
                             : selectedAnswer?.is_correct === true
-                            ? "bg-success/20 text-success-foreground"
-                            : "bg-primary/20 text-primary-foreground"
+                            ? "bg-success/20 text-success"
+                            : "bg-primary/20 text-primary"
                         }`}
                       >
                         {selectedAnswer?.is_correct === false && <XCircle className="h-4 w-4" />}
@@ -156,7 +156,7 @@ export const QuestionOptions = memo(
                       </div>
                     )}
                     {isCorrectOption && selectedAnswer && (
-                      <div className="flex items-center gap-2 rounded-full bg-success/20 px-3 py-1.5 text-sm font-semibold text-success-foreground">
+                      <div className="flex items-center gap-2 rounded-full bg-success/20 px-3 py-1.5 text-sm font-semibold text-success">
                         <CheckCircle2 className="h-4 w-4" />
                         Correct Answer
                       </div>

@@ -71,7 +71,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
       <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary dark:border-primary/50 dark:bg-primary/20 dark:text-primary-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary dark:border-primary/50 dark:bg-primary/20">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               Bookmarks
             </div>
@@ -195,7 +195,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                             className={cn(
                               "rounded-2xl border px-4 py-3 text-sm leading-relaxed transition",
                               isCorrectOption
-                                ? "border-success/30 bg-success/10 text-success-foreground ring-1 ring-success/30"
+                                ? "border-success/30 bg-success/10 text-success ring-1 ring-success/30"
                                 : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300"
                             )}
                           >

@@ -94,7 +94,7 @@ function OptionGroup<T extends string>({
               className={cn(
                 "rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-950",
                 active
-                  ? "border-primary/30 bg-primary/10 text-primary-foreground shadow-sm"
+                  ? "border-primary/30 bg-primary/10 text-primary shadow-sm"
                   : "border-slate-200 bg-white/70 text-slate-700 hover:bg-white dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300 dark:hover:bg-slate-950"
               )}
             >

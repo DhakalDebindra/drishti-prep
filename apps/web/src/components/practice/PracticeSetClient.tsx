@@ -560,7 +560,7 @@ function PracticeSetView() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-white px-5 py-3 text-base font-semibold text-primary shadow-sm transition hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring dark:border-primary/50 dark:bg-slate-950 dark:text-primary-foreground dark:hover:bg-slate-900 [&_svg]:size-5"
+                  className="inline-flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-white px-5 py-3 text-base font-semibold text-primary shadow-sm transition hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring dark:border-primary/50 dark:bg-slate-950 dark:hover:bg-slate-900 [&_svg]:size-5"
                   aria-expanded={state.showExplanation[currentQuestion.id]}
                   aria-controls={`explanation-${currentQuestion.id}`}
                   onClick={() => toggleExplanation(currentQuestion.id)}
@@ -594,7 +594,7 @@ function PracticeSetView() {
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                         Your choice: <span className="font-semibold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
                       </span>
-                      <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-success-foreground">
+                      <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-success">
                         Correct Answer: <span className="font-semibold">{currentQuestion.correct_option}</span>
                       </span>
                     </div>
