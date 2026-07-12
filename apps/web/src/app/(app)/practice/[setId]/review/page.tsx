@@ -4,7 +4,6 @@ import { ScoreOverview } from "@/components/practice/ScoreOverview";
 import { AIFeedbackPanel } from "@/components/practice/AIFeedbackPanel";
 import { QuestionReviewList, ReviewQuestion } from "@/components/practice/QuestionReviewList";
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
-import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
@@ -132,13 +131,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
         submittedAt={attempt.submitted_at}
       />
 
-      <Suspense fallback={
-        <div className="flex h-48 items-center justify-center rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-6 animate-pulse dark:border-slate-800 dark:bg-slate-900/60">
-          <p className="text-slate-500 dark:text-slate-400">Preparing AI insights…</p>
-        </div>
-      }>
-        <AIFeedbackPanel attemptId={attemptId} />
-      </Suspense>
+      <AIFeedbackPanel attemptId={attemptId} />
 
       <QuestionReviewList 
         questions={reviewQuestions} 

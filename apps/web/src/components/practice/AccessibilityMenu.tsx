@@ -280,7 +280,14 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
         <span>{triggerLabel}</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Mounted only while open, not open={open} on an always-mounted Dialog:
+          when rendered inside the practice page's high-churn tree, Base UI's
+          CSS-animation-completion-based unmount kept getting interrupted by
+          re-renders and never closed (see ConfirmSubmitDialog for the same
+          fix and full diagnosis). Mounting conditionally makes close a plain
+          React unmount instead. */}
+      {open && (
+      <Dialog open onOpenChange={setOpen}>
         <DialogContent className="max-h-[calc(100vh-1.5rem)] w-[min(48rem,calc(100vw-1rem))] overflow-y-auto rounded-[2rem] border border-slate-200 bg-white p-0 shadow-[0_20px_80px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950">
           <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800 sm:px-6">
             <DialogHeader>
@@ -389,6 +396,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
           </div>
         </DialogContent>
       </Dialog>
+      )}
     </>
   );
 }

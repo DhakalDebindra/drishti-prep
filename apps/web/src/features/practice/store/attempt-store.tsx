@@ -244,15 +244,33 @@ export function AttemptProvider({
     submitPracticeSet,
   }), [state.currentIndex, questions, setShowConfirmDialog, submitPracticeSet]);
 
+  // Merge + context value both memoized: without this, every render of
+  // AttemptProvider (including ones triggered by state this particular
+  // consumer doesn't care about) produced a brand-new `state` object and a
+  // brand-new context value, so every consumer via useAttemptStore()
+  // re-rendered on every dispatch anywhere in the tree -- unrelated ones
+  // included. That churn was frequent enough to continuously interrupt
+  // Base UI dialogs' CSS close animations before they could complete (see
+  // ConfirmSubmitDialog / AccessibilityMenu fixes).
+  const mergedState = useMemo(
+    () => ({ ...state, isSubmitting, showConfirmDialog }),
+    [state, isSubmitting, showConfirmDialog]
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      state: mergedState,
+      derived,
+      actions,
+      questions,
+      setInfo,
+      userEmail,
+    }),
+    [mergedState, derived, actions, questions, setInfo, userEmail]
+  );
+
   return (
-    <AttemptContext.Provider value={{ 
-    state: { ...state, isSubmitting, showConfirmDialog }, 
-      derived, 
-      actions, 
-      questions, 
-      setInfo, 
-      userEmail 
-    }}>
+    <AttemptContext.Provider value={contextValue}>
       {children}
     </AttemptContext.Provider>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState, startTransition } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Lang } from "@/components/ui/Lang";
 import { RichText } from "@/components/ui/RichText";
@@ -61,10 +61,7 @@ export default function PracticeSetClient(props: Props) {
       userEmail={props.userEmail}
       existingAttempt={props.existingAttempt}
     >
-      {/* Suspense boundary required because PracticeSetView reads useSearchParams. */}
-      <Suspense fallback={null}>
-        <PracticeSetView />
-      </Suspense>
+      <PracticeSetView />
     </AttemptProvider>
   );
 }
@@ -87,9 +84,21 @@ function PracticeSetView() {
   // Listening mode: an audio-first, decluttered layout reachable at
   // ?view=listen. It can be opened in its own tab for a focused, accessible
   // session, and shares the same attempt state and Shruti hooks.
-  const searchParams = useSearchParams();
+  //
+  // Read via window.location instead of useSearchParams(): the latter forces
+  // a <Suspense> boundary around this whole view, and in production that
+  // boundary's streamed content never swaps in from its fallback (stays
+  // stuck in a display:none holding div indefinitely -- see git history for
+  // the diagnosis). Defaulting to false on first render and correcting after
+  // mount means a one-frame flash of the normal view for listen-mode deep
+  // links, which is an acceptable trade for the page actually working.
   const pathname = usePathname();
-  const listenMode = searchParams.get("view") === "listen";
+  const [listenMode, setListenMode] = useState(false);
+  useEffect(() => {
+    startTransition(() => {
+      setListenMode(new URLSearchParams(window.location.search).get("view") === "listen");
+    });
+  }, []);
 
   // ── Tutor voice (Shruti) integration ───────────────────────────────────
   // The preference is loaded once on mount. If guest or off, all tutor paths
@@ -699,6 +708,11 @@ function PracticeSetView() {
           className="md:hidden fixed inset-x-4 bottom-4 z-[110] rounded-[1.75rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-transform duration-300 dark:border-slate-700/80 dark:bg-slate-950/95"
           style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
         >
+          {currentIndex === questionCount - 1 && !canSubmit && state.status !== "submitted" && (
+            <p className="px-2 pb-2 text-center text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
+            </p>
+          )}
           <div className="flex items-center justify-between gap-2">
             <Button
               aria-label="Previous question"

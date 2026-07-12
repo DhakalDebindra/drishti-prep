@@ -14,7 +14,7 @@ import { resolveGeminiApiKey } from "@/lib/env-keys";
 //
 // Pro TTS — better quality but very low daily quota (50/day on free tier).
 // Used for question audio where each clip is heard by many students.
-const _MODEL_PRO = "gemini-2.5-flash-preview-tts"; // Temporarily swapped due to quota
+// const _MODEL_PRO = "gemini-2.5-flash-preview-tts"; // Temporarily swapped due to quota
 // Flash TTS — much higher quotas, slightly less polished. Used for Shruti
 // dictation where the same user may need 100+ chunks per session.
 const MODEL_FLASH =
