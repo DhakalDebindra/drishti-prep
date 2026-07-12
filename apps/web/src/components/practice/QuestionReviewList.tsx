@@ -208,9 +208,9 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                         const isCorrectOpt = question.correct_option === currentOptId;
 
                         const optionClass = isCorrectOpt
-                          ? "border-success/30 bg-success/10 text-success-foreground"
+                          ? "border-success/30 bg-success/10 text-success"
                           : isSelected
-                          ? "border-destructive/30 bg-destructive/10 text-destructive-foreground"
+                          ? "border-destructive/30 bg-destructive/10 text-destructive"
                           : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300";
 
                         return (
