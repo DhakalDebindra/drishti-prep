@@ -13,13 +13,27 @@ import {
   ShieldCheck,
   Settings,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
+import { useFormStatus } from "react-dom";
 import { cn } from "@repo/utils";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/actions/auth";
 
 interface AppNavbarProps {
   userEmail?: string | null;
+}
+
+// Wraps the submit button so it can read the parent <form>'s pending state
+// via useFormStatus. Without this, a tap on a slow mobile connection shows
+// no feedback at all until the redirect lands, which reads as "didn't do
+// anything" and invites a confused second tap.
+function SignOutButton({ children, ...props }: ComponentProps<typeof Button>) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} {...props}>
+      {pending ? "Signing out…" : children}
+    </Button>
+  );
 }
 
 export function AppNavbar({ userEmail }: AppNavbarProps) {
@@ -87,15 +101,14 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
             </div>
 
             <form action={signOutAction}>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                type="submit"
+              <SignOutButton
+                variant="ghost"
+                size="sm"
                 className="text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
-              </Button>
+              </SignOutButton>
             </form>
           </div>
 
@@ -142,10 +155,10 @@ export function AppNavbar({ userEmail }: AppNavbarProps) {
                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{userEmail}</span>
                 </div>
                 <form action={signOutAction} className="px-2">
-                    <Button variant="destructive" className="w-full justify-start" type="submit">
+                    <SignOutButton variant="destructive" className="w-full justify-start">
                         <LogOut className="w-5 h-5 mr-3" />
                         Sign Out
-                    </Button>
+                    </SignOutButton>
                 </form>
             </div>
           </div>

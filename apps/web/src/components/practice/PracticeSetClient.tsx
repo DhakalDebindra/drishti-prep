@@ -699,6 +699,11 @@ function PracticeSetView() {
           className="md:hidden fixed inset-x-4 bottom-4 z-[110] rounded-[1.75rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-transform duration-300 dark:border-slate-700/80 dark:bg-slate-950/95"
           style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
         >
+          {currentIndex === questionCount - 1 && !canSubmit && state.status !== "submitted" && (
+            <p className="px-2 pb-2 text-center text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}).
+            </p>
+          )}
           <div className="flex items-center justify-between gap-2">
             <Button
               aria-label="Previous question"
