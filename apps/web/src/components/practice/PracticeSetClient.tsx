@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState, startTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,9 @@ function PracticeSetView() {
   const pathname = usePathname();
   const [listenMode, setListenMode] = useState(false);
   useEffect(() => {
-    setListenMode(new URLSearchParams(window.location.search).get("view") === "listen");
+    startTransition(() => {
+      setListenMode(new URLSearchParams(window.location.search).get("view") === "listen");
+    });
   }, []);
 
   // ── Tutor voice (Shruti) integration ───────────────────────────────────
