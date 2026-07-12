@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Lang } from "@/components/ui/Lang";
 import { RichText } from "@/components/ui/RichText";
@@ -61,10 +61,7 @@ export default function PracticeSetClient(props: Props) {
       userEmail={props.userEmail}
       existingAttempt={props.existingAttempt}
     >
-      {/* Suspense boundary required because PracticeSetView reads useSearchParams. */}
-      <Suspense fallback={null}>
-        <PracticeSetView />
-      </Suspense>
+      <PracticeSetView />
     </AttemptProvider>
   );
 }
@@ -87,9 +84,19 @@ function PracticeSetView() {
   // Listening mode: an audio-first, decluttered layout reachable at
   // ?view=listen. It can be opened in its own tab for a focused, accessible
   // session, and shares the same attempt state and Shruti hooks.
-  const searchParams = useSearchParams();
+  //
+  // Read via window.location instead of useSearchParams(): the latter forces
+  // a <Suspense> boundary around this whole view, and in production that
+  // boundary's streamed content never swaps in from its fallback (stays
+  // stuck in a display:none holding div indefinitely -- see git history for
+  // the diagnosis). Defaulting to false on first render and correcting after
+  // mount means a one-frame flash of the normal view for listen-mode deep
+  // links, which is an acceptable trade for the page actually working.
   const pathname = usePathname();
-  const listenMode = searchParams.get("view") === "listen";
+  const [listenMode, setListenMode] = useState(false);
+  useEffect(() => {
+    setListenMode(new URLSearchParams(window.location.search).get("view") === "listen");
+  }, []);
 
   // ── Tutor voice (Shruti) integration ───────────────────────────────────
   // The preference is loaded once on mount. If guest or off, all tutor paths

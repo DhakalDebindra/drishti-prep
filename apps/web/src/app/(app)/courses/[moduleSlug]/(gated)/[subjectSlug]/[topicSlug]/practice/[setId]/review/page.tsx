@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ScoreOverview } from "@/components/practice/ScoreOverview";
 import { AIFeedbackPanel } from "@/components/practice/AIFeedbackPanel";
 import { QuestionReviewList, ReviewQuestion } from "@/components/practice/QuestionReviewList";
-import { Suspense } from "react";
 
 type PageProps = {
   params: Promise<{
@@ -109,13 +108,7 @@ export default async function NestedReviewPage({ params, searchParams }: PagePro
         submittedAt={attempt.submitted_at}
       />
 
-      <Suspense fallback={
-        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 h-48 animate-pulse flex items-center justify-center">
-           <p className="text-slate-500">Preparing AI insights...</p>
-        </div>
-      }>
-        <AIFeedbackPanel attemptId={attemptId} />
-      </Suspense>
+      <AIFeedbackPanel attemptId={attemptId} />
 
       <QuestionReviewList 
         questions={reviewQuestions} 
