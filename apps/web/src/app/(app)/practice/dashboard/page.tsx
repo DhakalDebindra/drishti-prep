@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { ArrowRight, BarChart3, Clock3, Sparkles, ListChecks } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
+import { StatCard } from "@/components/ui/stat-card";
+import { WidgetCard } from "@/components/ui/widget-card";
 
 export default async function PracticeDashboardPage() {
   const supabase = await createClient();
@@ -34,21 +36,21 @@ export default async function PracticeDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
+      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">
-            <p className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200">
+            <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               Practice dashboard
             </p>
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+              <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">
                 Dashboard
               </p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
+              <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
                 Your recent practice
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 A calm snapshot of your latest attempts, progress trends, and the practice work you may want to revisit.
               </p>
             </div>
@@ -58,7 +60,7 @@ export default async function PracticeDashboardPage() {
             <PracticeAccessibilityMenu buttonMode="label" />
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Back to main dashboard
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -67,69 +69,44 @@ export default async function PracticeDashboardPage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/60">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-              <BarChart3 className="h-4 w-4" />
-              Average accuracy
-            </div>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
-              {avgPct.toFixed(1)}%
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Across the last {attempts?.length ?? 0} attempts
-            </p>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-            <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
-              <ListChecks className="h-4 w-4" />
-              Completed sets
-            </div>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200">
-              {completedCount}
-            </p>
-            <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-300/80">
-              Finished practice sessions
-            </p>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50/80 p-5 dark:border-cyan-900/50 dark:bg-cyan-950/30">
-            <div className="flex items-center gap-2 text-sm font-medium text-cyan-800 dark:text-cyan-300">
-              <Clock3 className="h-4 w-4" />
-              In progress
-            </div>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-cyan-900 dark:text-cyan-200">
-              {activeCount}
-            </p>
-            <p className="mt-1 text-xs text-cyan-700/80 dark:text-cyan-300/80">
-              Sessions ready to continue
-            </p>
-          </div>
+          <StatCard
+            icon={BarChart3}
+            label="Average accuracy"
+            value={`${avgPct.toFixed(1)}%`}
+            tone="primary"
+          />
+          <StatCard
+            icon={ListChecks}
+            label="Completed sets"
+            value={completedCount}
+            tone="success"
+          />
+          <StatCard
+            icon={Clock3}
+            label="In progress"
+            value={activeCount}
+            tone="primary"
+          />
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800 sm:px-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-              Recent attempts
-            </p>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Your latest practice sessions in one place.
-            </p>
-          </div>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+      <WidgetCard
+        title="Recent attempts"
+        subtitle="Your latest practice sessions in one place."
+        contentClassName="p-0"
+        actionSlot={
+          <span className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
             {attempts?.length ?? 0} shown
           </span>
-        </div>
-
-        <div className="divide-y divide-slate-200 dark:divide-slate-800">
+        }
+      >
+        <div className="divide-y divide-border">
           {(attempts ?? []).length === 0 && (
             <div className="px-5 py-10 text-center sm:px-6">
-              <p className="text-base font-medium text-slate-900 dark:text-white">
+              <p className="text-base font-medium text-foreground">
                 No attempts yet.
               </p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Start a practice set to see your progress here.
               </p>
             </div>
@@ -146,19 +123,19 @@ export default async function PracticeDashboardPage() {
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
                       isSubmitted
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
-                        : "bg-cyan-100 text-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200"
+                        ? "bg-success/10 text-success"
+                        : "bg-primary/10 text-primary"
                     }`}>
                       {isSubmitted ? "Submitted" : "In progress"}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                       {attempt.question_count ?? 0} questions
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold tracking-tight text-slate-950 dark:text-white">
+                  <h3 className="text-base font-semibold tracking-tight text-foreground">
                     {title}
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground">
                     {attempt.submitted_at
                       ? new Date(attempt.submitted_at).toLocaleDateString("en-US", {
                           month: "short",
@@ -171,16 +148,16 @@ export default async function PracticeDashboardPage() {
 
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {attempt.score_raw ?? 0}/{attempt.question_count ?? 0}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {scorePct.toFixed(1)}%
                     </p>
                   </div>
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:w-32">
+                  <div className="h-2 w-24 overflow-hidden rounded-full bg-muted sm:w-32">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${Math.max(5, scorePct)}%` }}
                     />
                   </div>
@@ -189,7 +166,7 @@ export default async function PracticeDashboardPage() {
             );
           })}
         </div>
-      </div>
+      </WidgetCard>
     </section>
   );
 }

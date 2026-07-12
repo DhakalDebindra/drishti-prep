@@ -12,13 +12,13 @@ export function QuestionNavigator() {
   return (
     <nav
       aria-label="Question Navigator"
-      className="mt-2 rounded-[1.75rem] border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-5"
+      className="mt-2 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <h3 className="text-sm font-semibold text-foreground">
           Question Navigator
         </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-muted-foreground">
           Jump between questions
         </p>
       </div>
@@ -38,12 +38,12 @@ export function QuestionNavigator() {
             : "outline";
 
           const statusClasses = isCurrent
-            ? "ring-2 ring-ring ring-offset-2 ring-offset-white dark:ring-offset-slate-950 font-semibold"
+            ? "ring-2 ring-ring ring-offset-2 ring-offset-background font-semibold"
             : isAnswered
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : isSkipped
-            ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
-            : "bg-white text-slate-700 hover:bg-primary/10 hover:text-primary dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-primary";
+            ? "bg-muted text-foreground hover:bg-muted/70"
+            : "bg-card text-foreground hover:bg-primary/10 hover:text-primary";
 
           const status = isAnswered ? "answered" : isSkipped ? "skipped" : "unanswered";
           const currentLabel = isCurrent ? "currently active" : "";
@@ -53,7 +53,7 @@ export function QuestionNavigator() {
             <Button
               key={index}
               variant={variant}
-              className={`h-11 w-11 p-0 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-ring dark:focus-visible:ring-offset-slate-950 ${statusClasses}`}
+              className={`h-11 w-11 p-0 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${statusClasses}`}
               aria-label={ariaLabel}
               aria-current={isCurrent ? "true" : undefined}
               onClick={() => jumpToQuestion(index)}

@@ -34,15 +34,15 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
       <div
         aria-live="polite"
         aria-atomic="true"
-        className="rounded-[2rem] border border-white/70 bg-white/85 p-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8"
+        className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm md:p-8"
       >
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-300">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Sparkles className="h-5 w-5 animate-pulse" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground">
           AI is analyzing your performance...
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Looking for patterns in your correct and incorrect answers to build personalized feedback.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
         aria-live="assertive"
         aria-atomic="true"
         role="alert"
-        className="rounded-[2rem] border border-rose-200 bg-rose-50 p-6 text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200 md:p-8"
+        className="rounded-3xl border border-destructive/30 bg-destructive/10 p-6 text-destructive shadow-sm md:p-8"
       >
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
@@ -80,18 +80,18 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
     <div
       aria-live="polite"
       aria-atomic="true"
-      className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8"
+      className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
     >
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+          <div className="rounded-2xl bg-primary/10 p-3 text-primary">
             <BrainCircuit className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
               AI Analysis & Insights
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm text-muted-foreground">
               Powered by DrishtiPrep AI
             </p>
           </div>
@@ -100,12 +100,12 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
 
       <div className="space-y-6">
         {feedback.strengths && (
-          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/60">
-            <div className="mb-3 flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+          <div className="rounded-2xl border border-border bg-muted/40 p-5">
+            <div className="mb-3 flex items-center gap-2 text-success">
               <Lightbulb className="h-5 w-5" />
               <h3 className="text-lg font-bold">Overall Performance</h3>
             </div>
-            <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <div className="text-sm leading-relaxed text-foreground">
               <RichText>{feedback.strengths}</RichText>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
 
         {weakZones.length > 0 && (
           <div>
-            <div className="mb-3 flex items-center gap-2 text-cyan-700 dark:text-cyan-300">
+            <div className="mb-3 flex items-center gap-2 text-primary">
               <Sparkles className="h-5 w-5" />
               <h3 className="text-lg font-bold">Recommended Focus Areas</h3>
             </div>
@@ -121,9 +121,9 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
               {weakZones.map((zone, idx) => (
                 <div
                   key={idx}
-                  className="flex gap-3 rounded-[1.4rem] border border-cyan-200 bg-cyan-50/70 p-4 text-sm leading-relaxed text-slate-700 dark:border-cyan-900/40 dark:bg-cyan-950/20 dark:text-slate-200"
+                  className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm leading-relaxed text-foreground"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-200 text-xs font-bold text-cyan-900 dark:bg-cyan-900/50 dark:text-cyan-100">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                     {idx + 1}
                   </span>
                   <div className="flex-1">

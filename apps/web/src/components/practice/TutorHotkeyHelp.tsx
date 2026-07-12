@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   open: boolean;
@@ -35,7 +36,7 @@ export function TutorHotkeyHelp({ open, onClose }: Props) {
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4"
       onClick={onClose}
     >
       <div
@@ -45,33 +46,29 @@ export function TutorHotkeyHelp({ open, onClose }: Props) {
         tabIndex={-1}
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
-        className="max-w-md w-full rounded-lg bg-white dark:bg-slate-900 shadow-xl p-6 outline-none focus:ring-4 focus:ring-blue-400"
+        className="max-w-md w-full rounded-2xl border border-border bg-card shadow-xl p-6 outline-none focus:ring-4 focus:ring-ring"
       >
         <h2
           id="tutor-hotkey-help-title"
-          className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4"
+          className="text-lg font-semibold text-foreground mb-4"
         >
           Tutor voice shortcuts
         </h2>
         <dl className="space-y-2 text-sm">
           {TUTOR_HOTKEYS.map((h) => (
             <div key={h.action} className="flex items-center justify-between gap-4">
-              <dt className="text-gray-700 dark:text-gray-300">{h.description}</dt>
+              <dt className="text-muted-foreground">{h.description}</dt>
               <dd>
-                <kbd className="font-mono text-xs px-2 py-1 rounded bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700">
+                <kbd className="font-mono text-xs px-2 py-1 rounded bg-muted border border-border text-foreground">
                   {h.label}
                 </kbd>
               </dd>
             </div>
           ))}
         </dl>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-6 inline-flex rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 focus:outline-none focus:ring-4 focus:ring-blue-400"
-        >
+        <Button type="button" variant="default" className="mt-6" onClick={onClose}>
           Close
-        </button>
+        </Button>
       </div>
     </div>
   );

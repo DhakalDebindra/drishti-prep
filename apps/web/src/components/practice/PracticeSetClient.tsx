@@ -226,13 +226,7 @@ function PracticeSetView() {
 
   if (listenMode) {
     return (
-      <main className="relative min-h-screen overflow-x-clip bg-gradient-to-b from-slate-50 via-white to-teal-50/60 px-4 py-4 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50 sm:px-6 sm:py-6">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-500/10" />
-          <div className="absolute right-[-5rem] top-1/3 h-64 w-64 rounded-full bg-cyan-200/25 blur-3xl dark:bg-cyan-500/10" />
-          <div className="absolute bottom-[-5rem] left-[-4rem] h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl dark:bg-emerald-500/10" />
-        </div>
-
+      <main className="relative min-h-screen overflow-x-clip bg-background px-4 py-4 text-foreground sm:px-6 sm:py-6">
         <section className="relative mx-auto flex max-w-2xl flex-col gap-6">
           <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
             {state.announcementText}
@@ -382,20 +376,14 @@ function PracticeSetView() {
   }
 
   return (
-    <main className="fixed inset-0 z-[100] overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-teal-50/60 text-slate-900 selection:bg-teal-200 selection:text-slate-950 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-[-6rem] h-72 w-72 -translate-x-1/2 rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-500/10" />
-        <div className="absolute right-[-5rem] top-1/3 h-64 w-64 rounded-full bg-cyan-200/25 blur-3xl dark:bg-cyan-500/10" />
-        <div className="absolute bottom-[-5rem] left-[-4rem] h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl dark:bg-emerald-500/10" />
-      </div>
-
+    <main className="fixed inset-0 z-[100] overflow-y-auto bg-background text-foreground selection:bg-primary/20 selection:text-foreground">
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-4 py-4 pb-36 sm:px-6 sm:py-6 md:px-8 md:py-8 md:pb-12">
         <div aria-live="polite" aria-atomic="true" role="status" className="sr-only">
           {state.announcementText}
         </div>
 
         <header className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:px-6 sm:py-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
@@ -504,7 +492,7 @@ function PracticeSetView() {
                   </div>
                   <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800 sm:w-40">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-500"
+                      className="h-full rounded-full bg-primary transition-all duration-500"
                       style={{ width: `${Math.max(5, answeredProgress)}%` }}
                     />
                   </div>
