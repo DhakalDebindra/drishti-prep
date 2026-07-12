@@ -84,7 +84,7 @@ export const QuestionOptions = memo(
             if (isSelected) {
               return "border-primary/30 bg-primary/10 text-primary-foreground shadow-sm";
             }
-            return "border-slate-200 bg-white text-slate-800 shadow-sm hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/10 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100 dark:hover:border-primary/50 dark:hover:bg-primary/10";
+            return "border-border bg-card text-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/10";
           })();
 
           return (
@@ -101,7 +101,7 @@ export const QuestionOptions = memo(
                 if (isSubmitted) return;
                 onSelect(option.value);
               }}
-              className={`group relative w-full rounded-[1.5rem] border p-4 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ring forced-colors:focus-visible:outline-[Highlight] sm:p-5 ${optionClasses} ${
+              className={`group relative w-full rounded-2xl border p-4 text-left transition-all duration-200 focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ring forced-colors:focus-visible:outline-[Highlight] sm:p-5 ${optionClasses} ${
                 isSubmitted ? "cursor-not-allowed opacity-95" : "cursor-pointer"
               }`}
             >
@@ -117,7 +117,7 @@ export const QuestionOptions = memo(
                       ? "border-success bg-success text-success-foreground"
                       : isSelected
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-slate-300 bg-white text-slate-700 group-hover:border-primary group-hover:text-primary dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:group-hover:border-primary dark:group-hover:text-primary"
+                      : "border-border bg-card text-foreground group-hover:border-primary group-hover:text-primary"
                   }`}
                 >
                   {option.value}
@@ -126,11 +126,7 @@ export const QuestionOptions = memo(
                 <div className="min-w-0 flex-1 space-y-3 pt-1">
                   <p
                     id={optionLabelId}
-                    className={`text-base font-semibold leading-relaxed transition-colors sm:text-lg md:text-xl ${
-                      isSelected || (isCorrectOption && selectedAnswer)
-                        ? "text-slate-950 dark:text-white"
-                        : "text-slate-800 dark:text-slate-100"
-                    }`}
+                    className="text-base font-semibold leading-relaxed text-foreground transition-colors sm:text-lg md:text-xl"
                   >
                     <Lang>{option.text}</Lang>
                   </p>

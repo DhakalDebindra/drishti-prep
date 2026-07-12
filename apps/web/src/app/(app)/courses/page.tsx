@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Lang } from "@/components/ui/Lang";
-import { SeeMoreText } from "@/components/ui/SeeMoreText";
+import { CourseCard } from "@/components/courses/CourseCard";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +24,7 @@ export default async function CoursesIndexPage() {
       .select("module_id")
       .eq("user_id", user.id)
       .eq("status", "approved");
-    
+
     if (enrollments) {
       enrolledModuleIds = new Set(enrollments.map((e: any) => e.module_id));
     }
@@ -35,55 +33,39 @@ export default async function CoursesIndexPage() {
   return (
     <section className="space-y-6 max-w-5xl mx-auto px-4 py-8">
       <div>
-        <p className="text-sm uppercase tracking-wide text-gray-500">Learning Paths</p>
-        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">Available Courses</h1>
-        <p className="text-gray-600">Choose a course module to start your preparation.</p>
+        <p className="text-sm uppercase tracking-wide text-muted-foreground">Learning Paths</p>
+        <h1 id="main-heading" className="text-2xl font-semibold text-foreground">Available Courses</h1>
+        <p className="text-muted-foreground">Choose a course module to start your preparation.</p>
         {error && (
-          <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             Unable to load courses right now. Please retry.
           </p>
         )}
       </div>
       {!modules || modules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-gray-600">
+        <div className="rounded-xl border border-dashed border-border bg-card p-6 text-muted-foreground">
           No courses are available yet.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((module: any) => (
-            <Link
-              key={module.id}
-              href={`/courses/${module.slug}`}
-              className="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md hover:border-blue-200"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  <Lang>{module.name}</Lang>
-                </h2>
-                <div className="flex flex-col items-end gap-1">
-                  {enrolledModuleIds.has(module.id) ? (
-                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                      Enrolled ✓
-                    </span>
-                  ) : module.price_paisa ? (
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                      NPR {module.price_paisa / 100}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                      Free
-                    </span>
-                  )}
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-gray-600 flex-grow">
-                {module.description ? <SeeMoreText text={module.description} maxLength={120} /> : "Explore subjects and topics within this module."}
-              </p>
-              <div className="mt-4 flex items-center text-sm font-medium text-blue-600">
-                {enrolledModuleIds.has(module.id) || !module.price_paisa ? "Access Course" : "Enroll"} <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-          ))}
+          {modules.map((module: any) => {
+            const isEnrolled = enrolledModuleIds.has(module.id);
+            const isFree = !module.price_paisa;
+            const canAccess = isEnrolled || isFree;
+
+            return (
+              <CourseCard
+                key={module.id}
+                href={`/courses/${module.slug}`}
+                name={module.name}
+                description={module.description}
+                badgeLabel={isEnrolled ? "Enrolled" : isFree ? "Free" : `NPR ${module.price_paisa / 100}`}
+                badgeTone={canAccess ? "success" : "primary"}
+                ctaLabel={canAccess ? "Access Course" : "Enroll"}
+                ctaVariant={canAccess ? "outline" : "default"}
+              />
+            );
+          })}
         </div>
       )}
     </section>
