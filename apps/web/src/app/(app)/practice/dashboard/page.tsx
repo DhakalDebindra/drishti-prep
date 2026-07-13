@@ -47,7 +47,7 @@ export default async function PracticeDashboardPage() {
               <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">
                 Dashboard
               </p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+              <h1 id="main-heading" className="mt-1 text-3xl font-bold tracking-tight text-foreground">
                 Your recent practice
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
