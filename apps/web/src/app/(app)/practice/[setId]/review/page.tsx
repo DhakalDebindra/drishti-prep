@@ -97,7 +97,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
 
   return (
     <div className="mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
+      <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">

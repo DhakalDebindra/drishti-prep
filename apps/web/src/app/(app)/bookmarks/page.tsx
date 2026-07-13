@@ -55,7 +55,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/40 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 dark:text-slate-50">
         <div className="relative mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-          <div className="rounded-[2rem] border border-rose-200/60 bg-rose-50/80 p-8 shadow-sm dark:border-rose-900/40 dark:bg-rose-950/20">
+          <div className="rounded-3xl border border-rose-200/60 bg-rose-50/80 p-8 shadow-sm dark:border-rose-900/40 dark:bg-rose-950/20">
             <h2 className="text-xl font-bold text-rose-900 dark:text-rose-100">Failed to load bookmarks</h2>
             <p className="mt-2 text-sm leading-relaxed text-rose-800/80 dark:text-rose-200/80">
               There was an error connecting to the database. Please try again later.

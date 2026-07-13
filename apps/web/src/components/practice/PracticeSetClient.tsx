@@ -25,7 +25,7 @@ import type {
 } from "@repo/types";
 import { QuestionOptions, optionKeys } from "@/components/practice/QuestionOptions";
 import { QuestionContent } from "@/components/practice/QuestionContent";
-import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp, Sparkles, Headphones } from "lucide-react";
 
 type Props = {
   setInfo: {
@@ -241,7 +241,7 @@ function PracticeSetView() {
             {state.announcementText}
           </div>
 
-          <header className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:p-6">
+          <header className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
               Shruti · Listening mode
             </p>
@@ -282,7 +282,7 @@ function PracticeSetView() {
             </p>
           )}
 
-          <div className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-6">
+          <div className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-6">
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
@@ -391,7 +391,7 @@ function PracticeSetView() {
           {state.announcementText}
         </div>
 
-        <header className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:px-6 sm:py-6">
+        <header className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:px-6 sm:py-6">
           <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
@@ -424,7 +424,8 @@ function PracticeSetView() {
                   href={`${pathname}?view=listen`}
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
                 >
-                  🎧 Listen mode
+                  <Headphones className="h-4 w-4" aria-hidden="true" />
+                  Listen mode
                 </Link>
               )}
               <Link
@@ -465,7 +466,7 @@ function PracticeSetView() {
           </p>
         )}
 
-        <div className={`practice-experience-container flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 ${state.status === "submitted" ? "opacity-95" : ""}`}>
+        <div className={`practice-experience-container flex flex-col overflow-hidden rounded-3xl border border-white/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 ${state.status === "submitted" ? "opacity-95" : ""}`}>
           <div className="border-b border-slate-200/80 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -489,7 +490,7 @@ function PracticeSetView() {
 
           <div className="flex flex-1 flex-col gap-8 p-5 sm:p-6 md:p-8">
             <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
@@ -519,7 +520,7 @@ function PracticeSetView() {
                 </div>
               </div>
 
-              <aside className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-5">
+              <aside className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                   Session tips
                 </p>
@@ -565,7 +566,7 @@ function PracticeSetView() {
               )}
 
             {(state.status === "submitted" || (state.answers[currentQuestion.id] && state.answers[currentQuestion.id].selected_option !== "skipped")) && (
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
                 <Button
                   type="button"
                   variant="outline"
@@ -587,7 +588,7 @@ function PracticeSetView() {
                 {state.showExplanation[currentQuestion.id] && (
                   <div
                     id={`explanation-${currentQuestion.id}`}
-                    className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 text-slate-800 shadow-inner dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200 sm:p-6"
+                    className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-inner dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200 sm:p-6"
                     role="region"
                     aria-live="polite"
                   >
@@ -705,7 +706,7 @@ function PracticeSetView() {
         </div>
 
         <div
-          className="md:hidden fixed inset-x-4 bottom-4 z-[110] rounded-[1.75rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-transform duration-300 dark:border-slate-700/80 dark:bg-slate-950/95"
+          className="md:hidden fixed inset-x-4 bottom-4 z-[110] rounded-3xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-transform duration-300 dark:border-slate-700/80 dark:bg-slate-950/95"
           style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
         >
           {currentIndex === questionCount - 1 && !canSubmit && state.status !== "submitted" && (

@@ -27,7 +27,7 @@ export function ConfirmSubmitDialog() {
 
   return (
     <Dialog open onOpenChange={(open) => setShowConfirmDialog(open)}>
-      <DialogContent className="sm:max-w-[460px] rounded-[1.75rem] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
+      <DialogContent className="sm:max-w-[460px] rounded-3xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">
             Confirm submission

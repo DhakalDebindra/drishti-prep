@@ -11,6 +11,7 @@ import {
   PaceConfig,
 } from "@/features/shruti";
 import { useDictationRuntime } from "@/features/shruti/useDictationRuntime";
+import { Mic } from "lucide-react";
 import {
   ExtractionResult,
   extractImagesText,
@@ -835,7 +836,7 @@ export default function ShrutiDictationPage() {
                     : "text-slate-400"
                 }
               >
-                🎤
+                <Mic className="h-4 w-4" aria-hidden="true" />
               </span>
             )}
           </div>
