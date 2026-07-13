@@ -95,7 +95,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
         {announcement}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-4 rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
             Review
@@ -129,7 +129,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
 
       <div className="space-y-4">
         {filteredQuestions.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white/85 px-6 py-10 text-center text-slate-600 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-300">
+          <div className="rounded-3xl border border-slate-200 bg-white/85 px-6 py-10 text-center text-slate-600 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-300">
             No questions match this filter.
           </div>
         ) : (
@@ -145,7 +145,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
             return (
               <article
                 key={question.id}
-                className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white/85 shadow-sm backdrop-blur-xl transition dark:border-slate-800 dark:bg-slate-950/70"
+                className="overflow-hidden rounded-3xl border border-slate-200 bg-white/85 shadow-sm backdrop-blur-xl transition dark:border-slate-800 dark:bg-slate-950/70"
               >
                 <div className="flex items-start gap-4 p-5 transition hover:bg-slate-50/80 dark:hover:bg-slate-900/50">
                   <div className={`mt-0.5 ${statusColor}`} aria-hidden="true">
@@ -216,7 +216,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                         return (
                           <li
                             key={opt}
-                            className={`flex items-center gap-3 rounded-[1.25rem] border p-3 text-sm ${optionClass}`}
+                            className={`flex items-center gap-3 rounded-2xl border p-3 text-sm ${optionClass}`}
                             aria-label={
                               isCorrectOpt
                                 ? isSelected
@@ -237,7 +237,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                       })}
                     </ul>
 
-                    <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
                       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                         Explanation
                       </span>

@@ -77,7 +77,7 @@ function OptionGroup<T extends string>({
   onChange: (next: T) => void;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+    <section className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
         <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h4>
@@ -288,7 +288,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
           React unmount instead. */}
       {open && (
       <Dialog open onOpenChange={setOpen}>
-        <DialogContent className="max-h-[calc(100vh-1.5rem)] w-[min(48rem,calc(100vw-1rem))] overflow-y-auto rounded-[2rem] border border-slate-200 bg-white p-0 shadow-[0_20px_80px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950">
+        <DialogContent className="max-h-[calc(100vh-1.5rem)] w-[min(48rem,calc(100vw-1rem))] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-0 shadow-[0_20px_80px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950">
           <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800 sm:px-6">
             <DialogHeader>
               <div className="flex items-start justify-between gap-4">
@@ -357,7 +357,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
               onChange={(value) => updatePreference("focusMode", value)}
             />
 
-            <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <section className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="mb-3 flex items-center gap-2">
                 <Keyboard className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
                 <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Shortcut summary</h4>
@@ -377,7 +377,7 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
               </dl>
             </section>
 
-            <div className="flex flex-col gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-slate-600 dark:text-slate-300">
                 {status === "saving" && "Saving your preferences…"}
                 {status === "saved" && statusMessage}
