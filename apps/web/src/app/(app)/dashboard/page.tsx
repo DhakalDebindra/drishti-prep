@@ -10,6 +10,8 @@ import { fetchMemoryHeat } from "@/lib/manana/heat-aggregate";
 import { MananaPlayerCard } from "@/features/manana/components/MananaPlayerCard";
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
 import { CourseCard } from "@/components/courses/CourseCard";
+import { DashboardWelcomeCard } from "@/components/dashboard/DashboardWelcomeCard";
+import { Lang } from "@/components/ui/Lang";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -98,7 +100,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 id="main-heading" className="text-3xl font-bold tracking-tight text-foreground">
@@ -111,6 +113,8 @@ export default async function DashboardPage() {
           <PracticeAccessibilityMenu buttonMode="label" />
         </div>
 
+        <DashboardWelcomeCard />
+
         <IdentityVerifyPrompt shouldShow={disabilityStatus === "not_submitted"} />
 
         <IdentityStatusBanner
@@ -119,8 +123,10 @@ export default async function DashboardPage() {
         />
 
         {activeCourses.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">Your Active Courses</h2>
+          <section aria-labelledby="dash-courses-heading" className="space-y-4">
+            <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
+              <Lang>सक्रिय कोर्सहरू</Lang>
+            </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {activeCourses.map((course: any) => (
                 <CourseCard
@@ -135,29 +141,42 @@ export default async function DashboardPage() {
                 />
               ))}
             </div>
+          </section>
+        )}
+
+        <section aria-labelledby="dash-progress-heading" className="space-y-6">
+          <h2 id="dash-progress-heading" className="text-xl font-bold tracking-tight text-foreground">
+            <Lang>प्रगति</Lang>
+          </h2>
+          <div id="analytics">
+            <MacroAnalytics attempts={safeAttempts} />
           </div>
-        )}
-
-        <div id="analytics">
-          <MacroAnalytics attempts={safeAttempts} />
-        </div>
-
-        {episode && mananaSignedUrl && (
-          <MananaPlayerCard
-            episodeId={episode.id}
-            audioUrl={mananaSignedUrl}
+          <MemoryHeatWidget
+            overallHeat={memoryHeat.overallHeat}
+            totalQuestions={memoryHeat.totalQuestions}
+            coldestTopics={memoryHeat.coldestTopics}
           />
-        )}
+        </section>
 
-        <MemoryHeatWidget
-          overallHeat={memoryHeat.overallHeat}
-          totalQuestions={memoryHeat.totalQuestions}
-          coldestTopics={memoryHeat.coldestTopics}
-        />
+        <section aria-labelledby="dash-practice-heading" className="space-y-6">
+          <h2 id="dash-practice-heading" className="text-xl font-bold tracking-tight text-foreground">
+            <Lang>अभ्यास</Lang>
+          </h2>
+          {episode && mananaSignedUrl && (
+            <MananaPlayerCard
+              episodeId={episode.id}
+              audioUrl={mananaSignedUrl}
+            />
+          )}
+          <PracticeBanners attempts={safeAttempts} />
+        </section>
 
-        <PracticeBanners attempts={safeAttempts} />
-
-        <AttemptHistoryList attempts={safeAttempts} />
+        <section aria-labelledby="dash-history-heading" className="space-y-6">
+          <h2 id="dash-history-heading" className="text-xl font-bold tracking-tight text-foreground">
+            <Lang>इतिहास</Lang>
+          </h2>
+          <AttemptHistoryList attempts={safeAttempts} />
+        </section>
       </div>
     </div>
   );
