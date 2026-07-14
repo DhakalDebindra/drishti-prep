@@ -69,17 +69,35 @@ export default async function DashboardPage() {
 
   const safeAttempts = attempts as any[] || [];
 
-  // Recently-studied courses: the distinct modules behind the learner's
-  // attempts, most-recently-started first. Derived from practice (not paid
-  // enrollment) so it works for free/universal courses too.
-  const recentCourses: { id: string; name: string; slug: string }[] = [];
-  const seenCourseIds = new Set<string>();
+  // The single course the learner most recently practised — the one to resume.
+  // Derived from attempts (not paid enrollment) so it works for free/universal
+  // courses too. Switching between all courses lives in the navbar's
+  // "My Courses" menu, which keeps the two surfaces distinct.
+  let latestCourse: { id: string; name: string; slug: string } | null = null;
   for (const attempt of safeAttempts) {
     const mod = attempt?.question_sets?.topic?.subject?.module;
-    if (mod?.id && mod?.slug && mod?.name && !seenCourseIds.has(mod.id)) {
-      seenCourseIds.add(mod.id);
-      recentCourses.push({ id: mod.id, name: mod.name, slug: mod.slug });
-      if (recentCourses.length >= 6) break;
+    if (mod?.id && mod?.slug && mod?.name) {
+      latestCourse = { id: mod.id, name: mod.name, slug: mod.slug };
+      break;
+    }
+  }
+
+  // Fallback for learners with nothing to resume yet (no practice history):
+  // surface a free course so the section is a starting point instead of empty.
+  // Enrolled courses always remain reachable from the navbar "My Courses" menu.
+  const isResuming = latestCourse !== null;
+  let courseToShow = latestCourse;
+  if (!courseToShow) {
+    const { data: freeModules } = await (supabase as any)
+      .from("modules")
+      .select("id, name, slug, price_paisa")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+    const free = (
+      (freeModules ?? []) as { id: string; name: string; slug: string; price_paisa: number | null }[]
+    ).find((m) => !m.price_paisa);
+    if (free) {
+      courseToShow = { id: free.id, name: free.name, slug: free.slug };
     }
   }
 
@@ -130,15 +148,17 @@ export default async function DashboardPage() {
           rejectionReason={profile?.disability_rejection_reason ?? null}
         />
 
-        {recentCourses.length > 0 && (
+        {courseToShow && (
           <section aria-labelledby="dash-courses-heading" className="space-y-4">
             <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
-              Continue studying
+              {isResuming ? "Continue studying" : "Start learning"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Open a course you have been practising and jump straight to a subject, topic, or set.
+              {isResuming
+                ? "Pick up where you left off — jump straight to a subject, topic, or set."
+                : "Explore a free course — jump straight to a subject, topic, or set."}
             </p>
-            <RecentCourses courses={recentCourses} />
+            <RecentCourses courses={[courseToShow]} />
           </section>
         )}
 
