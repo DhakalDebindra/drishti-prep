@@ -8,13 +8,21 @@ import { Lang } from "@/components/ui/Lang";
 
 export type CourseInput = { id: string; name: string; slug: string };
 
-type Subtopic = { id: string; name: string; slug: string; syllabus_ref: string | null };
+type PracticeSet = { id: string; title: string; difficulty_level: number | null };
+type Subtopic = {
+  id: string;
+  name: string;
+  slug: string;
+  syllabus_ref: string | null;
+  sets: PracticeSet[];
+};
 type Topic = {
   id: string;
   name: string;
   slug: string;
   syllabus_ref: string | null;
   subtopics: Subtopic[];
+  sets: PracticeSet[];
 };
 type Subject = {
   id: string;
@@ -26,9 +34,10 @@ type Subject = {
 
 /**
  * Expandable syllabus trees for the courses a learner has recently practised.
- * Each course lazy-loads its subject/topic/subtopic structure the first time it
- * is opened (one request per course), then expands/collapses purely client-side.
- * Leaves link to the canonical topic/subtopic pages, which list the sets.
+ * Each course lazy-loads its full structure (subjects → topics → subtopics →
+ * sets) the first time it is opened, then expands/collapses purely client-side.
+ * Set leaves link straight to practice; page links are only a fallback for
+ * empty nodes.
  *
  * All state changes happen in event handlers (never in an effect), so this
  * stays clear of the CI react-hooks/set-state-in-effect rule.
@@ -48,6 +57,18 @@ export function RecentCourses({ courses }: { courses: CourseInput[] }) {
 function Ref({ value }: { value: string | null }) {
   if (!value) return null;
   return <span className="mr-2 font-normal text-muted-foreground">{value}</span>;
+}
+
+const rowClass =
+  "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+function Caret({ open }: { open: boolean }) {
+  return (
+    <ChevronRight
+      className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")}
+      aria-hidden="true"
+    />
+  );
 }
 
 function CourseNode({ course }: { course: CourseInput }) {
@@ -158,15 +179,9 @@ function SubjectNode({ subject, courseSlug }: { subject: Subject; courseSlug: st
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn(rowClass, "text-sm font-semibold text-foreground")}
       >
-        <ChevronRight
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-90"
-          )}
-          aria-hidden="true"
-        />
+        <Caret open={open} />
         <span className="flex-1">
           <Ref value={subject.syllabus_ref} />
           <Lang>{subject.name}</Lang>
@@ -201,23 +216,15 @@ function TopicNode({
   subjectSlug: string;
 }) {
   const [open, setOpen] = useState(false);
-  const topicHref = `/courses/${courseSlug}/${subjectSlug}/${topic.slug}`;
+  const topicBase = `/courses/${courseSlug}/${subjectSlug}/${topic.slug}`;
   const panelId = `topic-${topic.id}-panel`;
+  const hasSubtopics = topic.subtopics.length > 0;
+  const hasSets = topic.sets.length > 0;
 
-  // A topic with no subtopics links straight to its practice sets.
-  if (topic.subtopics.length === 0) {
+  // Nothing to expand — link to the topic page so it stays reachable.
+  if (!hasSubtopics && !hasSets) {
     return (
-      <Link
-        href={topicHref}
-        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="h-4 w-4 shrink-0" aria-hidden="true" />
-        <span className="flex-1">
-          <Ref value={topic.syllabus_ref} />
-          <Lang>{topic.name}</Lang>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      </Link>
+      <LeafLink href={topicBase} refValue={topic.syllabus_ref} name={topic.name} weight="medium" />
     );
   }
 
@@ -228,15 +235,9 @@ function TopicNode({
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn(rowClass, "text-sm font-medium text-foreground")}
       >
-        <ChevronRight
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-90"
-          )}
-          aria-hidden="true"
-        />
+        <Caret open={open} />
         <span className="flex-1">
           <Ref value={topic.syllabus_ref} />
           <Lang>{topic.name}</Lang>
@@ -244,22 +245,116 @@ function TopicNode({
       </button>
       {open && (
         <ul id={panelId} className="ml-4 space-y-0.5 border-l border-border py-1 pl-2">
-          {topic.subtopics.map((subtopic) => (
-            <li key={subtopic.id}>
-              <Link
-                href={`/courses/${courseSlug}/${subjectSlug}/${topic.slug}/${subtopic.slug}`}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <span className="flex-1">
-                  <Ref value={subtopic.syllabus_ref} />
-                  <Lang>{subtopic.name}</Lang>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              </Link>
+          {hasSubtopics
+            ? topic.subtopics.map((subtopic) => (
+                <li key={subtopic.id}>
+                  <SubtopicNode
+                    subtopic={subtopic}
+                    courseSlug={courseSlug}
+                    subjectSlug={subjectSlug}
+                    topicSlug={topic.slug}
+                  />
+                </li>
+              ))
+            : topic.sets.map((set) => (
+                <li key={set.id}>
+                  <SetLink set={set} href={`${topicBase}/practice/${set.id}`} />
+                </li>
+              ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function SubtopicNode({
+  subtopic,
+  courseSlug,
+  subjectSlug,
+  topicSlug,
+}: {
+  subtopic: Subtopic;
+  courseSlug: string;
+  subjectSlug: string;
+  topicSlug: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const base = `/courses/${courseSlug}/${subjectSlug}/${topicSlug}/${subtopic.slug}`;
+  const panelId = `subtopic-${subtopic.id}-panel`;
+
+  if (subtopic.sets.length === 0) {
+    return <LeafLink href={base} refValue={subtopic.syllabus_ref} name={subtopic.name} weight="normal" />;
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className={cn(rowClass, "text-sm text-foreground")}
+      >
+        <Caret open={open} />
+        <span className="flex-1">
+          <Ref value={subtopic.syllabus_ref} />
+          <Lang>{subtopic.name}</Lang>
+        </span>
+      </button>
+      {open && (
+        <ul id={panelId} className="ml-4 space-y-0.5 border-l border-border py-1 pl-2">
+          {subtopic.sets.map((set) => (
+            <li key={set.id}>
+              <SetLink set={set} href={`${base}/practice/${set.id}`} />
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function SetLink({ set, href }: { set: PracticeSet; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="flex-1">
+        <Lang>{set.title}</Lang>
+      </span>
+      {set.difficulty_level ? (
+        <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+          Lvl {set.difficulty_level}
+        </span>
+      ) : null}
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    </Link>
+  );
+}
+
+function LeafLink({
+  href,
+  refValue,
+  name,
+  weight,
+}: {
+  href: string;
+  refValue: string | null;
+  name: string;
+  weight: "medium" | "normal";
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(rowClass, "text-sm text-foreground", weight === "medium" && "font-medium")}
+    >
+      <span className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <span className="flex-1">
+        <Ref value={refValue} />
+        <Lang>{name}</Lang>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    </Link>
   );
 }
