@@ -82,6 +82,25 @@ export default async function DashboardPage() {
     }
   }
 
+  // Fallback for learners with nothing to resume yet (no practice history):
+  // surface a free course so the section is a starting point instead of empty.
+  // Enrolled courses always remain reachable from the navbar "My Courses" menu.
+  const isResuming = latestCourse !== null;
+  let courseToShow = latestCourse;
+  if (!courseToShow) {
+    const { data: freeModules } = await (supabase as any)
+      .from("modules")
+      .select("id, name, slug, price_paisa")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+    const free = (
+      (freeModules ?? []) as { id: string; name: string; slug: string; price_paisa: number | null }[]
+    ).find((m) => !m.price_paisa);
+    if (free) {
+      courseToShow = { id: free.id, name: free.name, slug: free.slug };
+    }
+  }
+
   const disabilityStatus = (profile?.disability_status ?? "not_submitted") as
     | "not_submitted"
     | "pending"
@@ -129,15 +148,17 @@ export default async function DashboardPage() {
           rejectionReason={profile?.disability_rejection_reason ?? null}
         />
 
-        {latestCourse && (
+        {courseToShow && (
           <section aria-labelledby="dash-courses-heading" className="space-y-4">
             <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
-              Continue studying
+              {isResuming ? "Continue studying" : "Start learning"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Pick up where you left off — jump straight to a subject, topic, or set.
+              {isResuming
+                ? "Pick up where you left off — jump straight to a subject, topic, or set."
+                : "Explore a free course — jump straight to a subject, topic, or set."}
             </p>
-            <RecentCourses courses={[latestCourse]} />
+            <RecentCourses courses={[courseToShow]} />
           </section>
         )}
 
