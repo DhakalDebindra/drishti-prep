@@ -6,7 +6,6 @@ import { BookOpen, Play, X } from "lucide-react";
 
 import { cn } from "@repo/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Lang } from "@/components/ui/Lang";
 
 const STORAGE_KEY = "dp:welcome-dismissed:v1";
 
@@ -64,26 +63,24 @@ export function DashboardWelcomeCard() {
 
       <div className="max-w-2xl space-y-3 pr-10">
         <h2 id="welcome-card-heading" className="text-2xl font-bold tracking-tight text-foreground">
-          <Lang>DrishtiPrep मा स्वागत छ</Lang>
+          Welcome to DrishtiPrep
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
-          <Lang as="span">
-            यो तपाईंको अभ्यास केन्द्र हो — यहाँ कोर्स रोज्नुहोस्, अभ्यास सेट खेल्नुहोस्, र आफ्नो प्रगति हेर्नुहोस्।
-          </Lang>
+          This is your practice hub — choose a course, work through practice sets, and track your progress.
         </p>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <Link href="/courses" className={cn(buttonVariants({ size: "lg" }), "font-semibold")}>
           <BookOpen className="h-5 w-5" aria-hidden="true" />
-          <Lang>कोर्स हेर्नुहोस्</Lang>
+          Browse courses
         </Link>
         <Link
           href="/practice/dashboard"
           className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "font-semibold")}
         >
           <Play className="h-5 w-5" aria-hidden="true" />
-          <Lang>अभ्यास सुरु गर्नुहोस्</Lang>
+          Start practice
         </Link>
       </div>
     </section>

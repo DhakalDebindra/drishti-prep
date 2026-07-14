@@ -11,7 +11,6 @@ import { MananaPlayerCard } from "@/features/manana/components/MananaPlayerCard"
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { DashboardWelcomeCard } from "@/components/dashboard/DashboardWelcomeCard";
-import { Lang } from "@/components/ui/Lang";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -125,7 +124,7 @@ export default async function DashboardPage() {
         {activeCourses.length > 0 && (
           <section aria-labelledby="dash-courses-heading" className="space-y-4">
             <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
-              <Lang>सक्रिय कोर्सहरू</Lang>
+              Active Courses
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {activeCourses.map((course: any) => (
@@ -146,7 +145,7 @@ export default async function DashboardPage() {
 
         <section aria-labelledby="dash-progress-heading" className="space-y-6">
           <h2 id="dash-progress-heading" className="text-xl font-bold tracking-tight text-foreground">
-            <Lang>प्रगति</Lang>
+            Progress
           </h2>
           <div id="analytics">
             <MacroAnalytics attempts={safeAttempts} />
@@ -160,7 +159,7 @@ export default async function DashboardPage() {
 
         <section aria-labelledby="dash-practice-heading" className="space-y-6">
           <h2 id="dash-practice-heading" className="text-xl font-bold tracking-tight text-foreground">
-            <Lang>अभ्यास</Lang>
+            Practice
           </h2>
           {episode && mananaSignedUrl && (
             <MananaPlayerCard
@@ -173,7 +172,7 @@ export default async function DashboardPage() {
 
         <section aria-labelledby="dash-history-heading" className="space-y-6">
           <h2 id="dash-history-heading" className="text-xl font-bold tracking-tight text-foreground">
-            <Lang>इतिहास</Lang>
+            History
           </h2>
           <AttemptHistoryList attempts={safeAttempts} />
         </section>
