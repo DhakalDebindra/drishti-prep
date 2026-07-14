@@ -50,10 +50,10 @@ export function TutorVoicePanel({
 
   return (
     <div
-      className={`rounded-3xl border p-4 shadow-sm backdrop-blur-xl sm:p-5 ${
+      className={`rounded-3xl border p-4 shadow-sm sm:p-5 ${
         errored
-          ? "border-amber-200 bg-amber-50/90 dark:border-amber-900/50 dark:bg-amber-950/25"
-          : "border-cyan-200 bg-cyan-50/80 dark:border-cyan-900/50 dark:bg-cyan-950/25"
+          ? "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/25"
+          : "border-cyan-200 bg-cyan-50 dark:border-cyan-900/50 dark:bg-cyan-950/25"
       }`}
       role="region"
       aria-label="Shruti voice controls"

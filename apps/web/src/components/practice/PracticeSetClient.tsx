@@ -227,7 +227,7 @@ function PracticeSetView() {
 
   if (!currentQuestion) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
+      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
         <p className="text-slate-700 dark:text-slate-300">No questions available for this practice set.</p>
       </section>
     );
@@ -241,7 +241,7 @@ function PracticeSetView() {
             {state.announcementText}
           </div>
 
-          <header className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:p-6">
+          <header className="rounded-3xl border border-border bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
               Shruti · Listening mode
             </p>
@@ -282,7 +282,7 @@ function PracticeSetView() {
             </p>
           )}
 
-          <div className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 sm:p-6">
+          <div className="rounded-3xl border border-border bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
@@ -391,7 +391,7 @@ function PracticeSetView() {
           {state.announcementText}
         </div>
 
-        <header className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 sm:px-6 sm:py-6">
+        <header className="relative overflow-hidden rounded-3xl border border-border bg-card px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:px-6 sm:py-6">
           <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
@@ -439,10 +439,10 @@ function PracticeSetView() {
         </header>
 
         {state.message && (
-          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{state.message}</p>
+          <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">{state.message}</p>
         )}
         {state.error && (
-          <p className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">{state.error}</p>
+          <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">{state.error}</p>
         )}
         {state.authRequired && (
           <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
@@ -466,7 +466,7 @@ function PracticeSetView() {
           </p>
         )}
 
-        <div className={`practice-experience-container flex flex-col overflow-hidden rounded-3xl border border-white/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 ${state.status === "submitted" ? "opacity-95" : ""}`}>
+        <div className={`practice-experience-container flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_80px_rgba(15,23,42,0.10)] ${state.status === "submitted" ? "opacity-95" : ""}`}>
           <div className="border-b border-slate-200/80 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -524,7 +524,7 @@ function PracticeSetView() {
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                   Session tips
                 </p>
-                <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                   <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
                     Use the option cards or{" "}
                     <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">

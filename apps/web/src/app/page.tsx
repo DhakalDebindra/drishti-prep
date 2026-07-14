@@ -89,9 +89,9 @@ function HomeContent() {
         <PublicHeader />
 
         <main id="main" className="mt-14 space-y-16">
-          <section className={`grid gap-10 rounded-3xl p-8 shadow-2xl shadow-primary/10 backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:p-12 ${palette.panel}`}>
+          <section className={`grid gap-10 rounded-3xl p-8 shadow-2xl shadow-primary/10 lg:grid-cols-[1.1fr_0.9fr] lg:p-12 ${palette.panel}`}>
             <div className="space-y-6">
-              <p className={`text-xs uppercase tracking-[0.3em] ${palette.labelTone}`}>Hero</p>
+              <p className={`text-sm font-semibold uppercase tracking-[0.2em] ${palette.labelTone}`}>Hero</p>
               <h1 className={`text-4xl font-semibold leading-tight tracking-tight sm:text-5xl ${palette.headingText}`}>
                 {content.headline}
               </h1>
@@ -149,10 +149,10 @@ function HomeContent() {
             </div>
           </section>
 
-          <section id="features" className={`space-y-6 rounded-3xl p-8 shadow-xl shadow-primary/10 backdrop-blur lg:p-12 ${palette.panel}`}>
+          <section id="features" className={`space-y-6 rounded-3xl p-8 shadow-xl shadow-primary/10 lg:p-12 ${palette.panel}`}>
             <div className="flex items-center justify-between gap-4">
               <h2 className={`text-2xl font-semibold ${palette.headingText}`}>What you get</h2>
-              <span className={`text-xs uppercase tracking-[0.3em] ${palette.labelTone}`}>Features</span>
+              <span className={`text-sm font-semibold uppercase tracking-[0.2em] ${palette.labelTone}`}>Features</span>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {content.features.map((feature) => (
@@ -167,7 +167,7 @@ function HomeContent() {
             </div>
           </section>
 
-          <section id="about" className={`grid gap-8 rounded-3xl p-8 shadow-xl shadow-primary/10 backdrop-blur lg:grid-cols-[1.2fr_0.8fr] lg:p-12 ${palette.panel}`}>
+          <section id="about" className={`grid gap-8 rounded-3xl p-8 shadow-xl shadow-primary/10 lg:grid-cols-[1.2fr_0.8fr] lg:p-12 ${palette.panel}`}>
             <div className="space-y-3">
               <h2 className={`text-2xl font-semibold ${palette.headingText}`}>Why we exist</h2>
               <p className={`text-base leading-relaxed ${palette.subText}`}>{content.why}</p>
@@ -180,7 +180,7 @@ function HomeContent() {
             </div>
           </section>
 
-          <section className="flex flex-col gap-4 rounded-3xl border-2 border-primary/30 bg-primary/10 p-8 shadow-xl shadow-primary/10 backdrop-blur lg:flex-row lg:items-center lg:justify-between lg:p-12">
+          <section className="flex flex-col gap-4 rounded-3xl border-2 border-primary/30 bg-primary/10 p-8 shadow-xl shadow-primary/10 lg:flex-row lg:items-center lg:justify-between lg:p-12">
             <div className="space-y-2">
               <h2 className="text-xl font-semibold text-foreground">Access for individuals and partners</h2>
               <p className={`text-base ${palette.subText}`}>{content.pricing}</p>
@@ -207,7 +207,7 @@ function HomeContent() {
             </div>
           </section>
 
-          <section className={`rounded-3xl border p-8 text-center shadow-xl shadow-primary/10 backdrop-blur lg:p-12 ${palette.panelStrong}`}>
+          <section className={`rounded-3xl border p-8 text-center shadow-xl shadow-primary/10 lg:p-12 ${palette.panelStrong}`}>
             <h2 className={`text-2xl font-semibold ${palette.headingText}`}>{content.impact}</h2>
             <p className={`mt-3 text-sm ${palette.mutedText}`}>
               Our goal: more blind candidates succeeding in Teaching License, TSC, and PSC exams through focused General Knowledge preparation—opening doors to government service across Nepal.

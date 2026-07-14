@@ -68,7 +68,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
         {announcement}
       </div>
 
-      <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:p-8">
+      <div className="rounded-3xl border border-border bg-card p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] md:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary dark:border-primary/50 dark:bg-primary/20">
@@ -122,7 +122,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
             return (
               <li
                 key={question.question_id}
-                className="group relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-[0_14px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-950/70"
+                className="group relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_14px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(15,23,42,0.09)]"
               >
                 <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
@@ -215,7 +215,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                       })}
                     </ul>
 
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                    <div className="mt-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
                       <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         Explanation
                       </span>
