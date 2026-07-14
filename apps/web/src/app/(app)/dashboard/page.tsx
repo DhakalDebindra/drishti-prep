@@ -9,7 +9,7 @@ import { MemoryHeatWidget } from "@/components/dashboard/MemoryHeatWidget";
 import { fetchMemoryHeat } from "@/lib/manana/heat-aggregate";
 import { MananaPlayerCard } from "@/features/manana/components/MananaPlayerCard";
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
-import { CourseCard } from "@/components/courses/CourseCard";
+import { RecentCourses } from "@/components/dashboard/RecentCourses";
 import { DashboardWelcomeCard } from "@/components/dashboard/DashboardWelcomeCard";
 
 export default async function DashboardPage() {
@@ -43,6 +43,8 @@ export default async function DashboardPage() {
             name,
             slug,
             module:modules (
+              id,
+              name,
               slug
             )
           )
@@ -56,13 +58,6 @@ export default async function DashboardPage() {
     console.error("Error fetching dashboard attempts: ", error);
   }
 
-  // Fetch active enrollments
-  const { data: enrollments } = await (supabase as any)
-    .from("enrollments")
-    .select("module_id, modules(name, slug, description)")
-    .eq("user_id", user.id)
-    .eq("status", "approved");
-
   // Fetch profile for identity status banner
   const { data: profile } = await (supabase as any)
     .from("profiles")
@@ -73,7 +68,21 @@ export default async function DashboardPage() {
   const memoryHeat = await fetchMemoryHeat(supabase, user.id);
 
   const safeAttempts = attempts as any[] || [];
-  const activeCourses = enrollments?.map((e: any) => e.modules).filter(Boolean) || [];
+
+  // Recently-studied courses: the distinct modules behind the learner's
+  // attempts, most-recently-started first. Derived from practice (not paid
+  // enrollment) so it works for free/universal courses too.
+  const recentCourses: { id: string; name: string; slug: string }[] = [];
+  const seenCourseIds = new Set<string>();
+  for (const attempt of safeAttempts) {
+    const mod = attempt?.question_sets?.topic?.subject?.module;
+    if (mod?.id && mod?.slug && mod?.name && !seenCourseIds.has(mod.id)) {
+      seenCourseIds.add(mod.id);
+      recentCourses.push({ id: mod.id, name: mod.name, slug: mod.slug });
+      if (recentCourses.length >= 6) break;
+    }
+  }
+
   const disabilityStatus = (profile?.disability_status ?? "not_submitted") as
     | "not_submitted"
     | "pending"
@@ -121,25 +130,15 @@ export default async function DashboardPage() {
           rejectionReason={profile?.disability_rejection_reason ?? null}
         />
 
-        {activeCourses.length > 0 && (
+        {recentCourses.length > 0 && (
           <section aria-labelledby="dash-courses-heading" className="space-y-4">
             <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
-              Active Courses
+              Continue studying
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {activeCourses.map((course: any) => (
-                <CourseCard
-                  key={course.slug}
-                  href={`/courses/${course.slug}`}
-                  name={course.name}
-                  description={course.description || "Continue your preparation"}
-                  badgeLabel="Enrolled"
-                  badgeTone="success"
-                  ctaLabel="Access Course"
-                  ctaVariant="outline"
-                />
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Open a course you have been practising and jump straight to a subject, topic, or set.
+            </p>
+            <RecentCourses courses={recentCourses} />
           </section>
         )}
 
