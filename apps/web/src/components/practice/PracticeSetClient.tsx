@@ -26,6 +26,8 @@ import type {
 import { QuestionOptions, optionKeys } from "@/components/practice/QuestionOptions";
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { ChevronLeft, ChevronRight, BookOpen, ChevronDown, ChevronUp, Sparkles, Headphones } from "lucide-react";
+import { cn } from "@repo/utils";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 type Props = {
   setInfo: {
@@ -422,7 +424,7 @@ function PracticeSetView() {
               {tutorEnabled && (
                 <Link
                   href={`${pathname}?view=listen`}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
+                  className={cn(buttonVariants({ variant: "outline" }), "rounded-full font-semibold")}
                 >
                   <Headphones className="h-4 w-4" aria-hidden="true" />
                   Listen mode
@@ -430,7 +432,7 @@ function PracticeSetView() {
               )}
               <Link
                 href={`/courses/${setInfo.moduleSlug}/${setInfo.subjectSlug}/${setInfo.topicSlug}`}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                className={cn(buttonVariants({ variant: "outline" }), "rounded-full font-semibold")}
               >
                 Exit set
               </Link>
