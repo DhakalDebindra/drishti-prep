@@ -69,17 +69,16 @@ export default async function DashboardPage() {
 
   const safeAttempts = attempts as any[] || [];
 
-  // Recently-studied courses: the distinct modules behind the learner's
-  // attempts, most-recently-started first. Derived from practice (not paid
-  // enrollment) so it works for free/universal courses too.
-  const recentCourses: { id: string; name: string; slug: string }[] = [];
-  const seenCourseIds = new Set<string>();
+  // The single course the learner most recently practised — the one to resume.
+  // Derived from attempts (not paid enrollment) so it works for free/universal
+  // courses too. Switching between all courses lives in the navbar's
+  // "My Courses" menu, which keeps the two surfaces distinct.
+  let latestCourse: { id: string; name: string; slug: string } | null = null;
   for (const attempt of safeAttempts) {
     const mod = attempt?.question_sets?.topic?.subject?.module;
-    if (mod?.id && mod?.slug && mod?.name && !seenCourseIds.has(mod.id)) {
-      seenCourseIds.add(mod.id);
-      recentCourses.push({ id: mod.id, name: mod.name, slug: mod.slug });
-      if (recentCourses.length >= 6) break;
+    if (mod?.id && mod?.slug && mod?.name) {
+      latestCourse = { id: mod.id, name: mod.name, slug: mod.slug };
+      break;
     }
   }
 
@@ -130,15 +129,15 @@ export default async function DashboardPage() {
           rejectionReason={profile?.disability_rejection_reason ?? null}
         />
 
-        {recentCourses.length > 0 && (
+        {latestCourse && (
           <section aria-labelledby="dash-courses-heading" className="space-y-4">
             <h2 id="dash-courses-heading" className="text-xl font-bold tracking-tight text-foreground">
               Continue studying
             </h2>
             <p className="text-sm text-muted-foreground">
-              Open a course you have been practising and jump straight to a subject, topic, or set.
+              Pick up where you left off — jump straight to a subject, topic, or set.
             </p>
-            <RecentCourses courses={recentCourses} />
+            <RecentCourses courses={[latestCourse]} />
           </section>
         )}
 
