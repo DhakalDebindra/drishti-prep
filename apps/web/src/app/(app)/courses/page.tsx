@@ -56,7 +56,15 @@ export default async function CoursesIndexPage() {
             return (
               <CourseCard
                 key={module.id}
-                href={`/courses/${module.slug}`}
+                // Accessible course → straight into the content tree view.
+                // Locked course → its detail page (description + payment flow),
+                // never the content tree. This is the conditional split; the
+                // gated layout still enforces it server-side as a backstop.
+                href={
+                  canAccess
+                    ? `/courses/${module.slug}`
+                    : `/courses/${module.slug}/enroll`
+                }
                 name={module.name}
                 description={module.description}
                 badgeLabel={isEnrolled ? "Enrolled" : isFree ? "Free" : `NPR ${module.price_paisa / 100}`}
