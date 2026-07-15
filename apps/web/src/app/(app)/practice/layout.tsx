@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function PracticeLayout({
   children,
 }: {
@@ -12,19 +10,6 @@ export default function PracticeLayout({
         <div className="absolute right-[-5rem] top-24 h-72 w-72 rounded-full bg-cyan-200/20 blur-3xl dark:bg-cyan-500/10" />
       </div>
 
-      <header className="relative hidden border-b border-border bg-card sm:block">
-        <div className="mx-auto flex max-w-[var(--dp-shell-width)] items-center gap-3 px-6 py-4">
-          <Link
-            href="/"
-            className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-200"
-          >
-            ← Home
-          </Link>
-          <span className="text-sm text-slate-500 dark:text-slate-400" aria-current="page">
-            Practice
-          </span>
-        </div>
-      </header>
       <main className="relative mx-auto flex max-w-[var(--dp-shell-width)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {children}
       </main>

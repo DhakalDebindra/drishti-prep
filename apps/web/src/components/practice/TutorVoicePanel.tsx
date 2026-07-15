@@ -2,7 +2,7 @@
 
 import { Volume2, VolumeX, Headphones, AlertTriangle, Keyboard } from "lucide-react";
 import type { TutorPlayer } from "@/hooks/useTutorPlayer";
-import { getHotkey } from "@/lib/tutor-hotkeys";
+import { formatHotkeyLabel, getHotkey } from "@/lib/tutor-hotkeys";
 
 type Props = {
   player: TutorPlayer;
@@ -94,9 +94,9 @@ export function TutorVoicePanel({
         <button
           type="button"
           onClick={onShowHelp}
-          aria-keyshortcuts={helpKey.combo}
+          aria-keyshortcuts={formatHotkeyLabel(helpKey.combo)}
           className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-white px-3 py-1.5 text-xs font-medium text-cyan-800 transition hover:bg-cyan-100 focus:outline-none focus:ring-4 focus:ring-cyan-300 dark:border-cyan-900/50 dark:bg-slate-950 dark:text-cyan-200 dark:hover:bg-cyan-950/40"
-          title={`Show keyboard shortcuts (${helpKey.label})`}
+          title={`Show keyboard shortcuts (${formatHotkeyLabel(helpKey.label)})`}
         >
           <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
           Shortcuts
@@ -106,11 +106,11 @@ export function TutorVoicePanel({
           <button
             type="button"
             onClick={onStart}
-            aria-keyshortcuts={startKey.combo}
+            aria-keyshortcuts={formatHotkeyLabel(startKey.combo)}
             className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-ring"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
-            Start Shruti ({startKey.label})
+            Start Shruti ({formatHotkeyLabel(startKey.label)})
           </button>
         ) : (
           <button
@@ -127,13 +127,13 @@ export function TutorVoicePanel({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-        <kbd className="font-mono">{startKey.label}</kbd> start / replay,{" "}
-        <kbd className="font-mono">{stemKey.label}</kbd> question,{" "}
-        <kbd className="font-mono">{optsKey.label}</kbd> options,{" "}
+        <kbd className="font-mono">{formatHotkeyLabel(startKey.label)}</kbd> start / replay,{" "}
+        <kbd className="font-mono">{formatHotkeyLabel(stemKey.label)}</kbd> question,{" "}
+        <kbd className="font-mono">{formatHotkeyLabel(optsKey.label)}</kbd> options,{" "}
         <kbd className="font-mono">1-4</kbd> answer,{" "}
-        <kbd className="font-mono">{explKey.label}</kbd> explanation,{" "}
-        <kbd className="font-mono">{pauseKey.label}</kbd> pause,{" "}
-        <kbd className="font-mono">{helpKey.label}</kbd> all shortcuts.
+        <kbd className="font-mono">{formatHotkeyLabel(explKey.label)}</kbd> explanation,{" "}
+        <kbd className="font-mono">{formatHotkeyLabel(pauseKey.label)}</kbd> pause,{" "}
+        <kbd className="font-mono">{formatHotkeyLabel(helpKey.label)}</kbd> all shortcuts.
       </p>
     </div>
   );

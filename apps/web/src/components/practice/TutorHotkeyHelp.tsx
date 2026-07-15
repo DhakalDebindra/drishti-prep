@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
+import { formatHotkeyLabel, TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -60,7 +60,7 @@ export function TutorHotkeyHelp({ open, onClose }: Props) {
               <dt className="text-muted-foreground">{h.description}</dt>
               <dd>
                 <kbd className="font-mono text-xs px-2 py-1 rounded bg-muted border border-border text-foreground">
-                  {h.label}
+                  {formatHotkeyLabel(h.label)}
                 </kbd>
               </dd>
             </div>

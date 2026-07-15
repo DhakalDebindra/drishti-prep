@@ -17,6 +17,7 @@ import { useTutorAudio, prefetchQuestionAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
 import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
 import { useAnswerHotkeys } from "@/hooks/useAnswerHotkeys";
+import { formatHotkeyLabel } from "@/lib/tutor-hotkeys";
 import type {
   AttemptSummary,
   DecoratedAnswer,
@@ -368,14 +369,14 @@ function PracticeSetView() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
             <p className="mb-2 font-semibold text-slate-700 dark:text-slate-200">Keyboard shortcuts</p>
             <p className="leading-relaxed">
-              <kbd className="font-mono">Alt+S</kbd> start ·{" "}
-              <kbd className="font-mono">Alt+Q</kbd> question ·{" "}
-              <kbd className="font-mono">Alt+O</kbd> options ·{" "}
-              <kbd className="font-mono">Alt+E</kbd> explanation ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+S")}</kbd> start ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+Q")}</kbd> question ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+O")}</kbd> options ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+E")}</kbd> explanation ·{" "}
               <kbd className="font-mono">1-4</kbd> answer ·{" "}
-              <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
-              <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
-              <kbd className="font-mono">Alt+/</kbd> all shortcuts
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+P")}</kbd> pause ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+R")}</kbd> replay ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+/")}</kbd> all shortcuts
             </p>
           </div>
 
@@ -405,17 +406,19 @@ function PracticeSetView() {
                 <h1 id="main-heading" className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-3xl">
                   {setInfo.title}
                 </h1>
-                <nav aria-label="Breadcrumb">
-                  <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
-                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <Lang>{setInfo.subjectName}</Lang>
-                    </li>
-                    <li aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</li>
-                    <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <Lang>{setInfo.topicName}</Lang>
-                    </li>
-                  </ol>
-                </nav>
+                {setInfo.subjectName && setInfo.topicName && (
+                  <nav aria-label="Breadcrumb">
+                    <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
+                      <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <Lang>{setInfo.subjectName}</Lang>
+                      </li>
+                      <li aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</li>
+                      <li className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <Lang>{setInfo.topicName}</Lang>
+                      </li>
+                    </ol>
+                  </nav>
+                )}
               </div>
             </div>
 
@@ -491,7 +494,7 @@ function PracticeSetView() {
           </div>
 
           <div className="flex flex-1 flex-col gap-8 p-5 sm:p-6 md:p-8">
-            <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <section>
               <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -521,27 +524,6 @@ function PracticeSetView() {
                   />
                 </div>
               </div>
-
-              <aside className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                  Session tips
-                </p>
-                <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    Use the option cards or{" "}
-                    <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                      1-4
-                    </kbd>{" "}
-                    to answer quickly.
-                  </li>
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    The bottom action bar stays within thumb reach on mobile.
-                  </li>
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    Explanations stay collapsed until you need them.
-                  </li>
-                </ul>
-              </aside>
             </section>
 
             <QuestionOptions

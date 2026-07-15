@@ -99,6 +99,7 @@ export function AppNavbar({ userEmail, courses = [] }: AppNavbarProps) {
                   <Link
                     key={link.href}
                     href={link.href}
+                    aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       isActive
@@ -210,6 +211,7 @@ export function AppNavbar({ userEmail, courses = [] }: AppNavbarProps) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={isActive ? "page" : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors",

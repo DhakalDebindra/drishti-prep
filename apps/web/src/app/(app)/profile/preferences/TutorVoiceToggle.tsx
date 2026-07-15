@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { setTutorVoiceEnabled } from "./actions";
-import { TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
+import { formatHotkeyLabel, TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
 
 type Props = {
   initialEnabled: boolean;
@@ -63,7 +63,7 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-6 list-none">
             {TUTOR_HOTKEYS.map((h) => (
               <li key={h.action}>
-                <kbd className="font-mono">{h.label}</kbd> — {h.description}
+                <kbd className="font-mono">{formatHotkeyLabel(h.label)}</kbd> — {h.description}
               </li>
             ))}
           </ul>
