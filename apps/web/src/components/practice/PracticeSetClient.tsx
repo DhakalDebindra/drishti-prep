@@ -114,15 +114,27 @@ function PracticeSetView() {
     let cancelled = false;
     // `no-store` so a just-toggled preference is never served a stale cached
     // response on load — otherwise Shruti can look "off" right after enabling.
-    fetch("/api/me/preferences", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        if (cancelled) return;
-        setTutorEnabled(Boolean(j.tutor_voice_enabled));
-      })
-      .catch(() => {});
+    const loadPref = () => {
+      fetch("/api/me/preferences", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((j) => {
+          if (cancelled) return;
+          setTutorEnabled(Boolean(j.tutor_voice_enabled));
+        })
+        .catch(() => {});
+    };
+    loadPref();
+    // Re-read when this tab regains focus, so enabling Shruti on the
+    // preferences page (another tab) reflects here without a manual reload.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") loadPref();
+    };
+    window.addEventListener("focus", loadPref);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", loadPref);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
