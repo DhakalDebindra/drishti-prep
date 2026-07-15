@@ -494,7 +494,7 @@ function PracticeSetView() {
           </div>
 
           <div className="flex flex-1 flex-col gap-8 p-5 sm:p-6 md:p-8">
-            <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <section>
               <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -524,27 +524,6 @@ function PracticeSetView() {
                   />
                 </div>
               </div>
-
-              <aside className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                  Session tips
-                </p>
-                <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    Use the option cards or{" "}
-                    <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[11px] text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                      1-4
-                    </kbd>{" "}
-                    to answer quickly.
-                  </li>
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    The bottom action bar stays within thumb reach on mobile.
-                  </li>
-                  <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    Explanations stay collapsed until you need them.
-                  </li>
-                </ul>
-              </aside>
             </section>
 
             <QuestionOptions
