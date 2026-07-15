@@ -71,7 +71,7 @@ export function AppNavbar({ userEmail, courses = [] }: AppNavbarProps) {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/courses", label: "Courses", icon: GraduationCap },
+    { href: "/courses", label: "Browse Courses", icon: GraduationCap },
     { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { href: "/profile/verify-identity", label: "Identity", icon: ShieldCheck },
     { href: "/profile/preferences", label: "Preferences", icon: Settings },
