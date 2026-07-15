@@ -1,6 +1,6 @@
 "use client";
 
-import { ComponentType, useEffect, useMemo, useRef, useState } from "react";
+import { ComponentType, useEffect, useRef, useState } from "react";
 import { Settings2, Sparkles, Type, Contrast, Waves, Gauge, Focus, Keyboard, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,8 @@ import {
   accessibilityPreferencesEqual,
 } from "@/lib/accessibility-preferences";
 import { cn } from "@repo/utils";
+import { formatHotkeyLabel } from "@/lib/tutor-hotkeys";
+import { isMac } from "@/lib/platform";
 
 type ButtonMode = "compact" | "label";
 
@@ -118,16 +120,13 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const fetchOnceRef = useRef(false);
 
-  const shortcutSummary = useMemo(
-    () => [
-      ["Alt+A", "Open accessibility menu"],
-      ["Esc", "Close the menu"],
-      ["Alt+Q", "Jump to question"],
-      ["Alt+O", "Jump to options"],
-      ["1-4", "Choose an answer"],
-    ],
-    []
-  );
+  const shortcutSummary = [
+    [formatHotkeyLabel("Alt+A"), "Open accessibility menu"],
+    ["Esc", "Close the menu"],
+    [formatHotkeyLabel("Alt+Q"), "Jump to question"],
+    [formatHotkeyLabel("Alt+O"), "Jump to options"],
+    ["1-4", "Choose an answer"],
+  ];
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -139,7 +138,8 @@ export function PracticeAccessibilityMenu({ buttonMode = "label", className }: P
           target?.tagName === "SELECT" ||
           target?.isContentEditable);
 
-      if (!isEditable && event.altKey && event.key.toLowerCase() === "a") {
+      const mod = isMac() ? event.ctrlKey : event.altKey;
+      if (!isEditable && mod && event.code === "KeyA") {
         event.preventDefault();
         setOpen(true);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { isMac } from "@/lib/platform";
 
 /**
  * Alt+1 / Alt+2 / Alt+3 / Alt+4 → select option A/B/C/D.
@@ -18,8 +19,14 @@ export function useAnswerHotkeys(
     if (!enabled) return;
 
     const handler = (e: KeyboardEvent) => {
-      if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      if (!/^[1-4]$/.test(e.key)) return;
+      // Mac uses Ctrl as the modifier, other platforms use Alt.
+      if (isMac()) {
+        if (!e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+      } else {
+        if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      }
+      // Use e.code (e.g. "Digit1") so the shortcut is layout-independent.
+      if (!/^Digit[1-4]$/.test(e.code)) return;
 
       const target = e.target as HTMLElement | null;
       if (target) {
@@ -29,7 +36,7 @@ export function useAnswerHotkeys(
         }
       }
 
-      const letter = (["A", "B", "C", "D"] as const)[Number(e.key) - 1];
+      const letter = (["A", "B", "C", "D"] as const)[Number(e.code[5]) - 1];
       e.preventDefault();
       onSelect(letter);
     };
