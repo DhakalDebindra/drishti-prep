@@ -9,7 +9,11 @@
  *
  * `aria-keyshortcuts` consumes this list, and the on-screen help modal renders
  * from it too — keep the two in lockstep by importing rather than duplicating.
+ *
+ * Display labels are platform-aware: "Ctrl" on Mac, "Alt" elsewhere.
  */
+import { isMac } from "./platform";
+
 export type TutorAction =
   | "start"
   | "stem"
@@ -60,32 +64,50 @@ export function getHotkey(action: TutorAction): Hotkey {
 export function matchTutorAction(e: KeyboardEvent): TutorAction | null {
   if (e.key === "Escape") return "mute";
 
-  if (!e.altKey || e.ctrlKey || e.metaKey) return null;
-  // Alt + 1-4 selects an option. Alt-prefixed so a focused form field can't
-  // swallow the digit, and so it stays free of the bare-number bindings some
-  // page-level shortcut libraries grab.
-  if (/^[1-4]$/.test(e.key)) return "answer";
-  switch (e.key.toLowerCase()) {
-    case "s":
+  // Mac uses Ctrl as the modifier (reliable, no dead-key issues).
+  // Other platforms use Alt (avoids screen-reader conflicts).
+  if (isMac()) {
+    if (!e.ctrlKey || e.altKey || e.metaKey) return null;
+  } else {
+    if (!e.altKey || e.ctrlKey || e.metaKey) return null;
+  }
+  // Use e.code (physical key position) rather than e.key so that modifier+
+  // shortcuts work the same on both platforms.
+  if (/^Digit[1-4]$/.test(e.code)) return "answer";
+  switch (e.code) {
+    case "KeyS":
       return "start";
-    case "q":
+    case "KeyQ":
       return "stem";
-    case "o":
+    case "KeyO":
       return "options";
-    case "e":
+    case "KeyE":
       return "explanation";
-    case "p":
+    case "KeyP":
       return "pause";
-    case "r":
+    case "KeyR":
       return "replay";
-    case "n":
+    case "KeyN":
       return "next";
-    case "m":
+    case "KeyM":
       return "prev";
-    case "/":
-    case "?":
+    case "Slash":
       return "help";
     default:
       return null;
   }
+}
+
+/** Platform-aware modifier label — "Ctrl" on Mac, "Alt" elsewhere. */
+export function modifierKey(): string {
+  return isMac() ? "Ctrl" : "Alt";
+}
+
+/**
+ * Replace the "Alt" modifier in any shortcut label or combo with the
+ * platform-appropriate key name (e.g. "Alt + S" → "Ctrl + S" on Mac).
+ * Strings without "Alt" pass through unchanged.
+ */
+export function formatHotkeyLabel(label: string): string {
+  return label.replace("Alt", modifierKey());
 }

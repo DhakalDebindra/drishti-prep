@@ -17,6 +17,7 @@ import { useTutorAudio, prefetchQuestionAudio } from "@/hooks/useTutorAudio";
 import { useTutorPlayer } from "@/hooks/useTutorPlayer";
 import { useTutorHotkeys } from "@/hooks/useTutorHotkeys";
 import { useAnswerHotkeys } from "@/hooks/useAnswerHotkeys";
+import { formatHotkeyLabel } from "@/lib/tutor-hotkeys";
 import type {
   AttemptSummary,
   DecoratedAnswer,
@@ -361,14 +362,14 @@ function PracticeSetView() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
             <p className="mb-2 font-semibold text-slate-700 dark:text-slate-200">Keyboard shortcuts</p>
             <p className="leading-relaxed">
-              <kbd className="font-mono">Alt+S</kbd> start ·{" "}
-              <kbd className="font-mono">Alt+Q</kbd> question ·{" "}
-              <kbd className="font-mono">Alt+O</kbd> options ·{" "}
-              <kbd className="font-mono">Alt+E</kbd> explanation ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+S")}</kbd> start ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+Q")}</kbd> question ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+O")}</kbd> options ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+E")}</kbd> explanation ·{" "}
               <kbd className="font-mono">1-4</kbd> answer ·{" "}
-              <kbd className="font-mono">Alt+P</kbd> pause ·{" "}
-              <kbd className="font-mono">Alt+R</kbd> replay ·{" "}
-              <kbd className="font-mono">Alt+/</kbd> all shortcuts
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+P")}</kbd> pause ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+R")}</kbd> replay ·{" "}
+              <kbd className="font-mono">{formatHotkeyLabel("Alt+/")}</kbd> all shortcuts
             </p>
           </div>
 

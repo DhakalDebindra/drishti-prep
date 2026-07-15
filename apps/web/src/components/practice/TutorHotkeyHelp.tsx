@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
+import { formatHotkeyLabel, TUTOR_HOTKEYS } from "@/lib/tutor-hotkeys";
 
 type Props = {
   open: boolean;
@@ -59,7 +59,7 @@ export function TutorHotkeyHelp({ open, onClose }: Props) {
               <dt className="text-gray-700 dark:text-gray-300">{h.description}</dt>
               <dd>
                 <kbd className="font-mono text-xs px-2 py-1 rounded bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700">
-                  {h.label}
+                  {formatHotkeyLabel(h.label)}
                 </kbd>
               </dd>
             </div>
