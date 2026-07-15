@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { createStaticClient } from "@/lib/supabase/server";
-import { Lang } from "@/components/ui/Lang";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,9 +10,11 @@ export default async function ModuleLayout({ children, params }: LayoutProps) {
   const { moduleSlug } = await params;
   const supabase = createStaticClient();
 
+  // Existence guard only; each content page renders its own full breadcrumb
+  // trail so learners can step back up the hierarchy from any level.
   const { data: moduleData } = await supabase
     .from("modules")
-    .select("id, name, slug")
+    .select("id")
     .eq("slug", moduleSlug)
     .single();
 
@@ -21,15 +22,5 @@ export default async function ModuleLayout({ children, params }: LayoutProps) {
     notFound();
   }
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <div className="text-sm text-gray-500 font-medium">
-          <span className="text-gray-400">Course / </span>
-          <Lang>{moduleData.name}</Lang>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
+  return <div className="mx-auto max-w-5xl px-4 py-8">{children}</div>;
 }

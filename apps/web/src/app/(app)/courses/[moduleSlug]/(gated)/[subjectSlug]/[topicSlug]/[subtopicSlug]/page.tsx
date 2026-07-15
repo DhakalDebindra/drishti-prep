@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { createStaticClient } from "@/lib/supabase/server";
 import { Lang } from "@/components/ui/Lang";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface PageProps {
-  params: Promise<{ 
-    moduleSlug: string; 
-    subjectSlug: string; 
-    topicSlug: string; 
+  params: Promise<{
+    moduleSlug: string;
+    subjectSlug: string;
+    topicSlug: string;
     subtopicSlug: string;
   }>;
 }
@@ -18,7 +20,6 @@ export default async function SubtopicPage({ params }: PageProps) {
   const { moduleSlug, subjectSlug, topicSlug, subtopicSlug } = await params;
   const supabase = createStaticClient();
 
-  // Fetch subtopic details and its parent topic/subject
   const { data: subtopicData } = await supabase
     .from("subtopics")
     .select(`
@@ -35,7 +36,7 @@ export default async function SubtopicPage({ params }: PageProps) {
           id,
           name,
           slug,
-          modules!inner(id, slug)
+          modules!inner(id, slug, name)
         )
       )
     `)
@@ -56,7 +57,8 @@ export default async function SubtopicPage({ params }: PageProps) {
     notFound();
   }
 
-  // Native sets directly assigned to this subtopic
+  // Native sets directly assigned to this subtopic, plus cross-module sets
+  // linked here through the junction table.
   const [{ data: nativeSets, error }, { data: crossLinks }] = await Promise.all([
     supabase
       .from("question_sets")
@@ -64,7 +66,6 @@ export default async function SubtopicPage({ params }: PageProps) {
       .eq("subtopic_id", subtopicData.id)
       .eq("is_verified", true)
       .order("created_at", { ascending: true }),
-    // Cross-module sets: sets from another module's subtopic linked here via junction table
     supabase
       .from("question_set_modules")
       .select("question_sets!inner(id, title, difficulty_level, version)")
@@ -83,63 +84,72 @@ export default async function SubtopicPage({ params }: PageProps) {
     .filter((s): s is NonNullable<typeof s> => s && !nativeIds.has(s.id));
 
   const sets = [...(nativeSets ?? []), ...crossSets];
+  const subtopicTitle = subtopicData.name_np || subtopicData.name;
 
   return (
     <section className="space-y-6">
-      <nav aria-label="Breadcrumb">
-        <div className="text-sm text-gray-500 font-medium mb-1 flex items-center space-x-2">
-          <Link href={`/courses/${moduleSlug}`} className="hover:text-blue-600 transition-colors">
-            Course
-          </Link>
-          <span className="text-gray-300">/</span>
-          <Link href={`/courses/${moduleSlug}/${subjectSlug}`} className="hover:text-blue-600 transition-colors">
-            <Lang>{subject.name}</Lang>
-          </Link>
-          <span className="text-gray-300">/</span>
-          <Link href={`/courses/${moduleSlug}/${subjectSlug}/${topicSlug}`} className="hover:text-blue-600 transition-colors">
-            <Lang>{topic.name}</Lang>
-          </Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-900"><Lang>{subtopicData.name_np || subtopicData.name}</Lang></span>
-        </div>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: "Courses", href: "/courses" },
+          {
+            label: moduleItem?.name ? <Lang>{moduleItem.name}</Lang> : "Course",
+            href: `/courses/${moduleSlug}`,
+          },
+          { label: <Lang>{subject.name}</Lang>, href: `/courses/${moduleSlug}/${subjectSlug}` },
+          {
+            label: <Lang>{topic.name}</Lang>,
+            href: `/courses/${moduleSlug}/${subjectSlug}/${topicSlug}`,
+          },
+          { label: <Lang>{subtopicTitle}</Lang> },
+        ]}
+      />
 
-      <header>
-        <h1 id="main-heading" className="text-2xl font-semibold text-gray-900">
-          {subtopicData.syllabus_ref && <span className="text-gray-500 font-normal mr-2">{subtopicData.syllabus_ref}</span>}
-          <Lang>{subtopicData.name_np || subtopicData.name}</Lang>
+      <header className="space-y-2">
+        <h1 id="main-heading" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          {subtopicData.syllabus_ref && (
+            <span className="mr-2 font-normal text-muted-foreground">{subtopicData.syllabus_ref}</span>
+          )}
+          <Lang>{subtopicTitle}</Lang>
         </h1>
-        <p className="text-gray-600">
-          {subtopicData.description || "Choose a question set to begin your practice attempt."}
+        <p className="text-muted-foreground">
+          {subtopicData.description ? (
+            <Lang>{subtopicData.description}</Lang>
+          ) : (
+            "Choose a question set to begin your practice attempt."
+          )}
         </p>
       </header>
 
       {!sets || sets.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-gray-600">
-          यस उप-विषयमा अहिले कुनै सेट उपलब्ध छैन।
+        <div className="rounded-2xl border-2 border-dashed border-border bg-card p-6 text-muted-foreground">
+          <Lang>यस उप-विषयमा अहिले कुनै सेट उपलब्ध छैन।</Lang>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sets.map((set) => (
-            <Link
-              key={set.id}
-              href={`/courses/${moduleSlug}/${subjectSlug}/${topicSlug}/${subtopicSlug}/practice/${set.id}`}
-              className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg font-semibold text-gray-900 line-clamp-2"><Lang>{set.title}</Lang></h2>
-                {set.difficulty_level && (
-                  <span className="inline-block px-2 py-1 bg-gray-100 text-xs font-medium text-gray-600 rounded">
-                    Lvl {set.difficulty_level}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 mt-4 flex items-center">
-                Start Practice <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
-              </p>
-            </Link>
+            <li key={set.id}>
+              <Link
+                href={`/courses/${moduleSlug}/${subjectSlug}/${topicSlug}/${subtopicSlug}/practice/${set.id}`}
+                className="group flex h-full flex-col rounded-2xl border-2 border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="line-clamp-2 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+                    <Lang>{set.title}</Lang>
+                  </h2>
+                  {set.difficulty_level ? (
+                    <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      Lvl {set.difficulty_level}
+                    </span>
+                  ) : null}
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                  Start practice
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </section>
   );
