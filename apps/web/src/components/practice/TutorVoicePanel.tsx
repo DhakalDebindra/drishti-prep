@@ -2,7 +2,7 @@
 
 import { Volume2, VolumeX, Headphones, AlertTriangle, Keyboard } from "lucide-react";
 import type { TutorPlayer } from "@/hooks/useTutorPlayer";
-import { formatHotkeyLabel, getHotkey } from "@/lib/tutor-hotkeys";
+import { formatAriaKeyshortcuts, formatHotkeyLabel, getHotkey } from "@/lib/tutor-hotkeys";
 
 type Props = {
   player: TutorPlayer;
@@ -94,7 +94,7 @@ export function TutorVoicePanel({
         <button
           type="button"
           onClick={onShowHelp}
-          aria-keyshortcuts={formatHotkeyLabel(helpKey.combo)}
+          aria-keyshortcuts={formatAriaKeyshortcuts(helpKey.combo)}
           className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-white px-3 py-1.5 text-xs font-medium text-cyan-800 transition hover:bg-cyan-100 focus:outline-none focus:ring-4 focus:ring-cyan-300 dark:border-cyan-900/50 dark:bg-slate-950 dark:text-cyan-200 dark:hover:bg-cyan-950/40"
           title={`Show keyboard shortcuts (${formatHotkeyLabel(helpKey.label)})`}
         >
@@ -106,7 +106,7 @@ export function TutorVoicePanel({
           <button
             type="button"
             onClick={onStart}
-            aria-keyshortcuts={formatHotkeyLabel(startKey.combo)}
+            aria-keyshortcuts={formatAriaKeyshortcuts(startKey.combo)}
             className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-ring"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />

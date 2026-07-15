@@ -98,16 +98,28 @@ export function matchTutorAction(e: KeyboardEvent): TutorAction | null {
   }
 }
 
-/** Platform-aware modifier label — "Ctrl" on Mac, "Alt" elsewhere. */
+/** Platform-aware modifier label for DISPLAY — "Ctrl" on Mac, "Alt" elsewhere. */
 export function modifierKey(): string {
   return isMac() ? "Ctrl" : "Alt";
 }
 
 /**
- * Replace the "Alt" modifier in any shortcut label or combo with the
- * platform-appropriate key name (e.g. "Alt + S" → "Ctrl + S" on Mac).
+ * Replace the "Alt" modifier in a shortcut display label with the
+ * platform-appropriate key name (e.g. "Alt + S" → "Ctrl + S" on Mac). Uses a
+ * global replace so multi-key labels ("Alt+1 Alt+2") convert every occurrence.
  * Strings without "Alt" pass through unchanged.
  */
 export function formatHotkeyLabel(label: string): string {
-  return label.replace("Alt", modifierKey());
+  return label.replace(/Alt/g, modifierKey());
+}
+
+/**
+ * ARIA-canonical modifier for `aria-keyshortcuts`: the spec names the key
+ * "Control", not the display shorthand "Ctrl". Mac binds these shortcuts to
+ * Control (see matchTutorAction), so the exposed combo must say "Control";
+ * other platforms keep "Alt". Use this for aria-keyshortcuts, not the display
+ * formatter above.
+ */
+export function formatAriaKeyshortcuts(combo: string): string {
+  return combo.replace(/Alt/g, isMac() ? "Control" : "Alt");
 }
