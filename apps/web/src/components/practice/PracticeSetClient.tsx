@@ -112,7 +112,9 @@ function PracticeSetView() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/me/preferences")
+    // `no-store` so a just-toggled preference is never served a stale cached
+    // response on load — otherwise Shruti can look "off" right after enabling.
+    fetch("/api/me/preferences", { cache: "no-store" })
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
@@ -279,10 +281,17 @@ function PracticeSetView() {
             />
           )}
           <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
-          {tutorEnabled && audio.status === "not_generated" && (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-              Shruti audio isn&apos;t available for this question yet.
-            </p>
+          {tutorEnabled && audio.status !== "ready" && (
+            <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              <Headphones className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span>
+                {audio.status === "loading"
+                  ? "Shruti is on — preparing audio for this question…"
+                  : audio.status === "error"
+                    ? "Shruti is on, but its audio couldn't load for this question."
+                    : "Shruti audio isn't available for this question yet."}
+              </span>
+            </div>
           )}
 
           <div className="rounded-3xl border border-border bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
@@ -465,10 +474,17 @@ function PracticeSetView() {
           />
         )}
         <TutorHotkeyHelp open={showHotkeyHelp} onClose={() => setShowHotkeyHelp(false)} />
-        {tutorEnabled && audio.status === "not_generated" && (
-          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-            Shruti isn&apos;t available for this question yet. Using your screen reader instead.
-          </p>
+        {tutorEnabled && audio.status !== "ready" && (
+          <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-900 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+            <Headphones className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span>
+              {audio.status === "loading"
+                ? "Shruti is on — preparing audio for this question…"
+                : audio.status === "error"
+                  ? "Shruti is on, but its audio couldn't load for this question. Using your screen reader instead."
+                  : "Shruti is on, but audio isn't available for this question yet. Using your screen reader instead."}
+            </span>
+          </div>
         )}
 
         <div className={`practice-experience-container flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_80px_rgba(15,23,42,0.10)] ${state.status === "submitted" ? "opacity-95" : ""}`}>
