@@ -45,7 +45,7 @@ export default function SignupForm() {
   const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const visibleError = error || (passwordMismatch ? "Passwords do not match." : "");
   let strengthText = "";
-  let strengthColor = "bg-gray-200";
+  let strengthColor = "bg-muted";
   if (password.length > 0) {
     if (strengthScore <= 1) { strengthText = "Weak"; strengthColor = "bg-red-500"; }
     else if (strengthScore <= 3) { strengthText = "Fair"; strengthColor = "bg-yellow-500"; }
@@ -130,10 +130,13 @@ export default function SignupForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
           <PublicHeader />
-          <div className="flex justify-center pt-14">
+          {/* Same <main id="main"> landmark / skip-link target as the form
+              branch below. Only one branch renders at a time, so the id stays
+              unique in the document. */}
+          <main id="main" className="flex justify-center pt-14">
             <Card className="w-full max-w-md">
               <CardHeader>
                 <CardTitle className="text-2xl text-center">Check your email</CardTitle>
@@ -143,16 +146,16 @@ export default function SignupForm() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {visibleError && (
-                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                     {visibleError}
                   </div>
                 )}
                 {resendMessage && (
-                  <div role="alert" aria-live="polite" className="bg-green-50 text-green-600 p-3 rounded-md text-sm">
+                  <div role="alert" aria-live="polite" className="bg-success/10 text-success p-3 rounded-md text-sm">
                     {resendMessage}
                   </div>
                 )}
-                <p className="text-sm text-center text-gray-600">
+                <p className="text-sm text-center text-muted-foreground">
                   Please click the link in that email to activate your account.
                 </p>
               </CardContent>
@@ -160,22 +163,28 @@ export default function SignupForm() {
                 <Button onClick={handleResend} variant="outline" className="w-full" disabled={isResending}>
                   {isResending ? "Resending..." : "Resend confirmation email"}
                 </Button>
-                <Link href="/login" className="text-sm text-blue-600 hover:underline text-center w-full block">
+                <Link
+                  href="/login"
+                  className="block w-full text-center text-sm font-medium text-primary underline underline-offset-2"
+                >
                   Return to login
                 </Link>
               </CardFooter>
             </Card>
-          </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
         <PublicHeader />
-        <div className="flex justify-center pt-14">
+        {/* <main id="main"> so the root layout's "Skip to main content" link
+            has a target here — without it the skip link silently does nothing
+            on this page, and the form sits outside any landmark. */}
+        <main id="main" className="flex justify-center pt-14">
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-2xl text-center">
@@ -186,7 +195,7 @@ export default function SignupForm() {
             <form onSubmit={handleSignup} aria-labelledby="signup-heading">
               <CardContent className="space-y-4">
                 {visibleError && (
-                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                     {visibleError}
                   </div>
                 )}
@@ -229,7 +238,7 @@ export default function SignupForm() {
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
@@ -238,13 +247,16 @@ export default function SignupForm() {
                   </div>
                   {password && (
                     <div className="flex items-center space-x-2 mt-2">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${strengthColor} transition-all duration-300`} 
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${strengthColor} transition-all duration-300`}
                           style={{ width: `${(strengthScore / 5) * 100}%` }}
+                          aria-hidden="true"
                         />
                       </div>
-                      <span className="text-xs text-gray-500 w-12">{strengthText}</span>
+                      {/* The bar is decorative; strength is conveyed in text so
+                          it never depends on colour perception alone. */}
+                      <span className="text-xs text-muted-foreground w-12">{strengthText}</span>
                     </div>
                   )}
                 </div>
@@ -262,7 +274,7 @@ export default function SignupForm() {
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                     >
@@ -275,13 +287,22 @@ export default function SignupForm() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Signing Up..." : "Sign Up"}
                 </Button>
-                <div className="text-sm text-center text-gray-500">
-                   Already have an account? <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
+                {/* Inline links carry an underline, not colour alone: axe's
+                    link-in-text-block rule (and users who cannot distinguish
+                    the accent from body text) need a non-colour cue. */}
+                <div className="text-sm text-center text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    href="/login"
+                    className="font-medium text-primary underline underline-offset-2"
+                  >
+                    Log in
+                  </Link>
                 </div>
               </CardFooter>
             </form>
           </Card>
-        </div>
+        </main>
       </div>
     </div>
   );

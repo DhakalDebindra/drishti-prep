@@ -1,89 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@repo/utils";
-import { useTheme } from "next-themes";
-import { useContrast } from "@/hooks/use-theme";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
+
+// Anchors are absolute (`/#id`) rather than bare (`#id`) so the same header
+// works on /login and /signup, where those sections do not exist — the link
+// navigates home and then scrolls, instead of doing nothing.
+const navLinks = [
+  { href: "/#features", label: "Features", id: "features" },
+  { href: "/#courses", label: "Courses", id: "courses" },
+  { href: "/#accessibility", label: "Accessibility", id: "accessibility" },
+  { href: "/#about", label: "About", id: "about" },
+];
 
 export function PublicHeader() {
-  const [contrast, setContrast] = useContrast();
-  const { resolvedTheme } = useTheme();
   const pathname = usePathname();
-  const [currentHash, setCurrentHash] = useState(() =>
-    typeof window !== "undefined" ? window.location.hash : ""
-  );
+  const [currentHash, setCurrentHash] = useState("");
 
   useEffect(() => {
     const onHashChange = () => setCurrentHash(window.location.hash);
+    onHashChange();
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const isDark = resolvedTheme === "dark";
-
-  const toggleContrast = () => {
-    const next = contrast === "high-contrast" ? "normal" : "high-contrast";
-    setContrast(next);
-  };
-
-  const navLinks = [
-    { href: "#about", label: "About" },
-    { href: "#features", label: "Features" },
-  ];
-
-  const palette = useMemo(() => {
-    if (contrast === "high-contrast") {
-      return {
-        panel: "border-white bg-black",
-        labelTone: "text-yellow-200",
-        subText: "text-white",
-        navText: "text-white",
-        buttonBorder: "border-white/80 text-white",
-      };
-    }
-    if (isDark) {
-      return {
-        panel: "border-white/10 bg-white/5",
-        labelTone: "text-emerald-200",
-        subText: "text-slate-200",
-        navText: "text-slate-100",
-        buttonBorder: "border-white/25 text-slate-50",
-      };
-    }
-    return {
-      panel: "border-slate-200 bg-white",
-      labelTone: "text-emerald-700",
-      subText: "text-slate-700",
-      navText: "text-slate-900",
-      buttonBorder: "border-slate-300 text-slate-900",
-    };
-  }, [contrast, isDark]);
-
   return (
-    <header className={cn("flex items-center justify-between rounded-2xl px-4 py-3 backdrop-blur", palette.panel)}>
-      <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-300 text-slate-950 font-semibold shadow-lg shadow-emerald-500/30">
-            DP
-          </div>
-          <div>
-            <p className={cn("text-sm uppercase font-bold tracking-[0.2em]", palette.labelTone)}>DrishtiPrep</p>
-            <p className={cn("text-xs", palette.subText)}>Accessible exam prep</p>
-          </div>
-        </Link>
-      </div>
+    <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 shadow-sm">
+      <Link
+        href="/"
+        className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span
+          aria-hidden="true"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground"
+        >
+          DP
+        </span>
+        <span className="flex flex-col">
+          <span className="text-sm font-bold uppercase tracking-[0.2em] text-primary">
+            DrishtiPrep
+          </span>
+          <span className="text-xs text-muted-foreground">Accessible exam prep</span>
+        </span>
+      </Link>
 
-      <nav aria-label="primary" className={cn("hidden items-center gap-6 text-sm font-medium sm:flex", palette.navText)}>
+      <nav
+        aria-label="Primary"
+        className="hidden items-center gap-1 text-sm font-medium md:flex"
+      >
         {navLinks.map((link) => {
-          const isActive = pathname === "/" && link.href === currentHash;
+          const isActive = pathname === "/" && currentHash === `#${link.id}`;
           return (
             <Link
               key={link.href}
               href={link.href}
               aria-current={isActive ? "page" : undefined}
-              className="rounded-md px-2 py-1 transition hover:text-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-300"
+              className={cn(
+                "rounded-lg px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-foreground hover:bg-muted hover:text-primary"
+              )}
             >
               {link.label}
             </Link>
@@ -91,26 +72,24 @@ export function PublicHeader() {
         })}
       </nav>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-pressed={contrast === "high-contrast"}
-          className={cn("rounded-full border px-4 py-2 text-xs font-semibold transition hover:border-emerald-200 hover:text-emerald-200", palette.buttonBorder)}
-          onClick={toggleContrast}
-        >
-          {contrast === "high-contrast" ? "Contrast: High" : "Contrast: Normal"}
-        </button>
+      <div className="flex items-center gap-2">
+        {/* The shared menu ships hardcoded white/slate colours for the practice
+            screens. Those never adapt to the high-contrast theme (.hc is not
+            .dark, so its dark: variants never fire) and the trigger renders as
+            a white pill on a black page. Override with semantic tokens —
+            twMerge lets these win over the component's defaults. */}
+        <PracticeAccessibilityMenu
+          buttonMode="compact"
+          className="border-border bg-card text-foreground hover:bg-muted dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted"
+        />
         <Link
           href="/login"
-          className={cn("hidden rounded-full border px-4 py-2 text-xs font-semibold sm:inline-flex transition hover:border-emerald-200 hover:text-emerald-200", palette.buttonBorder)}
+          className={cn(buttonVariants({ variant: "outline" }), "hidden font-semibold sm:inline-flex")}
         >
-          Login
+          Log in
         </Link>
-        <Link
-          href="/signup"
-          className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-0.5 hover:bg-emerald-300"
-        >
-          Get Started
+        <Link href="/signup" className={cn(buttonVariants(), "font-semibold")}>
+          Get started
         </Link>
       </div>
     </header>

@@ -1,7 +1,7 @@
 "use client";
 
 import { loginSchema } from "@repo/validation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -91,10 +91,13 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
         <PublicHeader />
-        <div className="flex justify-center pt-14">
+        {/* <main id="main"> so the root layout's "Skip to main content" link
+            has a target here — without it the skip link silently does nothing
+            on this page, and the form sits outside any landmark. */}
+        <main id="main" className="flex justify-center pt-14">
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-2xl text-center">
@@ -105,7 +108,7 @@ export default function LoginForm() {
             <form onSubmit={handleLogin} aria-labelledby="login-heading">
               <CardContent className="space-y-4">
                 {error && (
-                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                  <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                     {error}
                   </div>
                 )}
@@ -125,7 +128,10 @@ export default function LoginForm() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm font-medium text-primary underline underline-offset-2"
+                    >
                       Forgot password?
                     </Link>
                   </div>
@@ -140,7 +146,7 @@ export default function LoginForm() {
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
@@ -153,13 +159,22 @@ export default function LoginForm() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
-                <div className="text-sm text-center text-gray-500">
-                  Need an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+                {/* Inline links carry an underline, not colour alone: axe's
+                    link-in-text-block rule (and users who cannot distinguish
+                    the accent from body text) need a non-colour cue. */}
+                <div className="text-sm text-center text-muted-foreground">
+                  Need an account?{" "}
+                  <Link
+                    href="/signup"
+                    className="font-medium text-primary underline underline-offset-2"
+                  >
+                    Sign up
+                  </Link>
                 </div>
               </CardFooter>
             </form>
           </Card>
-        </div>
+        </main>
       </div>
     </div>
   );
