@@ -12,16 +12,18 @@ const columns = [
   {
     heading: "Accessibility",
     links: [
-      { href: "/#accessibility", label: "How we build for screen readers" },
+      { href: "/#accessibility", label: "Accessibility" },
       { href: "/#partnerships", label: "Sponsored access" },
     ],
   },
   {
     heading: "Account",
     links: [
+      // "Reset password" deliberately omitted: password recovery belongs on the
+      // login page, where someone actually discovers they need it, not in
+      // sitewide navigation.
       { href: "/signup", label: "Create an account" },
       { href: "/login", label: "Log in" },
-      { href: "/forgot-password", label: "Reset password" },
     ],
   },
 ];
@@ -43,8 +45,8 @@ export function PublicFooter() {
             </span>
           </div>
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Screen-reader-first preparation for Nepal&apos;s Teaching License, TSC, and Public
-            Service examinations — built with blind educators, for blind learners.
+            Exam preparation for Nepal&apos;s Teaching License, TSC, and Public Service papers,
+            built with blind educators for blind learners.
           </p>
         </div>
 
@@ -54,7 +56,7 @@ export function PublicFooter() {
               <h2 className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                 {column.heading}
               </h2>
-              {/* min-h-11 keeps every link at a 44px touch target — the same
+              {/* min-h-11 keeps every link at a 44px touch target, the same
                   large-target rule the rest of the app follows for low-vision
                   and motor-impaired users. */}
               <ul className="text-sm">
@@ -74,8 +76,11 @@ export function PublicFooter() {
         </div>
       </div>
 
+      {/* Standard footer close: a copyright line is what people look for here.
+          Privacy, Terms and Contact belong beside it, but those pages do not
+          exist yet, so nothing links to them rather than shipping dead links. */}
       <p className="mt-8 border-t border-border pt-6 text-sm text-muted-foreground">
-        DrishtiPrep — accessible exam preparation in Nepal.
+        &copy; {new Date().getFullYear()} DrishtiPrep. Accessible exam preparation in Nepal.
       </p>
     </footer>
   );

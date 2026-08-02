@@ -51,7 +51,7 @@ export default async function PracticeDashboardPage() {
                 Your recent practice
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                A calm snapshot of your latest attempts, progress trends, and the practice work you may want to revisit.
+                Your recent attempts, how your scores are trending, and the sets worth another look.
               </p>
             </div>
           </div>

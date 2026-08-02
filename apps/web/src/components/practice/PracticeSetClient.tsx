@@ -298,7 +298,7 @@ function PracticeSetView() {
               <Headphones className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span>
                 {audio.status === "loading"
-                  ? "Shruti is on — preparing audio for this question…"
+                  ? "Shruti is on. Preparing audio for this question…"
                   : audio.status === "error"
                     ? "Shruti is on, but its audio couldn't load for this question."
                     : "Shruti audio isn't available for this question yet."}
@@ -491,7 +491,7 @@ function PracticeSetView() {
             <Headphones className="h-5 w-5 shrink-0" aria-hidden="true" />
             <span>
               {audio.status === "loading"
-                ? "Shruti is on — preparing audio for this question…"
+                ? "Shruti is on. Preparing audio for this question…"
                 : audio.status === "error"
                   ? "Shruti is on, but its audio couldn't load for this question. Using your screen reader instead."
                   : "Shruti is on, but audio isn't available for this question yet. Using your screen reader instead."}
@@ -614,7 +614,7 @@ function PracticeSetView() {
                     </div>
                     <div className="mt-5 flex flex-wrap gap-3 border-t border-slate-200 pt-4 text-sm font-medium dark:border-slate-800">
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                        Your choice: <span className="font-semibold">{state.answers[currentQuestion.id]?.selected_option ?? "—"}</span>
+                        Your choice: <span className="font-semibold">{state.answers[currentQuestion.id]?.selected_option ?? "Not answered"}</span>
                       </span>
                       <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-success">
                         Correct Answer: <span className="font-semibold">{currentQuestion.correct_option}</span>

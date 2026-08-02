@@ -54,16 +54,16 @@ export default function UpdatePasswordForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <main id="main" className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle id="update-password-heading" className="text-2xl text-center">Set New Password</CardTitle>
+          <CardTitle className="text-2xl text-center"><h1 id="update-password-heading">Set a new password</h1></CardTitle>
           <CardDescription className="text-center">Enter your new password below</CardDescription>
         </CardHeader>
         <form onSubmit={handleUpdatePassword} aria-labelledby="update-password-heading">
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">New password</Label>
               <Input
                 id="password"
                 type="password"
@@ -76,7 +76,7 @@ export default function UpdatePasswordForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">Confirm new password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -95,6 +95,6 @@ export default function UpdatePasswordForm() {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </main>
   );
 }

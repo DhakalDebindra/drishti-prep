@@ -8,7 +8,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { PracticeAccessibilityMenu } from "@/components/practice/AccessibilityMenu";
 
 // Anchors are absolute (`/#id`) rather than bare (`#id`) so the same header
-// works on /login and /signup, where those sections do not exist — the link
+// works on /login and /signup, where those sections do not exist. The link
 // navigates home and then scrolls, instead of doing nothing.
 const navLinks = [
   { href: "/#features", label: "Features", id: "features" },
@@ -76,10 +76,13 @@ export function PublicHeader() {
         {/* The shared menu ships hardcoded white/slate colours for the practice
             screens. Those never adapt to the high-contrast theme (.hc is not
             .dark, so its dark: variants never fire) and the trigger renders as
-            a white pill on a black page. Override with semantic tokens —
+            a white pill on a black page. Override with semantic tokens:
             twMerge lets these win over the component's defaults. */}
+        {/* buttonMode="label" renders "Accessibility"; the compact mode renders
+            "A11y", which is developer jargon most learners will not recognise
+            and which screen readers read as nonsense. */}
         <PracticeAccessibilityMenu
-          buttonMode="compact"
+          buttonMode="label"
           className="border-border bg-card text-foreground hover:bg-muted dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted"
         />
         <Link

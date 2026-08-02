@@ -20,9 +20,9 @@ import {
 } from "@/features/shruti/sourceExtractors";
 
 const MODES: Array<{ value: DictationMode; label: string; hint: string }> = [
-  { value: "word",     label: "Word by word", hint: "One word at a time — easiest for new learners" },
+  { value: "word",     label: "Word by word", hint: "One word at a time, easiest for new learners" },
   { value: "phrase",   label: "Phrase",       hint: "Three words at a time" },
-  { value: "sentence", label: "Sentence",     hint: "Full sentence — best for fluent writers" },
+  { value: "sentence", label: "Sentence",     hint: "Full sentence, best for fluent writers" },
 ];
 
 const PACE_ORDER: Array<keyof typeof PACE_PRESETS> = ["slow", "medium", "fast", "sprint"];
@@ -185,7 +185,7 @@ export default function ShrutiDictationPage() {
   // is then prompted to click Prepare again with the new settings.
   useEffect(() => {
     if (synthAbortRef.current) {
-      cancelPrepare("Settings changed — preparation cancelled. Click Prepare to retry.");
+      cancelPrepare("Settings changed. Click Prepare to retry.");
     }
   }, [text, mode, runtime.state.selectedVoiceURI, pace.preset, pace.wpm]);
 
@@ -246,7 +246,7 @@ export default function ShrutiDictationPage() {
 
   const onPdfChosen = async (file: File) => {
     // New source upload supersedes any pending prepare.
-    cancelPrepare("New PDF loaded — preparation cancelled. Click Prepare to retry.");
+    cancelPrepare("New PDF loaded. Click Prepare to retry.");
     setExtractError(null);
     setExtracting(true);
     try {
@@ -263,7 +263,7 @@ export default function ShrutiDictationPage() {
   };
 
   const onImagesChosen = async (files: File[]) => {
-    cancelPrepare("New images loaded — preparation cancelled. Click Prepare to retry.");
+    cancelPrepare("New images loaded. Click Prepare to retry.");
     setExtractError(null);
     setExtracting(true);
     try {
@@ -420,13 +420,13 @@ export default function ShrutiDictationPage() {
               <div className="rounded border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-2 text-xs text-amber-800 dark:text-amber-300">
                 <strong>Please review the extracted text before starting.</strong>{" "}
                 PDFs with multi-column layouts, footnotes, or scanned pages may have
-                jumbled word order. The editbox is editable — fix any issues there
+                jumbled word order. The edit box is editable, so fix any issues there
                 first.
               </div>
             )}
             {extraction.truncated && (
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                File had more pages — only the first {extraction.source === "pdf" ? LIMITS.MAX_PDF_PAGES : LIMITS.MAX_IMAGES} were extracted.
+                File had more pages. Only the first {extraction.source === "pdf" ? LIMITS.MAX_PDF_PAGES : LIMITS.MAX_IMAGES} were extracted.
               </p>
             )}
             <label htmlFor="page-select" className="block text-sm font-medium">
@@ -456,7 +456,7 @@ export default function ShrutiDictationPage() {
         />
         {!text.trim() && (
           <p className="text-sm text-slate-500">
-            Add some text above to begin — paste a passage, upload a PDF, or upload images of your notes.
+            Add some text above to begin. You can paste a passage, upload a PDF, or upload images of your notes.
           </p>
         )}
         {issues.length > 0 && (
@@ -476,7 +476,7 @@ export default function ShrutiDictationPage() {
         <h2 id="settings-heading" className="text-lg font-medium">2. Reading settings</h2>
         <Card className="p-4 sm:p-5 space-y-5">
           {/* Mode, Voice, Pace: native selects (best screen-reader support).
-              Hidden entirely when auto-advance is on — the slider below
+              Hidden entirely when auto-advance is on: the slider below
               replaces them. */}
           {!runtime.state.autoAdvance && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -541,7 +541,7 @@ export default function ShrutiDictationPage() {
                 })}
               </select>
               <p id="voice-hint" className="text-xs text-slate-600 dark:text-slate-400">
-                <strong>Nepali (cloud)</strong> voices stream from Microsoft Edge TTS — free, no
+                <strong>Nepali (cloud)</strong> voices stream from Microsoft Edge TTS, free and with no
                 install. <strong>Browser</strong> voices use whatever your OS provides. Voices
                 marked <em>Natural</em>, <em>Neural</em>, or <em>Enhanced</em> sound most human.
               </p>
@@ -566,7 +566,7 @@ export default function ShrutiDictationPage() {
                   const p = PACE_PRESETS[key];
                   return (
                     <option key={key} value={key}>
-                      {p.preset.charAt(0).toUpperCase() + p.preset.slice(1)} — {p.wpm} words / min
+                      {p.preset.charAt(0).toUpperCase() + p.preset.slice(1)}: {p.wpm} words per minute
                     </option>
                   );
                 })}
@@ -698,14 +698,14 @@ export default function ShrutiDictationPage() {
                 </summary>
                 <p className="mt-2">
                   Shruti speaks with its own voice. To avoid two voices at once, silence
-                  your screen reader temporarily — it will still respond to commands:
+                  your screen reader temporarily. It will still respond to commands:
                 </p>
                 <ul className="mt-2 list-disc pl-5 space-y-1">
-                  <li><strong>NVDA</strong> — <kbd>NVDA</kbd>+<kbd>S</kbd> to cycle speech / beeps / off</li>
-                  <li><strong>JAWS</strong> — <kbd>Insert</kbd>+<kbd>Spacebar</kbd>, then <kbd>S</kbd></li>
-                  <li><strong>Narrator</strong> — <kbd>Caps Lock</kbd>+<kbd>V</kbd> to mute</li>
-                  <li><strong>VoiceOver (macOS)</strong> — <kbd>VO</kbd>+<kbd>S</kbd> to mute</li>
-                  <li><strong>TalkBack</strong> — swipe down then right → <em>Pause feedback</em></li>
+                  <li><strong>NVDA</strong>: <kbd>NVDA</kbd>+<kbd>S</kbd> to cycle speech / beeps / off</li>
+                  <li><strong>JAWS</strong>: <kbd>Insert</kbd>+<kbd>Spacebar</kbd>, then <kbd>S</kbd></li>
+                  <li><strong>Narrator</strong>: <kbd>Caps Lock</kbd>+<kbd>V</kbd> to mute</li>
+                  <li><strong>VoiceOver (macOS)</strong>: <kbd>VO</kbd>+<kbd>S</kbd> to mute</li>
+                  <li><strong>TalkBack</strong>: swipe down then right → <em>Pause feedback</em></li>
                 </ul>
               </details>
               <Button

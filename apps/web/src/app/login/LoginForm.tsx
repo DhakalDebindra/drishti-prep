@@ -78,7 +78,7 @@ export default function LoginForm() {
       }
     } catch (err: any) {
       if (err.message === "AbortError") {
-        setError("Connection timed out — please try again");
+        setError("Connection timed out. Please try again.");
         toast.error("Connection timed out.");
       } else {
         logger.error("Caught Exception during Sign In:", err);
@@ -95,7 +95,7 @@ export default function LoginForm() {
       <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
         <PublicHeader />
         {/* <main id="main"> so the root layout's "Skip to main content" link
-            has a target here — without it the skip link silently does nothing
+            has a target here. Without it the skip link silently does nothing
             on this page, and the form sits outside any landmark. */}
         <main id="main" className="flex justify-center pt-14">
           <Card className="w-full max-w-md">

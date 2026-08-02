@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
  * the user continues to /update-password.
  *
  * Rendered as a client island so the homepage itself can stay a server
- * component. Must be wrapped in <Suspense> — useSearchParams opts the subtree
+ * component. Must be wrapped in <Suspense>, because useSearchParams opts the subtree
  * into client-side rendering.
  */
 export function AuthCodeHandler() {

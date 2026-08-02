@@ -108,7 +108,7 @@ export default async function EnrollPage({
           {moduleData.description ? (
             <SeeMoreText text={moduleData.description} maxLength={200} />
           ) : (
-            "A paid course. Verify your identity and complete payment to unlock all subjects, topics, and practice sets."
+            "A paid course. Verify your identity and complete payment to open its subjects and practice sets."
           )}
         </div>
       </header>
@@ -273,7 +273,7 @@ function HowToEnroll({
           <p className="mt-1 text-sm text-muted-foreground">
             Payment instructions were emailed to you when your identity was
             approved. To enroll in this course, send us your payment proof and
-            we&apos;ll activate access — usually within 24 hours.
+            we&apos;ll activate access, usually within 24 hours.
           </p>
         </div>
       </div>
@@ -295,7 +295,7 @@ function HowToEnroll({
                 Open WhatsApp
               </a>
               <span className="text-muted-foreground">
-                — include your registered email and the course name
+                Include your registered email and the course name.
               </span>
             </li>
           )}

@@ -121,7 +121,7 @@ export default function VerifyIdentityClient({
             <p className="mt-1 text-sm">
               Your disability card was submitted
               {latestSubmittedAt ? ` on ${formatDate(latestSubmittedAt)}` : ""}.
-              We will review it and email you when there is an update — usually
+              We will review it and email you when there is an update, usually
               within 24 hours.
             </p>
           </div>

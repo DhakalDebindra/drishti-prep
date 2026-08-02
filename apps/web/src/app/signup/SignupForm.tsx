@@ -182,13 +182,13 @@ export default function SignupForm() {
       <div className="mx-auto max-w-6xl px-6 pt-10 lg:px-10">
         <PublicHeader />
         {/* <main id="main"> so the root layout's "Skip to main content" link
-            has a target here — without it the skip link silently does nothing
+            has a target here. Without it the skip link silently does nothing
             on this page, and the form sits outside any landmark. */}
         <main id="main" className="flex justify-center pt-14">
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-2xl text-center">
-                <h1 id="signup-heading">Create Account</h1>
+                <h1 id="signup-heading">Create account</h1>
               </CardTitle>
               <CardDescription className="text-center">Join DrishtiPrep to track your progress</CardDescription>
             </CardHeader>
@@ -200,7 +200,7 @@ export default function SignupForm() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">Full name</Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -261,7 +261,7 @@ export default function SignupForm() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm password</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
