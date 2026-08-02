@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Authentication', () => {
   test('should navigate to login page', async ({ page }) => {
     await page.goto('http://localhost:3000/login');
-    await expect(page.getByRole('heading', { name: 'DrishtiPrep Login' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Log in' })).toBeVisible();
   });
 
   test('should show error on invalid login', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Authentication', () => {
 
   test('should navigate to signup page', async ({ page }) => {
     await page.goto('http://localhost:3000/signup');
-    await expect(page.getByRole('heading', { name: 'Create Account' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible();
   });
 
   test('should show error on mismatched passwords', async ({ page }) => {
