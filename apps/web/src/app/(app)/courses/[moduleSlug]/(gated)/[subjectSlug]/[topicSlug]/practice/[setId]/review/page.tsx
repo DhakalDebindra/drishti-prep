@@ -97,7 +97,7 @@ export default async function NestedReviewPage({ params, searchParams }: PagePro
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 id="main-heading" className="text-2xl font-bold text-slate-900 dark:text-white">Performance Review</h1>
+        <h1 id="main-heading" className="text-2xl font-bold text-slate-900 dark:text-white">Performance review</h1>
       </div>
 
       <ScoreOverview

@@ -17,12 +17,14 @@ interface ReportIssueModalProps {
   questionId: string;
 }
 
+// Sentence case, and worded the way a learner would describe the problem
+// rather than the way an editor would file it.
 const ISSUE_TYPES = [
-  "Incorrect Answer Key",
-  "Outdated Information/Curriculum",
-  "Translation or Clarity Issue",
-  "Typo or Formatting Error",
-  "Other",
+  "The marked answer looks wrong",
+  "The information is out of date",
+  "The wording is confusing or mistranslated",
+  "There is a typo or formatting problem",
+  "Something else",
 ];
 
 export function ReportIssueModal({ isOpen, onClose, questionId }: ReportIssueModalProps) {

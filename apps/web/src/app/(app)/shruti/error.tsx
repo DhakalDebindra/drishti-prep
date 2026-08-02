@@ -32,7 +32,7 @@ export default function ShrutiErrorBoundary({ error, reset }: Props) {
       </h1>
       <Card className="p-4 border-red-300 bg-red-50 dark:bg-red-950/30 space-y-3">
         <p className="text-sm">
-          Something went wrong inside the dictation app. Your text isn't lost — the
+          Something went wrong inside the dictation app. Your text isn't lost. The
           editor will restore it on reload. If the problem persists, try clearing
           the browser cache for this site.
         </p>

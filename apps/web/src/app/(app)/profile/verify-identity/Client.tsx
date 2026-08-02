@@ -121,7 +121,7 @@ export default function VerifyIdentityClient({
             <p className="mt-1 text-sm">
               Your disability card was submitted
               {latestSubmittedAt ? ` on ${formatDate(latestSubmittedAt)}` : ""}.
-              We will review it and email you when there is an update — usually
+              We will review it and email you when there is an update, usually
               within 24 hours.
             </p>
           </div>
@@ -143,7 +143,7 @@ export default function VerifyIdentityClient({
             <h2 className="font-semibold">Previous submission was not approved</h2>
             <p className="mt-1 text-sm">
               <span className="font-medium">Reason:</span>{" "}
-              {rejectionReason || "(no reason provided)"}
+              {rejectionReason || "No reason was given. Contact us if you need details."}
             </p>
             {latestReviewedAt && (
               <p className="mt-1 text-xs opacity-80">

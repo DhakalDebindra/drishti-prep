@@ -151,7 +151,7 @@ export function InlineQuestionForm({
           />
           <p className="text-xs text-slate-500">
             Audio is generated from the saved version. If you&apos;ve edited the
-            text above, save first — the trigger will mark audio as outdated
+            text above, save first. The trigger will mark audio as outdated
             and you can regenerate.
           </p>
           <div className="flex gap-2 justify-end pt-2 border-t">

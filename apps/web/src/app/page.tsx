@@ -32,12 +32,15 @@ export const revalidate = 3600;
 const HEADLINE = "Study independently. Compete equally.";
 
 const SUBHEADLINE =
-  "The accessibility hub for blind and low-vision aspirants in Nepal. Structured, screen-reader-first preparation for the Teaching License, TSC, and Public Service examinations, with an intensive focus on the General Knowledge that decides those results.";
+  "Exam preparation for blind and low-vision candidates in Nepal, covering the Teaching License, TSC, and Public Service papers. General Knowledge carries most of the marks, so it carries most of our material.";
 
-const EXAMS = ["Teaching License", "TSC Preparation", "PSC (Public Service)", "GK Mastery"];
+// Exam names only. "GK Mastery" used to sit in this list, but the list is
+// labelled "Examinations covered" and GK is a subject inside these papers,
+// not an exam a candidate sits.
+const EXAMS = ["Teaching License", "TSC (Teacher Service)", "PSC (Public Service)"];
 
 /**
- * The core offering. Deliberately limited to the primary learning surface —
+ * The core offering. Deliberately limited to the primary learning surface:
  * notes, flashcards, MCQ practice and progress. Exploratory audio work
  * (voice tutor, dictation, weekly audio review) is intentionally NOT
  * advertised here: it stays unlisted until those features are confirmed to
@@ -48,88 +51,88 @@ const FEATURES = [
     icon: BookOpen,
     title: "Structured notes",
     description:
-      "Screen-reader-friendly, topic-wise notes and study material, organised so you can read a subject through in a sensible order instead of hunting for it.",
+      "Topic-wise notes you can read straight through with a screen reader, arranged in the order the syllabus teaches them rather than scattered across files.",
   },
   {
     icon: Zap,
     title: "Flashcards",
     description:
-      "Quick revision decks for the high-yield facts that decide these examinations — built for fast, repeated passes rather than long reading sessions.",
+      "Short decks for the facts that keep reappearing in past papers. Built for quick repeat passes rather than long sittings.",
   },
   {
     icon: ListChecks,
     title: "MCQ practice",
     description:
-      "Curriculum-aligned practice sets, daily drills, and model questions, each with a full written explanation of why the right answer is right.",
+      "Practice sets and model questions that follow the official syllabus. Every question carries a written explanation of the answer.",
   },
   {
     icon: Layers,
     title: "Practice that follows the syllabus",
     description:
-      "Work down a real curriculum tree — course, subject, topic, subtopic, practice set — with breadcrumbs at every level so you can step back up from anywhere without losing your place.",
+      "Courses open into subjects, then topics, then sets. Breadcrumbs on every page let you step back up a level without losing your place.",
   },
   {
     icon: Sparkles,
     title: "AI feedback after every set",
     description:
-      "Submit a set and get a coach-style review: what you missed, the reasoning behind each answer, and which topics to go back to next.",
+      "Submit a set and you get a written review of what you missed and which topics are worth going back to.",
   },
   {
     icon: BarChart3,
     title: "Progress tracking",
     description:
-      "Scores, weak areas, and improvement over time, with your full attempt history kept so you can re-read any past set and its explanations.",
+      "Your scores and weak areas over time. Past attempts stay available, so you can reopen a set you have already done and read its explanations again.",
   },
   {
     icon: Bookmark,
     title: "Bookmarks",
     description:
-      "Save any question while you are practising and come back to it later, without breaking your flow to write it down somewhere else.",
+      "Save a question mid-set and come back to it later. You do not have to stop and note it down somewhere else.",
   },
   {
     icon: GraduationCap,
     title: "Exam coverage",
     description:
-      "Comprehensive Teaching License, TSC, and Public Service preparation, with an intensive focus on the General Knowledge components that decide the result.",
+      "Material for the Teaching License, TSC, and Public Service papers, weighted towards the General Knowledge sections that carry the most marks.",
   },
 ] as const;
 
 const ACCESSIBILITY_POINTS = [
   {
     icon: ScreenShare,
-    title: "Screen readers first, not last",
+    title: "Built for screen readers",
     description:
-      "Semantic headings, labelled landmarks, live regions for every state change, and a skip link on every page. Tested with NVDA, JAWS, Narrator, VoiceOver, and TalkBack.",
+      "Proper headings, labelled landmarks, live regions that announce state changes, and a working skip link on every page. Tested with NVDA, JAWS, Narrator, VoiceOver, and TalkBack.",
   },
   {
     icon: Keyboard,
     title: "Everything on the keyboard",
     description:
-      "Practice and navigation are fully keyboard-driven, with an in-app shortcut reference you can open at any time. Nothing on the site needs a pointer.",
+      "Practice and navigation both run from the keyboard, and you can open the shortcut list at any time. The whole site is usable without a mouse.",
   },
   {
     icon: Type,
     title: "Six display controls",
     description:
-      "Font size, contrast, line spacing, motion, layout density, and focus-ring strength. Change them from any page — they save on your device and sync to your profile once you sign in.",
+      "Font size, contrast, line spacing, motion, layout density, and focus-ring strength. You can change them from any page. They save on your device and follow your profile once you sign in.",
   },
   {
     icon: Contrast,
-    title: "A real high-contrast mode",
+    title: "High-contrast mode",
     description:
-      "Not a filter over a pale theme: a separate high-contrast palette with solid surfaces, heavy borders, and large touch targets, built for low residual vision.",
+      "A separate palette rather than a filter laid over the light theme, with solid backgrounds, heavy borders, and large touch targets for low residual vision.",
   },
   {
     icon: Languages,
     title: "Nepali that reads correctly",
     description:
-      "Nepali text is tagged with its language so screen readers switch pronunciation engines, and Devanagari numerals carry a spoken equivalent that Android screen readers would otherwise skip entirely.",
+      "Nepali text is tagged with its language so screen readers switch pronunciation. Devanagari numerals also carry a spoken equivalent, which Android screen readers otherwise skip over.",
   },
   {
     icon: GraduationCap,
     title: "Built with blind educators",
     description:
-      "Curriculum and interface decisions are made with blind teachers and candidates, not designed for them from a distance.",
+      "Blind teachers and candidates help decide what goes into the curriculum and how the interface behaves before it ships.",
   },
 ] as const;
 
@@ -137,17 +140,17 @@ const STEPS = [
   {
     title: "Create your account",
     description:
-      "Sign up with an email address. If you are applying for sponsored access, you can submit your disability documentation from your profile.",
+      "Sign up with an email address. If you are applying for sponsored access, upload your disability documentation from the Identity page once you are signed in.",
   },
   {
-    title: "Choose a course and drill down",
+    title: "Pick a course",
     description:
-      "Open a course, pick a subject, then a topic, then a practice set — or resume exactly where you stopped from your dashboard.",
+      "Open a course and work down to a subject, a topic, and a set. Your dashboard also takes you straight back to wherever you stopped last time.",
   },
   {
     title: "Practise and review",
     description:
-      "Answer with the keyboard, read the AI feedback on what you missed, and watch your scores and weak areas build up across every attempt.",
+      "Answer from the keyboard, then read the feedback on what you missed. Your scores and weak areas build up across attempts.",
   },
 ] as const;
 
@@ -177,7 +180,7 @@ type CourseRow = {
 };
 
 /**
- * Course descriptions in the database run to full catalogue copy — several
+ * Course descriptions in the database run to full catalogue copy, several
  * hundred words for some courses. Rendered raw they blow the card out to many
  * times the height of its neighbour. Trim to a sentence-length summary at a
  * word boundary; the full text still lives on the course page itself.
@@ -261,7 +264,7 @@ export default async function Home() {
                   href="/signup"
                   className={cn(buttonVariants({ size: "lg" }), "text-base font-semibold")}
                 >
-                  Join DrishtiPrep
+                  Create free account
                   <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Link>
                 <Link
@@ -277,22 +280,20 @@ export default async function Home() {
             </div>
 
             <div className="flex flex-col gap-4 rounded-2xl border-2 border-border bg-muted p-5 sm:p-6">
-              <h2 className="text-lg font-bold text-foreground">
-                Everything in one accessible workspace
-              </h2>
+              <h2 className="text-lg font-bold text-foreground">What you get</h2>
               <ul className="space-y-3">
                 {[
                   {
                     icon: Layers,
-                    text: "Syllabus-structured practice sets with full written explanations",
+                    text: "Practice sets that follow the syllabus, each with written explanations",
                   },
                   {
                     icon: BookOpen,
-                    text: "Topic-wise notes and flashcards for focused revision",
+                    text: "Topic-wise notes and flashcards for revision",
                   },
                   {
                     icon: Sparkles,
-                    text: "AI feedback the moment you submit a set",
+                    text: "Feedback on what you missed as soon as you submit",
                   },
                   {
                     icon: BarChart3,
@@ -316,7 +317,8 @@ export default async function Home() {
                 ))}
               </ul>
               <p className="rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 text-sm font-medium text-foreground">
-                Works with your screen reader as it is. No plugin, no special mode, no extra setup.
+                Works with the screen reader you already use. There is no plugin to install and no
+                separate accessible version to switch to.
               </p>
             </div>
           </section>
@@ -355,10 +357,10 @@ export default async function Home() {
                       screen reader's link list. */}
                   <Link
                     href="/signup"
-                    aria-label={`Create an account to start ${course.name}`}
+                    aria-label={`Sign up to open ${course.name}`}
                     className={cn(buttonVariants({ variant: "outline" }), "mt-4 w-full font-semibold")}
                   >
-                    Create an account to start
+                    Sign up to open
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </article>
@@ -371,7 +373,7 @@ export default async function Home() {
             id="features"
             eyebrow="Features"
             heading="What you get"
-            description="Mainstream platforms leave blind candidates to piece their preparation together from scattered recordings and inaccessible PDFs. These are the tools that replace that."
+            description="Most platforms leave blind candidates stitching preparation together from scattered recordings and PDFs a screen reader cannot read. These are the tools that replace that."
           >
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((feature) => (
@@ -416,7 +418,7 @@ export default async function Home() {
             id="accessibility"
             eyebrow="Accessibility"
             heading="Prep without barriers"
-            description="Accessibility here is the architecture, not a compliance checklist bolted on at the end. Every one of these is in the product now — try the Accessibility button in the header before you even make an account."
+            description="All of this is in the product today. You can try it before making an account: the Accessibility button in the header opens the same controls a signed-in learner gets."
           >
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {ACCESSIBILITY_POINTS.map((point) => (
@@ -435,22 +437,22 @@ export default async function Home() {
             id="about"
             eyebrow="About"
             heading="Why we exist"
-            description="Why should blind candidates have to assemble their own education? While mainstream platforms treat accessibility as an afterthought, DrishtiPrep is built from the ground up for screen readers. We move past passive audio recordings and unstructured material to a structured, interactive way of studying that respects your time and your goals."
+            description="Blind candidates in Nepal usually prepare from whatever they can get hold of: borrowed recordings, scanned notes, a friend reading questions aloud. It works, but it is slow, and it leaves people sitting the same exam with less preparation than everyone else. DrishtiPrep exists so the same syllabus is available in a form a screen reader can actually work through."
           >
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-6">
                 <h3 className="text-base font-bold text-foreground">Built with the community</h3>
                 <p className="mt-2 text-sm leading-relaxed text-foreground">
-                  Curriculum and feedback are co-created with blind educators, so every flow is
-                  keyboard-first, screen-reader-ready, and aligned to the actual examination
-                  syllabus.
+                  Blind educators write and review the material, and test the interface before it
+                  ships. That is why it works with a keyboard and a screen reader from the start
+                  instead of being retrofitted afterwards.
                 </p>
               </div>
               <div className="rounded-2xl border-2 border-border bg-background p-6">
                 <h3 className="text-base font-bold text-foreground">Our goal</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   More visually impaired candidates passing the Teaching License, TSC, and PSC
-                  examinations through focused General Knowledge preparation — and entering
+                  examinations through focused General Knowledge preparation, and going on into
                   government service across Nepal.
                 </p>
               </div>
@@ -479,27 +481,22 @@ export default async function Home() {
                   Access for individuals and partners
                 </h2>
                 <p className="text-base leading-relaxed text-foreground">
-                  Individual learners can create an account and begin straight away. For candidates
-                  who cannot pay for premium modules, DrishtiPrep works with NGOs, disability
-                  organisations, and training institutes to sponsor access — submit your disability
-                  documentation from your profile and we will verify it for you.
+                  Anyone can create an account and start straight away. For candidates who cannot
+                  pay for the premium modules, we work with NGOs, disability organisations, and
+                  training institutes to sponsor access. Once you have an account, upload your
+                  documentation from the Identity page and we will verify it.
                 </p>
               </div>
-              <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
+              {/* One button, not two. This section previously offered a second
+                  "Partnership options" button that also pointed at /signup,
+                  which promised a page that does not exist. Sponsorship starts
+                  from the profile, so signup is the only real next step. */}
+              <div className="shrink-0">
                 <Link
                   href="/signup"
                   className={cn(buttonVariants({ size: "lg" }), "text-base font-semibold")}
                 >
-                  Join now
-                </Link>
-                <Link
-                  href="/signup"
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "text-base font-semibold"
-                  )}
-                >
-                  Partnership options
+                  Create free account
                 </Link>
               </div>
             </div>

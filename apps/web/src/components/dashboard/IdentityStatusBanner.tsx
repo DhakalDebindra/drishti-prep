@@ -46,7 +46,7 @@ export function IdentityStatusBanner({
       >
         <XCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
         <div className="flex-1">
-          <p className="font-semibold">Identity verification needs another look</p>
+          <p className="font-semibold">We could not verify your identity</p>
           {rejectionReason && (
             <p className="mt-1 text-sm">
               <span className="font-medium">Reason:</span> {rejectionReason}
@@ -56,7 +56,7 @@ export function IdentityStatusBanner({
             href="/profile/verify-identity"
             className={buttonVariants({ size: "sm" }) + " mt-3"}
           >
-            Re-submit identity
+            Submit again
           </Link>
         </div>
       </div>
@@ -71,7 +71,7 @@ export function IdentityStatusBanner({
     >
       <ShieldCheck className="w-5 h-5 mt-0.5 flex-shrink-0" />
       <div className="flex-1">
-        <p className="font-semibold">Verify your identity to unlock paid courses</p>
+        <p className="font-semibold">Verify your identity to enrol in paid courses</p>
         <p className="mt-1 text-sm">
           DrishtiPrep is built for visually-impaired aspirants. Submit your
           disability card once and you'll receive payment instructions for any

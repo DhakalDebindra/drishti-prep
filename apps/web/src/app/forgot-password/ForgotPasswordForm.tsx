@@ -31,7 +31,7 @@ export default function ForgotPasswordForm() {
         if (err.message.includes("User not found")) {
           setError("We couldn't find an account with that email address.");
         } else {
-          setError("An error occurred while sending the reset link. Please try again.");
+          setError("We could not send the reset link. Please try again.");
         }
       } else {
         setIsSuccess(true);
@@ -46,40 +46,40 @@ export default function ForgotPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <main id="main" className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Check your email</CardTitle>
+            <CardTitle className="text-2xl text-center"><h1>Check your email</h1></CardTitle>
             <CardDescription className="text-center">
               We've sent password reset instructions to <span className="font-semibold">{email}</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-center text-gray-600">
+            <p className="text-sm text-center text-muted-foreground">
               Please check your inbox and follow the link to create a new password.
             </p>
           </CardContent>
           <CardFooter>
-            <Link href="/login" className="text-sm text-blue-600 hover:underline text-center w-full block">
+            <Link href="/login" className="block w-full text-center text-sm font-medium text-primary underline underline-offset-2">
               Return to login
             </Link>
           </CardFooter>
         </Card>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <main id="main" className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle id="forgot-password-heading" className="text-2xl text-center">Reset Password</CardTitle>
-          <CardDescription className="text-center">Enter your email to receive a reset link</CardDescription>
+          <CardTitle className="text-2xl text-center"><h1 id="forgot-password-heading">Reset password</h1></CardTitle>
+          <CardDescription className="text-center">We will email you a link to set a new password.</CardDescription>
         </CardHeader>
         <form onSubmit={handleResetPassword} aria-labelledby="forgot-password-heading">
           <CardContent className="space-y-4">
             {error && (
-              <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                 {error}
               </div>
             )}
@@ -99,14 +99,14 @@ export default function ForgotPasswordForm() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Sending Link..." : "Send Reset Link"}
+              {isLoading ? "Sending Link..." : "Send reset link"}
             </Button>
-            <div className="text-sm text-center text-gray-500">
-              Remember your password? <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
+            <div className="text-sm text-center text-muted-foreground">
+              Remember your password? <Link href="/login" className="font-medium text-primary underline underline-offset-2">Log in</Link>
             </div>
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </main>
   );
 }

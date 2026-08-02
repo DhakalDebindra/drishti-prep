@@ -21,11 +21,11 @@ const monoFont = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "DrishtiPrep — Accessible Exam Prep for Nepal",
+    default: "DrishtiPrep: Accessible Exam Prep for Nepal",
     template: "%s | DrishtiPrep",
   },
   description:
-    "An accessibility-first exam preparation platform for blind and low-vision aspirants in Nepal. Practice MCQs, get AI-powered feedback, and prepare with a screen-reader-first experience.",
+    "Exam preparation for blind and low-vision candidates in Nepal. Practise MCQs for the Teaching License, TSC, and Public Service papers with a site built for screen readers.",
   applicationName: "DrishtiPrep",
   keywords: [
     "DrishtiPrep",
@@ -39,18 +39,18 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "DrishtiPrep" }],
   openGraph: {
-    title: "DrishtiPrep — Accessible Exam Prep for Nepal",
+    title: "DrishtiPrep: Accessible Exam Prep for Nepal",
     description:
-      "Accessibility-first exam preparation for blind and low-vision aspirants in Nepal.",
+      "Exam preparation for blind and low-vision candidates in Nepal, built for screen readers.",
     siteName: "DrishtiPrep",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "DrishtiPrep — Accessible Exam Prep for Nepal",
+    title: "DrishtiPrep: Accessible Exam Prep for Nepal",
     description:
-      "Accessibility-first exam preparation for blind and low-vision aspirants in Nepal.",
+      "Exam preparation for blind and low-vision candidates in Nepal, built for screen readers.",
   },
   robots: { index: true, follow: true },
 };

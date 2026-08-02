@@ -40,8 +40,8 @@ export function MemoryHeatWidget({
 
   return (
     <WidgetCard
-      title="Revision Snapshot"
-      subtitle={`A quick view of what still feels solid and what may need another pass from your ${totalQuestions} practiced questions.`}
+      title="Revision"
+      subtitle={`Based on the ${totalQuestions} questions you have practised so far.`}
       actionSlot={
         <div className="flex items-center gap-2 shrink-0">
           <Activity className={`w-6 h-6 ${heatColor}`} aria-hidden="true" />

@@ -66,7 +66,7 @@ export function DashboardWelcomeCard() {
           Welcome to DrishtiPrep
         </h2>
         <p className="text-base leading-relaxed text-muted-foreground">
-          This is your practice hub — choose a course, work through practice sets, and track your progress.
+          Pick a course, work through its practice sets, and your scores build up here as you go.
         </p>
       </div>
 

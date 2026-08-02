@@ -104,10 +104,10 @@ export default async function ReviewPage({ params, searchParams }: PageProps) {
               Practice review
             </p>
             <h1 id="main-heading" className="mt-1 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
-              Performance Review
+              Performance review
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              A clearer look at how this session went — score, AI insights, and a question-by-question breakdown.
+              Your score for this session, the AI feedback, and a question-by-question breakdown.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

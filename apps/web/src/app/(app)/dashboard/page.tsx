@@ -155,8 +155,8 @@ export default async function DashboardPage() {
             </h2>
             <p className="text-sm text-muted-foreground">
               {isResuming
-                ? "Pick up where you left off — jump straight to a subject, topic, or set."
-                : "Explore a free course — jump straight to a subject, topic, or set."}
+                ? "Go straight back to the subject, topic or set you were last working on."
+                : "Open this course and go straight to a subject, topic or set."}
             </p>
             <RecentCourses courses={[courseToShow]} />
           </section>

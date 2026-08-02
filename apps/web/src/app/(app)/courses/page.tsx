@@ -33,9 +33,9 @@ export default async function CoursesIndexPage() {
   return (
     <section className="space-y-6 max-w-5xl mx-auto px-4 py-8">
       <div>
-        <p className="text-sm uppercase tracking-wide text-muted-foreground">Learning Paths</p>
-        <h1 id="main-heading" className="text-2xl font-semibold text-foreground">Available Courses</h1>
-        <p className="text-muted-foreground">Choose a course module to start your preparation.</p>
+        <p className="text-sm uppercase tracking-wide text-muted-foreground">Courses</p>
+        <h1 id="main-heading" className="text-2xl font-semibold text-foreground">Available courses</h1>
+        <p className="text-muted-foreground">Pick a course to see its subjects and practice sets.</p>
         {error && (
           <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             Unable to load courses right now. Please retry.

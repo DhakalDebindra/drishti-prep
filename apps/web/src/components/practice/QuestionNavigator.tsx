@@ -11,7 +11,7 @@ export function QuestionNavigator() {
 
   return (
     <nav
-      aria-label="Question Navigator"
+      aria-label="Question navigator"
       className="mt-2 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
     >
       <div className="mb-4 flex items-center justify-between gap-3">

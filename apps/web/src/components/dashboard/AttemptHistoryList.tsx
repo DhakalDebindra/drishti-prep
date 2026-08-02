@@ -50,8 +50,8 @@ export function AttemptHistoryList({ attempts }: { attempts: AttemptWithSet[] })
 
   return (
     <WidgetCard
-      title="Active Practice Sets"
-      subtitle="Your recent practice sessions across all courses."
+      title="Recent practice"
+      subtitle="Sets you have worked on across all your courses."
       contentClassName="p-0"
       actionSlot={
         <span className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">

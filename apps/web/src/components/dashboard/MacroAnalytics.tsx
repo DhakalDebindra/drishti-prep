@@ -46,19 +46,19 @@ export function MacroAnalytics({ attempts }: { attempts: AttemptRow[] }) {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-8">
       <StatCard
         icon={Target}
-        label="Questions Practiced"
+        label="Questions practised"
         value={totalQuestionsPracticed}
         tone="primary"
       />
       <StatCard
         icon={CheckCircle2}
-        label="Overall Accuracy"
+        label="Overall accuracy"
         value={`${overallAccuracy}%`}
         tone="success"
       />
       <StatCard
         icon={Activity}
-        label="Active Study Days"
+        label="Days studied"
         value={7}
         tone="primary"
       />

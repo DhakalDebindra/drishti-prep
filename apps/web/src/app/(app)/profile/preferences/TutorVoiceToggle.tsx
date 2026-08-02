@@ -28,7 +28,7 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       } else {
         setMessage(
           next
-            ? "Shruti enabled. It will activate on your next practice session."
+            ? "Shruti is on. It starts with your next practice set."
             : "Shruti disabled."
         );
       }
@@ -40,7 +40,7 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       <div className="flex items-start justify-between gap-6">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            Shruti — AI voice tutor (नेपाली)
+            Shruti: AI voice tutor (नेपाली)
           </h2>
           <p className="mt-1 text-sm text-slate-600 max-w-prose">
             Shruti reads questions, options, and explanations aloud in natural
@@ -63,7 +63,7 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-6 list-none">
             {TUTOR_HOTKEYS.map((h) => (
               <li key={h.action}>
-                <kbd className="font-mono">{formatHotkeyLabel(h.label)}</kbd> — {h.description}
+                <kbd className="font-mono">{formatHotkeyLabel(h.label)}</kbd>: {h.description}
               </li>
             ))}
           </ul>
