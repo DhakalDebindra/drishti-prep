@@ -28,7 +28,7 @@ export function TutorVoiceToggle({ initialEnabled }: Props) {
       } else {
         setMessage(
           next
-            ? "Shruti enabled. It will activate on your next practice session."
+            ? "Shruti is on. It starts with your next practice set."
             : "Shruti disabled."
         );
       }

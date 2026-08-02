@@ -15,7 +15,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
       try {
         const response = await fetch(`/api/attempts/${attemptId}/feedback`);
         if (!response.ok) {
-          throw new Error("Failed to generate AI feedback");
+          throw new Error("We could not generate feedback for this attempt.");
         }
         const data = await response.json();
         setFeedback(data);
@@ -103,7 +103,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
           <div className="rounded-2xl border border-border bg-muted/40 p-5">
             <div className="mb-3 flex items-center gap-2 text-success">
               <Lightbulb className="h-5 w-5" />
-              <h3 className="text-lg font-bold">Overall Performance</h3>
+              <h3 className="text-lg font-bold">Overall performance</h3>
             </div>
             <div className="text-sm leading-relaxed text-foreground">
               <RichText>{feedback.strengths}</RichText>
@@ -115,7 +115,7 @@ export function AIFeedbackPanel({ attemptId }: { attemptId: string }) {
           <div>
             <div className="mb-3 flex items-center gap-2 text-primary">
               <Sparkles className="h-5 w-5" />
-              <h3 className="text-lg font-bold">Recommended Focus Areas</h3>
+              <h3 className="text-lg font-bold">What to focus on next</h3>
             </div>
             <div className="space-y-3">
               {weakZones.map((zone, idx) => (
