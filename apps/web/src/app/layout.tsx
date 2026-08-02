@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | DrishtiPrep",
   },
   description:
-    "Exam preparation for blind and low-vision candidates in Nepal. Practise MCQs for the Teaching License, TSC, and Public Service papers with a site built for screen readers.",
+    "Exam preparation for blind and low-vision candidates in Nepal. Practise MCQs for the Teaching License, Teacher Service Commission and Public Service Commission papers with a site built for screen readers.",
   applicationName: "DrishtiPrep",
   keywords: [
     "DrishtiPrep",

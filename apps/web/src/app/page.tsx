@@ -32,12 +32,16 @@ export const revalidate = 3600;
 const HEADLINE = "Study independently. Compete equally.";
 
 const SUBHEADLINE =
-  "Exam preparation for blind and low-vision candidates in Nepal, covering the Teaching License, TSC, and Public Service papers. General Knowledge carries most of the marks, so it carries most of our material.";
+  "Exam preparation for blind and low-vision candidates in Nepal, covering the Teaching License, TSC, and PSC papers. General Knowledge carries most of the marks, so it carries most of our material.";
 
 // Exam names only. "GK Mastery" used to sit in this list, but the list is
 // labelled "Examinations covered" and GK is a subject inside these papers,
 // not an exam a candidate sits.
-const EXAMS = ["Teaching License", "TSC (Teacher Service)", "PSC (Public Service)"];
+const EXAMS = [
+  "Teaching License",
+  "TSC (Teacher Service Commission)",
+  "PSC (Public Service Commission)",
+];
 
 /**
  * The core offering. Deliberately limited to the primary learning surface:
@@ -93,7 +97,7 @@ const FEATURES = [
     icon: GraduationCap,
     title: "Exam coverage",
     description:
-      "Material for the Teaching License, TSC, and Public Service papers, weighted towards the General Knowledge sections that carry the most marks.",
+      "Material for the Teaching License, TSC, and PSC papers, weighted towards the General Knowledge sections that carry the most marks.",
   },
 ] as const;
 
