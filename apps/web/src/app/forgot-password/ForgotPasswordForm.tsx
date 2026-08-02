@@ -31,7 +31,7 @@ export default function ForgotPasswordForm() {
         if (err.message.includes("User not found")) {
           setError("We couldn't find an account with that email address.");
         } else {
-          setError("An error occurred while sending the reset link. Please try again.");
+          setError("We could not send the reset link. Please try again.");
         }
       } else {
         setIsSuccess(true);
@@ -74,7 +74,7 @@ export default function ForgotPasswordForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center"><h1 id="forgot-password-heading">Reset password</h1></CardTitle>
-          <CardDescription className="text-center">Enter your email to receive a reset link</CardDescription>
+          <CardDescription className="text-center">We will email you a link to set a new password.</CardDescription>
         </CardHeader>
         <form onSubmit={handleResetPassword} aria-labelledby="forgot-password-heading">
           <CardContent className="space-y-4">
@@ -99,7 +99,7 @@ export default function ForgotPasswordForm() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Sending Link..." : "Send Reset Link"}
+              {isLoading ? "Sending Link..." : "Send reset link"}
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Remember your password? <Link href="/login" className="font-medium text-primary underline underline-offset-2">Log in</Link>

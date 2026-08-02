@@ -32,8 +32,13 @@ export function ConfirmSubmitDialog() {
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">
             Confirm submission
           </DialogTitle>
+          {/* Only mention unanswered questions when there are some. The old
+              copy always printed the count, so a completed set read "The
+              remaining 0 will be marked as skipped." */}
           <DialogDescription className="text-slate-600 dark:text-slate-300">
-            You have answered {answeredCount} question{answeredCount === 1 ? "" : "s"}. The remaining {unansweredCount} will be marked as skipped. Are you ready to submit?
+            {unansweredCount === 0
+              ? `All ${answeredCount} questions answered. You cannot change your answers after submitting.`
+              : `${unansweredCount} of ${answeredCount + unansweredCount} questions are still unanswered. They will be scored as incorrect.`}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -49,7 +54,7 @@ export function ConfirmSubmitDialog() {
             onClick={submitPracticeSet}
             className="rounded-full bg-primary shadow-md shadow-primary/20 transition hover:bg-primary/90"
           >
-            Confirm and submit
+            Submit
           </Button>
         </DialogFooter>
       </DialogContent>

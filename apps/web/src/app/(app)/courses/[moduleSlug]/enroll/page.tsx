@@ -236,7 +236,7 @@ function RejectedIdentity({
           <h2 className="font-semibold">Identity verification was not approved</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Reason:</span>{" "}
-            {reason || "(no reason provided)"}
+            {reason || "No reason was given. Contact us if you need details."}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             You can submit a new image to try again.

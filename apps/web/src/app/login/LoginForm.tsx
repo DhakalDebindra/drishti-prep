@@ -12,7 +12,6 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { logger } from "@/lib/logger";
-import { toast } from "react-hot-toast";
 
 const supabase = createClient();
 
@@ -63,7 +62,7 @@ export default function LoginForm() {
         if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid credentials")) {
           setError("Incorrect email or password.");
         } else {
-          setError("An error occurred during sign in. Please try again.");
+          setError("We could not sign you in. Please try again.");
         }
       } else if (data?.user && !data.user.email_confirmed_at) {
         // Sign out immediately if email is not confirmed
@@ -71,7 +70,6 @@ export default function LoginForm() {
         setError("Please verify your email address before signing in. Check your inbox for the confirmation link.");
       } else {
         logger.info("Login successful! Redirecting...");
-        toast.success("Signed in successfully!");
         const next = searchParams.get("next");
         router.push(next && next.startsWith("/") ? next : "/dashboard");
         router.refresh(); // Refresh the router cache to ensure the server component picks up the new session
@@ -79,11 +77,9 @@ export default function LoginForm() {
     } catch (err: any) {
       if (err.message === "AbortError") {
         setError("Connection timed out. Please try again.");
-        toast.error("Connection timed out.");
       } else {
         logger.error("Caught Exception during Sign In:", err);
-        setError("An unexpected error occurred. Please try again.");
-        toast.error("An unexpected error occurred.");
+        setError("Something went wrong signing you in. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -101,7 +97,7 @@ export default function LoginForm() {
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-2xl text-center">
-                <h1 id="login-heading">DrishtiPrep Login</h1>
+                <h1 id="login-heading">Log in</h1>
               </CardTitle>
               <CardDescription className="text-center">Sign in to your learner account</CardDescription>
             </CardHeader>
@@ -157,7 +153,7 @@ export default function LoginForm() {
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing In..." : "Sign In"}
+                  {isLoading ? "Logging in..." : "Log in"}
                 </Button>
                 {/* Inline links carry an underline, not colour alone: axe's
                     link-in-text-block rule (and users who cannot distinguish

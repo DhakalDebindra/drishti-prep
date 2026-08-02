@@ -12,7 +12,6 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { logger } from "@/lib/logger";
-import { toast } from "react-hot-toast";
 
 const supabase = createClient();
 
@@ -84,24 +83,24 @@ export default function SignupForm() {
 
       if (err) {
         if (err.message.includes("User already registered")) {
-          setError("This email is already registered. Please log in.");
+          setError("An account with this email already exists. Try logging in instead.");
         } else {
-          setError("Incorrect email or password.");
+          // Was "Incorrect email or password", copied from the login form. There
+          // is no password to get wrong when creating an account, so it told
+          // people to fix something that was not the problem.
+          setError("We could not create your account. Check your details and try again.");
         }
       } else {
         if (data.session) {
-           toast.success("Account created successfully!");
            router.push("/dashboard");
            router.refresh();
         } else {
-           toast.success("Registration successful! Check your email.");
            setIsSuccess(true);
         }
       }
     } catch (err: any) {
       logger.error("Caught Exception during Sign Up:", err);
-      setError("An unexpected error occurred. Please try again.");
-      toast.error("An unexpected error occurred.");
+      setError("Something went wrong creating your account. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -120,9 +119,9 @@ export default function SignupForm() {
         }
       });
       if (err) throw err;
-      setResendMessage("Confirmation email resent successfully.");
-    } catch (err: any) {
-      setError(err.message || "Failed to resend confirmation email.");
+      setResendMessage("Confirmation email sent again.");
+    } catch {
+      setError("We could not resend the confirmation email. Please try again in a minute.");
     } finally {
       setIsResending(false);
     }
@@ -190,7 +189,7 @@ export default function SignupForm() {
               <CardTitle className="text-2xl text-center">
                 <h1 id="signup-heading">Create account</h1>
               </CardTitle>
-              <CardDescription className="text-center">Join DrishtiPrep to track your progress</CardDescription>
+              <CardDescription className="text-center">Create an account to track your progress.</CardDescription>
             </CardHeader>
             <form onSubmit={handleSignup} aria-labelledby="signup-heading">
               <CardContent className="space-y-4">
@@ -285,7 +284,7 @@ export default function SignupForm() {
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing Up..." : "Sign Up"}
+                  {isLoading ? "Creating account..." : "Create account"}
                 </Button>
                 {/* Inline links carry an underline, not colour alone: axe's
                     link-in-text-block rule (and users who cannot distinguish

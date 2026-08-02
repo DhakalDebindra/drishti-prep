@@ -244,7 +244,7 @@ export function QuestionReviewList({ questions, initialBookmarkedIds = [] }: Que
                       <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                         {question.explanation
                           ? <RichText>{question.explanation}</RichText>
-                          : "No specific database explanation provided. Check the AI feedback for insights."}
+                          : "No written explanation for this question yet. The AI feedback above covers it."}
                       </div>
                     </div>
 

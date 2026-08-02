@@ -300,8 +300,8 @@ function PracticeSetView() {
                 {audio.status === "loading"
                   ? "Shruti is on. Preparing audio for this question…"
                   : audio.status === "error"
-                    ? "Shruti is on, but its audio couldn't load for this question."
-                    : "Shruti audio isn't available for this question yet."}
+                    ? "Shruti could not load audio for this question."
+                    : "No Shruti audio for this question yet."}
               </span>
             </div>
           )}
@@ -312,7 +312,6 @@ function PracticeSetView() {
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                   Question {currentIndex + 1} of {questionCount}
                 </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Audio-first practice with clean visuals.</p>
               </div>
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                 {answeredCount}/{questionCount}
@@ -375,14 +374,14 @@ function PracticeSetView() {
               disabled={state.status === "submitted" || state.isSubmitting || !canSubmit}
             >
               {state.isSubmitting
-                ? "Submitting..."
+                ? "Submitting…"
                 : state.status === "submitted"
                   ? "Submitted"
                   : "Submit"}
             </Button>
             {!canSubmit && state.status !== "submitted" && (
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}). Any unanswered questions will be marked as skipped.
+                Answer {minToSubmit} questions to submit. You have answered {answeredCount}.
               </p>
             )}
           </div>
@@ -493,8 +492,8 @@ function PracticeSetView() {
               {audio.status === "loading"
                 ? "Shruti is on. Preparing audio for this question…"
                 : audio.status === "error"
-                  ? "Shruti is on, but its audio couldn't load for this question. Using your screen reader instead."
-                  : "Shruti is on, but audio isn't available for this question yet. Using your screen reader instead."}
+                  ? "Shruti could not load audio for this question. Your screen reader will read it instead."
+                  : "No Shruti audio for this question yet. Your screen reader will read it instead."}
             </span>
           </div>
         )}
@@ -589,7 +588,7 @@ function PracticeSetView() {
                 >
                   <span className="flex items-center gap-3">
                     <BookOpen aria-hidden="true" className="h-5 w-5" />
-                    <span>{state.showExplanation[currentQuestion.id] ? "Hide Explanation" : "Show Explanation"}</span>
+                    <span>{state.showExplanation[currentQuestion.id] ? "Hide explanation" : "Show explanation"}</span>
                   </span>
                   {state.showExplanation[currentQuestion.id] ? (
                     <ChevronUp className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -657,15 +656,15 @@ function PracticeSetView() {
                     }
                   >
                     {state.isSubmitting
-                      ? "Submitting..."
+                      ? "Submitting…"
                       : state.status === "submitted"
                         ? "Submitted"
                         : !userEmail
                           ? !currentHandled
-                            ? "Skip & See Demo Feedback"
-                            : "Submit & Get Feedback"
+                            ? "Skip and submit"
+                            : "Submit"
                           : !currentHandled
-                            ? "Skip & Submit"
+                            ? "Skip and submit"
                             : "Done"}
                   </Button>
                 ) : (
@@ -699,16 +698,16 @@ function PracticeSetView() {
                     disabled={state.status === "submitted" || state.isSubmitting || state.saving || !canSubmit}
                   >
                     {state.isSubmitting
-                      ? "Submitting..."
+                      ? "Submitting…"
                       : state.status === "submitted"
                         ? "Submitted"
                         : !userEmail
-                          ? "Submit & See Demo Feedback"
+                          ? "Submit"
                           : "Done"}
                   </Button>
                   {!canSubmit && state.status !== "submitted" && (
                     <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                      Answer at least {minToSubmit} questions to submit ({answeredCount}/{minToSubmit}). Any unanswered questions will be marked as skipped.
+                      Answer {minToSubmit} questions to submit. You have answered {answeredCount}.
                     </p>
                   )}
                 </>

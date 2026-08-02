@@ -104,13 +104,13 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
             </div>
             <h3 className="text-lg font-semibold text-slate-950 dark:text-white">No bookmarks yet</h3>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              Questions you save during practice will appear here, ready for a calmer second look.
+              Questions you save while practising show up here so you can come back to them later.
             </p>
             <Link
               href="/practice"
               className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Start practicing
+              Start practice
             </Link>
           </li>
         ) : (
@@ -223,7 +223,7 @@ export function BookmarkedQuestionList({ initialQuestions }: BookmarkedQuestionL
                         {question.explanation ? (
                           <RichText>{question.explanation}</RichText>
                         ) : (
-                          "No specific database explanation provided."
+                          "No explanation available for this question."
                         )}
                       </div>
                     </div>

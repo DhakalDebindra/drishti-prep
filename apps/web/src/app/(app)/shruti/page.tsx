@@ -204,7 +204,7 @@ export default function ShrutiDictationPage() {
   };
 
   // Primary action button morphs by FSM status:
-  //   no doc                       → "Prepare & Start"
+  //   no doc                       → "Prepare and start"
   //   IDLE with doc                → "Start"
   //   PLAYING / WAITING_FOR_USER   → "Stop"  (halts dictation, returns to IDLE)
   //   PAUSED                       → "Resume"
@@ -216,7 +216,7 @@ export default function ShrutiDictationPage() {
   let primaryLabel: string;
   let primaryAction: () => void;
   if (!doc) {
-    primaryLabel = "Prepare & Start";
+    primaryLabel = "Prepare and start";
     primaryAction = startNow;
   } else if (status === "PAUSED") {
     primaryLabel = "Resume";
@@ -354,7 +354,7 @@ export default function ShrutiDictationPage() {
         {sourceTab === "pdf" && (
           <div className="space-y-3 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50 p-6 transition-all">
             <label className="block text-sm cursor-pointer group">
-              <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Upload a PDF Document</span>
+              <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Upload a PDF</span>
               <span className="block text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
                 Up to {LIMITS.MAX_PDF_PAGES} pages will be extracted locally. Your file is never uploaded to a server.
               </span>
@@ -376,7 +376,7 @@ export default function ShrutiDictationPage() {
         {sourceTab === "image" && (
           <div className="space-y-3 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50 p-6 transition-all">
             <label className="block text-sm cursor-pointer group">
-              <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Upload Note Images</span>
+              <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Upload note images</span>
               <span className="block text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
                 Up to {LIMITS.MAX_IMAGES} images (PNG, JPG, HEIC). Processed via Gemini OCR for handwriting support.
               </span>
