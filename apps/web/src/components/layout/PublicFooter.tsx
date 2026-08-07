@@ -45,8 +45,8 @@ export function PublicFooter() {
             </span>
           </div>
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Exam preparation for Nepal&apos;s Teaching License, TSC, and Public Service papers,
-            built with blind educators for blind learners.
+            Exam preparation for Nepal&apos;s Teaching License, TSC, and PSC papers, built with
+            blind educators for blind learners.
           </p>
         </div>
 
