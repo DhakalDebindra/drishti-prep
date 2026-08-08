@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useManageQuestionSet } from "@/hooks/admin/useManageQuestionSet";
@@ -19,7 +19,24 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { RichText } from "@/components/ui/RichText";
-import { Settings, Trash2, Loader2, Globe, Lock } from "lucide-react";
+import { Settings, Trash2, Loader2, Globe, Lock, Plus } from "lucide-react";
+
+/** House standard for a practice set; sets below this are flagged as short. */
+const TARGET_QUESTION_COUNT = 20;
+
+/** Stable DOM key for the unsaved draft question (field ids, saving key). */
+const DRAFT_ID = "new-question";
+
+const BLANK_QUESTION = {
+  id: DRAFT_ID,
+  content: "",
+  option_a: "",
+  option_b: "",
+  option_c: "",
+  option_d: "",
+  correct_option: "",
+  explanation: ""
+};
 
 export default function EditorClient({ initialSet, initialQuestions }: { initialSet: any, initialQuestions: any[] }) {
   const { 
@@ -30,16 +47,37 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
     deleteQuestionSet 
   } = useManageQuestionSet(initialSet);
   
-  const { 
-    questions, 
-    editingId, 
-    savingKey: questionsSavingKey, 
-    setEditingId, 
-    updateQuestion, 
-    moveQuestion 
+  const {
+    questions,
+    editingId,
+    savingKey: questionsSavingKey,
+    creating,
+    setEditingId,
+    addQuestion,
+    updateQuestion,
+    moveQuestion
   } = useManageQuestions(initialQuestions, initialSet.id);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  // Bumped after each successful add so the draft form remounts empty,
+  // ready for the next question without a round trip through the list.
+  const [draftKey, setDraftKey] = useState(0);
+  const draftRef = useRef<HTMLDivElement>(null);
+
+  const activeCount = questions.filter(q => q.status !== 'deprecated').length;
+  const shortBy = TARGET_QUESTION_COUNT - activeCount;
+
+  useEffect(() => {
+    if (isAdding) {
+      draftRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isAdding, draftKey]);
+
+  const openDraft = () => {
+    setEditingId(null);
+    setIsAdding(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -56,18 +94,35 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
               {questionSet.is_verified ? "Published" : "Draft"}
             </span>
           </div>
-          <p className="text-slate-500 text-sm flex items-center gap-4">
+          <p className="text-slate-500 text-sm flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-              Questions: {questions.length} ({questions.filter(q => q.status !== 'deprecated').length} active)
+              Questions: {questions.length} ({activeCount} active)
             </span>
             <span className="flex items-center gap-1.5 capitalize">
                {questionSet.set_type.replace('_', ' ')}
             </span>
+            {shortBy > 0 && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                {shortBy} short of the {TARGET_QUESTION_COUNT}-question target
+              </span>
+            )}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Add Question Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openDraft}
+            className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+            aria-label="Add a new question to this set"
+          >
+            <Plus className="w-4 h-4" />
+            Add Question
+          </Button>
+
           {/* Settings Button */}
           <Button 
             variant="outline" 
@@ -268,6 +323,33 @@ export default function EditorClient({ initialSet, initialQuestions }: { initial
             </Card>
           );
         })}
+
+        {/* Add a question to this set */}
+        <div ref={draftRef}>
+          {isAdding ? (
+            <InlineQuestionForm
+              key={`draft-${draftKey}`}
+              q={BLANK_QUESTION}
+              title={`New Question ${questions.length + 1}`}
+              isNew
+              savingKey={creating ? DRAFT_ID : null}
+              onCancel={() => setIsAdding(false)}
+              onSave={async (values) => {
+                const added = await addQuestion(values);
+                if (added) setDraftKey(k => k + 1);
+              }}
+            />
+          ) : (
+            <Button
+              variant="outline"
+              onClick={openDraft}
+              className="w-full h-auto justify-center gap-2 border-2 border-dashed border-slate-300 py-6 text-slate-600 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              Add question {questions.length + 1} to this set
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

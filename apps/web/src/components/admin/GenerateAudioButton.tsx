@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useId, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Headphones, Loader2, Play, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronDown, Headphones, Loader2, Play, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Segment = "stem" | "opt_a" | "opt_b" | "opt_c" | "opt_d" | "explanation";
@@ -29,22 +29,27 @@ type Props = {
   questionId: string;
   initialReady?: boolean | null;
   initialVoice?: string | null;
+  defaultOpen?: boolean;
 };
 
 /**
  * Per-segment audio panel for the admin question editor.
  *
- * Each of the 6 segments shows its own status (✓ ready / – missing),
- * a Play preview button, and a per-segment Regenerate. A "Generate all
- * missing" action covers the common case after editing question text;
- * a voice override picks one of the three tutor voices when the default
- * deterministic assignment pronounces a term badly.
+ * Collapsed by default: the header alone reports readiness, and the six
+ * segment rows (plus their players) stay out of the tab order so Save is
+ * reachable in a couple of keystrokes. Expanding reveals each segment's
+ * status (✓ ready / – missing), a preview player, and a per-segment
+ * Regenerate; "Generate all missing" covers the common case after editing
+ * question text.
  */
 export function GenerateAudioButton({
   questionId,
   initialReady,
   initialVoice,
+  defaultOpen = false,
 }: Props) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<AudioStatus | null>(
     initialReady === true && initialVoice
@@ -130,33 +135,48 @@ export function GenerateAudioButton({
   const presentSet = new Set(status?.segments_present ?? []);
   const missingCount = SEGMENTS.filter((s) => !presentSet.has(s)).length;
 
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <div className="flex items-center gap-2 text-slate-700">
-          <Headphones className="w-4 h-4" aria-hidden="true" />
-          <span className="font-medium">Tutor audio</span>
-          {loading ? (
-            <span className="text-slate-400">checking…</span>
-          ) : status?.ready ? (
-            <span className="text-emerald-700 inline-flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> all 6 segments ready
-            </span>
-          ) : (
-            <span className="text-amber-700 inline-flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5" /> {missingCount} missing
-            </span>
-          )}
-          {status?.voice && (
-            <span className="text-xs text-slate-500">
-              voice <span className="font-mono">{status.voice}</span>
-              {status.version !== null && (
-                <> · v{status.version}</>
-              )}
-            </span>
-          )}
-        </div>
+  const summary = loading ? (
+    <span className="text-slate-400">checking…</span>
+  ) : status?.ready ? (
+    <span className="text-emerald-700 inline-flex items-center gap-1">
+      <CheckCircle2 className="w-3.5 h-3.5" /> all 6 segments ready
+    </span>
+  ) : (
+    <span className="text-amber-700 inline-flex items-center gap-1">
+      <AlertCircle className="w-3.5 h-3.5" /> {missingCount} missing
+    </span>
+  );
 
+  return (
+    <div className="rounded-lg border border-slate-200">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg"
+      >
+        <Headphones className="w-4 h-4 shrink-0" aria-hidden="true" />
+        <span className="font-medium">Tutor audio</span>
+        {summary}
+        {status?.voice && (
+          <span className="text-xs text-slate-500">
+            voice <span className="font-mono">{status.voice}</span>
+            {status.version !== null && (
+              <> · v{status.version}</>
+            )}
+          </span>
+        )}
+        <ChevronDown
+          className={`w-4 h-4 ml-auto shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+        <span className="sr-only">{open ? "Hide audio segments" : "Show audio segments"}</span>
+      </button>
+
+      {!open ? null : (
+      <div id={panelId} className="space-y-3 border-t border-slate-200 p-3">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
         <Button
           type="button"
           variant="outline"
@@ -238,6 +258,8 @@ export function GenerateAudioButton({
           );
         })}
       </div>
+      </div>
+      )}
     </div>
   );
 }

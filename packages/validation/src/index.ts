@@ -50,6 +50,27 @@ export type QuestionSetQuestionFormValues = z.infer<
   typeof questionSetQuestionSchema
 >;
 
+/**
+ * Payload for appending a single question to an existing set.
+ * order_number / position are assigned server-side, so they are not accepted here.
+ */
+export const addQuestionToSetSchema = z.object({
+  content: z.string().trim().min(1, "Question content is required"),
+  option_a: z.string().trim().min(1, "Option A is required"),
+  option_b: z.string().trim().min(1, "Option B is required"),
+  option_c: z.string().trim().min(1, "Option C is required"),
+  option_d: z.string().trim().min(1, "Option D is required"),
+  correct_option: z.enum(["A", "B", "C", "D"], {
+    message: "Correct option must be A, B, C or D",
+  }),
+  explanation: z.string().optional().nullable(),
+  exam_year: z.coerce.number().int().optional().nullable(),
+  paper_ref: z.string().optional().nullable(),
+  language: z.enum(["nepali", "english", "both"]).default("nepali").optional(),
+});
+
+export type AddQuestionToSetPayload = z.infer<typeof addQuestionToSetSchema>;
+
 export const questionSetSchema = z.object({
   subject_id: z.string().min(1, "Subject is required"),
   topic_id: z.string().min(1, "Topic is required"),

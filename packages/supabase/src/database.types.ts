@@ -1196,6 +1196,22 @@ export type Database = {
       }
     }
     Functions: {
+      add_question_to_set: {
+        Args: {
+          p_set_id: string
+          p_content: string
+          p_option_a: string
+          p_option_b: string
+          p_option_c: string
+          p_option_d: string
+          p_correct_option: string
+          p_explanation?: string | null
+          p_exam_year?: number | null
+          p_paper_ref?: string | null
+          p_language?: string | null
+        }
+        Returns: Database["public"]["Tables"]["questions"]["Row"]
+      }
       has_module_access: { Args: { p_module: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }

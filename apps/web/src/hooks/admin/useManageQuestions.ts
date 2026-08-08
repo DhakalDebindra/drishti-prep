@@ -5,6 +5,29 @@ export function useManageQuestions(initialQuestions: any[], setId: string) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const addQuestion = async (values: any) => {
+    setCreating(true);
+    try {
+      const res = await fetch(`/api/question-sets/${setId}/questions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values)
+      });
+      const created = await res.json();
+      if (!res.ok) throw new Error(created?.error || "Failed to add question");
+
+      setQuestions(prev => [...prev, created]);
+      toast.success(`Question ${created.order_number} added`);
+      return true;
+    } catch (e: any) {
+      toast.error(e.message || "Error adding question");
+      return false;
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const updateQuestion = async (id: string, updates: any) => {
     setSavingKey(id);
@@ -65,7 +88,9 @@ export function useManageQuestions(initialQuestions: any[], setId: string) {
     questions,
     editingId,
     savingKey,
+    creating,
     setEditingId,
+    addQuestion,
     updateQuestion,
     moveQuestion
   };

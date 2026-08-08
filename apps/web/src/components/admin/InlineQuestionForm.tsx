@@ -8,35 +8,48 @@ import { Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { GenerateAudioButton } from "./GenerateAudioButton";
 
-export function InlineQuestionForm({ 
-  q, 
+export function InlineQuestionForm({
+  q,
   title,
-  savingKey, 
-  onCancel, 
-  onSave, 
-  highlightCorrect = false 
-}: { 
-  q: any, 
+  savingKey,
+  onCancel,
+  onSave,
+  highlightCorrect = false,
+  isNew = false
+}: {
+  q: any,
   title?: string,
-  savingKey: string | null, 
-  onCancel: () => void, 
+  savingKey: string | null,
+  onCancel: () => void,
   onSave: (updates: any) => void,
-  highlightCorrect?: boolean
+  highlightCorrect?: boolean,
+  /** Draft mode: no audio panel yet (audio needs a saved question) and the
+   *  primary action reads "Add question". */
+  isNew?: boolean
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [explanationText, setExplanationText] = useState<string>(q.explanation || "");
   const [showPreview, setShowPreview] = useState(false);
 
+  const isSaving = savingKey === q.id || savingKey === 'question';
+
+  const readField = (id: string) =>
+    (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? "";
+
+  const collectValues = () => ({
+    content: readField(`edit-content-${q.id}`).trim(),
+    option_a: readField(`edit-a-${q.id}`).trim(),
+    option_b: readField(`edit-b-${q.id}`).trim(),
+    option_c: readField(`edit-c-${q.id}`).trim(),
+    option_d: readField(`edit-d-${q.id}`).trim(),
+    correct_option: readField(`edit-correct-${q.id}`).trim().toUpperCase(),
+  });
+
   const handleAiGenerate = async () => {
     try {
-      const content = (document.getElementById(`edit-content-${q.id}`) as HTMLTextAreaElement).value;
-      const option_a = (document.getElementById(`edit-a-${q.id}`) as HTMLInputElement).value;
-      const option_b = (document.getElementById(`edit-b-${q.id}`) as HTMLInputElement).value;
-      const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
-      const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
-      const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
+      const values = collectValues();
 
-      if (!content || !correct_option) {
+      if (!values.content || !values.correct_option) {
         toast.error("Please fill in the question and correct option first");
         return;
       }
@@ -45,9 +58,9 @@ export function InlineQuestionForm({
       const res = await fetch("/api/admin/generate-explanation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, option_a, option_b, option_c, option_d, correct_option })
+        body: JSON.stringify(values)
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate explanation");
 
@@ -61,6 +74,32 @@ export function InlineQuestionForm({
     }
   };
 
+  const handleSave = () => {
+    if (isSaving || isGenerating) return;
+
+    const values = collectValues();
+
+    const missing = [
+      ["Question content", values.content],
+      ["Option A", values.option_a],
+      ["Option B", values.option_b],
+      ["Option C", values.option_c],
+      ["Option D", values.option_d],
+    ].filter(([, value]) => !value).map(([label]) => label);
+
+    if (missing.length > 0) {
+      toast.error(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+
+    if (!["A", "B", "C", "D"].includes(values.correct_option)) {
+      toast.error("Correct option must be A, B, C or D");
+      return;
+    }
+
+    onSave({ ...values, explanation: explanationText });
+  };
+
   return (
     <Card className="border-blue-400 border-2">
       {title && (
@@ -68,13 +107,21 @@ export function InlineQuestionForm({
           <CardTitle>{title}</CardTitle>
         </CardHeader>
       )}
-      <CardContent className={title ? "space-y-4" : "space-y-4 pt-6"}>
+      <CardContent
+        className={title ? "space-y-4" : "space-y-4 pt-6"}
+        onKeyDown={(e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            handleSave();
+          }
+        }}
+      >
         <div>
           <label htmlFor={`edit-content-${q.id}`} className="text-sm font-medium">Question Content</label>
-          <Textarea 
+          <Textarea
             lang="ne"
-            defaultValue={q.content} 
-            id={`edit-content-${q.id}`} 
+            defaultValue={q.content}
+            id={`edit-content-${q.id}`}
             rows={4}
             autoFocus
           />
@@ -143,35 +190,47 @@ export function InlineQuestionForm({
             />
           )}
         </div>
-        <div className="mt-4 pt-4 border-t space-y-3">
-          <GenerateAudioButton
-            questionId={q.id}
-            initialReady={q.audio_ready ?? null}
-            initialVoice={q.audio_voice ?? null}
-          />
-          <p className="text-xs text-slate-500">
-            Audio is generated from the saved version. If you&apos;ve edited the
-            text above, save first. The trigger will mark audio as outdated
-            and you can regenerate.
+
+        {/* Save sits directly after the fields so it is one tab away — the
+            audio panel below is collapsed and stays out of the tab order. */}
+        <div className="flex flex-wrap gap-2 justify-end items-center pt-4 border-t">
+          <p className="mr-auto text-xs text-slate-500">
+            Press <kbd className="rounded border border-slate-300 bg-slate-100 px-1 py-0.5 font-mono text-[10px]">Ctrl</kbd>
+            {" + "}
+            <kbd className="rounded border border-slate-300 bg-slate-100 px-1 py-0.5 font-mono text-[10px]">Enter</kbd>
+            {" "}to save from any field.
           </p>
-          <div className="flex gap-2 justify-end pt-2 border-t">
-            <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-            <Button
-              disabled={savingKey === q.id || savingKey === 'question' || isGenerating}
-              aria-live="polite"
-              onClick={() => {
-                const content = (document.getElementById(`edit-content-${q.id}`) as HTMLTextAreaElement).value;
-                const option_a = (document.getElementById(`edit-a-${q.id}`) as HTMLInputElement).value;
-                const option_b = (document.getElementById(`edit-b-${q.id}`) as HTMLInputElement).value;
-                const option_c = (document.getElementById(`edit-c-${q.id}`) as HTMLInputElement).value;
-                const option_d = (document.getElementById(`edit-d-${q.id}`) as HTMLInputElement).value;
-                const correct_option = (document.getElementById(`edit-correct-${q.id}`) as HTMLInputElement).value.toUpperCase();
-                onSave({ content, option_a, option_b, option_c, option_d, correct_option, explanation: explanationText });
-              }}>
-              {(savingKey === q.id || savingKey === 'question') ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
+          <Button variant="ghost" onClick={onCancel}>{isNew ? "Close" : "Cancel"}</Button>
+          <Button
+            disabled={isSaving || isGenerating}
+            aria-live="polite"
+            onClick={handleSave}
+          >
+            {isSaving
+              ? (isNew ? "Adding..." : "Saving...")
+              : (isNew ? "Add Question" : "Save Changes")}
+          </Button>
         </div>
+
+        {isNew ? (
+          <p className="text-xs text-slate-500">
+            Tutor audio can be generated once the question is saved. After
+            adding, open it from the list to generate audio.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <GenerateAudioButton
+              questionId={q.id}
+              initialReady={q.audio_ready ?? null}
+              initialVoice={q.audio_voice ?? null}
+            />
+            <p className="text-xs text-slate-500">
+              Audio is generated from the saved version. If you&apos;ve edited the
+              text above, save first. The trigger will mark audio as outdated
+              and you can regenerate.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

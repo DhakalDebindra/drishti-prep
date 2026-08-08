@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/user";
 import { MacroAnalytics } from "@/components/dashboard/MacroAnalytics";
 import { PracticeBanners } from "@/components/dashboard/PracticeBanners";
 import { AttemptHistoryList } from "@/components/dashboard/AttemptHistoryList";
@@ -15,57 +16,71 @@ import { DashboardWelcomeCard } from "@/components/dashboard/DashboardWelcomeCar
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  // Fetch user attempts with nested question set details
-  const { data: attempts, error } = await supabase
-    .from("attempts")
-    .select(`
-      id, 
-      set_id,
-      status, 
-      score_raw, 
-      score_pct, 
-      question_count, 
-      submitted_at,
-      question_sets (
-        title,
-        topic:topics (
-          name,
-          slug,
-          subject:subjects (
+  // These four reads only depend on user.id, so they go out together. Run one
+  // after another they cost ~950ms of round trips from Nepal; concurrently the
+  // whole batch costs about as much as its slowest member.
+  const [
+    { data: attempts, error },
+    { data: profile },
+    memoryHeat,
+    { data: episode },
+  ] = await Promise.all([
+    // User attempts with nested question set details
+    supabase
+      .from("attempts")
+      .select(`
+        id,
+        set_id,
+        status,
+        score_raw,
+        score_pct,
+        question_count,
+        submitted_at,
+        question_sets (
+          title,
+          topic:topics (
             name,
             slug,
-            module:modules (
-              id,
+            subject:subjects (
               name,
-              slug
+              slug,
+              module:modules (
+                id,
+                name,
+                slug
+              )
             )
           )
         )
-      )
-    `)
-    .eq("user_id", user.id)
-    .order("started_at", { ascending: false });
+      `)
+      .eq("user_id", user.id)
+      .order("started_at", { ascending: false }),
+    // Profile for the identity status banner
+    (supabase as any)
+      .from("profiles")
+      .select("disability_status, disability_rejection_reason")
+      .eq("id", user.id)
+      .single(),
+    fetchMemoryHeat(supabase, user.id),
+    (supabase as any)
+      .from("manana_episodes")
+      .select("id, storage_path")
+      .eq("user_id", user.id)
+      .eq("status", "ready")
+      .order("week_starting", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (error) {
     console.error("Error fetching dashboard attempts: ", error);
   }
-
-  // Fetch profile for identity status banner
-  const { data: profile } = await (supabase as any)
-    .from("profiles")
-    .select("disability_status, disability_rejection_reason")
-    .eq("id", user.id)
-    .single();
-
-  const memoryHeat = await fetchMemoryHeat(supabase, user.id);
 
   const safeAttempts = attempts as any[] || [];
 
@@ -106,15 +121,6 @@ export default async function DashboardPage() {
     | "pending"
     | "approved"
     | "rejected";
-
-  const { data: episode } = await (supabase as any)
-    .from("manana_episodes")
-    .select("id, storage_path")
-    .eq("user_id", user.id)
-    .eq("status", "ready")
-    .order("week_starting", { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   let mananaSignedUrl = null;
   if (episode?.storage_path) {
