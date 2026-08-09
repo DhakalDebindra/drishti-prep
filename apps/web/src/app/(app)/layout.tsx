@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/user";
 import { AppNavbar } from "@/components/layout/AppNavbar";
 import { BackToDashboard } from "@/components/layout/BackToDashboard";
 
@@ -14,30 +15,31 @@ export default async function AppLayout({
 }) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // Note: Middleware already protects these routes, but we fetch user
-  // here to pass the email/avatar to the Navbar.
+  // here to pass the email/avatar to the Navbar. Shared with the page
+  // inside this layout, so it costs one auth round trip, not two.
+  const user = await getCurrentUser();
+
   if (!user) {
     redirect("/login");
   }
 
   // Courses the learner can open — enrolled (approved) OR free — power the
   // navbar's "My Courses" quick-nav, a direct jump into each course's subjects
-  // instead of drilling in from the catalog.
-  const { data: moduleRows } = await (supabase as any)
-    .from("modules")
-    .select("id, name, slug, price_paisa")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
-
-  const { data: enrollmentRows } = await (supabase as any)
-    .from("enrollments")
-    .select("module_id")
-    .eq("user_id", user.id)
-    .eq("status", "approved");
+  // instead of drilling in from the catalog. The two reads are independent, so
+  // they go out together rather than one after the other.
+  const [{ data: moduleRows }, { data: enrollmentRows }] = await Promise.all([
+    (supabase as any)
+      .from("modules")
+      .select("id, name, slug, price_paisa")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    (supabase as any)
+      .from("enrollments")
+      .select("module_id")
+      .eq("user_id", user.id)
+      .eq("status", "approved"),
+  ]);
 
   const enrolledModuleIds = new Set<string>(
     ((enrollmentRows ?? []) as { module_id: string }[]).map((e) => e.module_id)

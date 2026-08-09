@@ -70,9 +70,16 @@ export default function LoginForm() {
         setError("Please verify your email address before signing in. Check your inbox for the confirmation link.");
       } else {
         logger.info("Login successful! Redirecting...");
-        const next = searchParams.get("next");
-        router.push(next && next.startsWith("/") ? next : "/dashboard");
-        router.refresh(); // Refresh the router cache to ensure the server component picks up the new session
+        // The middleware bounces unauthenticated users here with ?redirect_to=
+        // (see lib/supabase/middleware.ts); ?next= is the older spelling. Read
+        // both, or an admin sent to /login from /admin/… lands on the dashboard
+        // and has to navigate back by hand.
+        const dest = searchParams.get("redirect_to") ?? searchParams.get("next");
+        // Invalidate the stale router cache *before* navigating: doing it after
+        // the push re-renders the destination a second time, and the dashboard
+        // is an expensive render.
+        router.refresh();
+        router.push(dest && dest.startsWith("/") ? dest : "/dashboard");
       }
     } catch (err: any) {
       if (err.message === "AbortError") {
