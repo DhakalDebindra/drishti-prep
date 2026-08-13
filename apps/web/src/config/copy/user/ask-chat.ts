@@ -11,7 +11,12 @@ export const AskChatCopy = {
   readyAnnouncementNe: "DrishtiPrep AI को उत्तर तयार भयो",
   failedAnnouncementNe: "उत्तर तयार गर्न सकिएन",
   yourQuestionSrNe: "तपाईंको प्रश्न: ",
-  sourcesNe: "स्रोत",
+  /**
+   * Marks a practice set the answer was built from. Replaces the old separate
+   * "स्रोत" list, which named the same sets again without letting a learner
+   * open them.
+   */
+  sourceBadgeNe: "यही सेटबाट",
   practiceSetsNe: "अभ्यास सेटहरू",
   questionsSuffixNe: "प्रश्न",
   /** Marks a reply built from general knowledge, not DrishtiPrep content. */

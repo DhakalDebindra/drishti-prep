@@ -15,6 +15,7 @@ import {
   modelSections,
   permittedSections,
   sectionsToPlainText,
+  sectionsToSpeechParts,
 } from "@/lib/ask/sections";
 import {
   SECTION_TITLES,
@@ -68,6 +69,7 @@ const EMPTY_LESSON: Lesson = {
   recommendations: [],
   lockedNote: null,
   plainText: "",
+  speechParts: [],
 };
 
 type ModelReply = {
@@ -210,9 +212,14 @@ export async function buildLesson(query: string): Promise<Lesson> {
     clarifications: [],
     sections: allSections,
     sources: buildSources(reply, resolved),
-    recommendations,
+    recommendations: mergeSourcesIntoRecommendations(
+      buildSources(reply, resolved),
+      recommendations,
+      resolved
+    ),
     lockedNote,
     plainText: sectionsToPlainText(allSections),
+    speechParts: sectionsToSpeechParts(allSections),
   };
 }
 
@@ -276,6 +283,7 @@ async function withFallback(
         recommendations,
         lockedNote,
         plainText: fallback.answer,
+        speechParts: [fallback.answer],
       };
     }
   } catch (error) {
@@ -371,5 +379,62 @@ function buildRecommendations(search: SearchResults | null): LessonRecommendatio
     locked: set.locked,
     module_name: set.module_name,
     href: set.locked ? null : practiceUrl(set),
+    isSource: false,
+    citedCount: 0,
   }));
+}
+
+/**
+ * One list instead of two.
+ *
+ * The reply used to be followed by a plain-text "स्रोत" block and then a
+ * separate list of practice sets — largely the same sets, named twice, with
+ * only the second one openable. The sets the answer was actually built from
+ * now lead the practice list and are marked, so the citation is still there to
+ * check and every entry is something a learner can act on.
+ */
+function mergeSourcesIntoRecommendations(
+  sources: LessonSource[],
+  ranked: LessonRecommendation[],
+  material: AskMaterial
+): LessonRecommendation[] {
+  const bySet = new Map<string, LessonRecommendation>();
+
+  for (const source of sources) {
+    // Metadata comes from the material the answer was built on, which is the
+    // only place a cited set's slugs are known.
+    const question = material.questions.find((q) => q.set_id === source.set_id);
+    const existing = ranked.find((r) => r.set_id === source.set_id);
+
+    bySet.set(source.set_id, {
+      set_id: source.set_id,
+      title: source.set_title,
+      topic_name: existing?.topic_name ?? question?.topic_name ?? "",
+      subtopic_name: existing?.subtopic_name ?? question?.subtopic_name ?? null,
+      q_count: existing?.q_count ?? question?.set_q_count ?? 0,
+      locked: false, // only readable material reaches a citation
+      module_name: existing?.module_name ?? question?.module_name ?? "",
+      href:
+        existing?.href ??
+        (question
+          ? practiceUrl({
+              id: source.set_id,
+              module_slug: question.module_slug,
+              subject_slug: question.subject_slug,
+              topic_slug: question.topic_slug,
+              subtopic_slug: question.subtopic_slug,
+            })
+          : null),
+      isSource: true,
+      citedCount: source.question_count,
+    });
+  }
+
+  for (const recommendation of ranked) {
+    if (!bySet.has(recommendation.set_id)) bySet.set(recommendation.set_id, recommendation);
+  }
+
+  return [...bySet.values()]
+    .sort((a, b) => Number(b.isSource) - Number(a.isSource) || b.citedCount - a.citedCount)
+    .slice(0, MAX_RECOMMENDATIONS + 1);
 }

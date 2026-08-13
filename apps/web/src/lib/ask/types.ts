@@ -38,6 +38,16 @@ export type LessonRecommendation = {
   locked: boolean;
   module_name: string;
   href: string | null;
+  /**
+   * True when the answer above was actually built from this set.
+   *
+   * Sources used to be a separate, unclickable list beneath the reply — the
+   * same sets named twice, and the useful copy second. Merging them keeps the
+   * citation a learner can check while making it something they can open.
+   */
+  isSource: boolean;
+  /** How many of this set's questions the answer drew on. */
+  citedCount: number;
 };
 
 /**
@@ -69,8 +79,14 @@ export type Lesson = {
   recommendations: LessonRecommendation[];
   /** Locked material we can name but not teach from. */
   lockedNote: { count: number; sets: { title: string; module_name: string }[] } | null;
-  /** Flat text of the whole lesson, for the Listen button and for storage. */
+  /** Flat text of the whole lesson, for display and copy. */
   plainText: string;
+  /**
+   * The lesson split for playback, one entry per section. Sent to the client so
+   * audio can start on the first section instead of waiting for the whole
+   * reply to be synthesised.
+   */
+  speechParts: string[];
 };
 
 /** One question as handed to the model, with its 1-based prompt index. */
@@ -92,11 +108,16 @@ export type MaterialQuestion = {
   paper_ref: string | null;
   set_id: string;
   set_title: string;
+  set_q_count: number;
   topic_id: string;
   topic_name: string;
   subtopic_name: string | null;
   subject_name_np: string | null;
   module_name: string;
+  module_slug: string | null;
+  subject_slug: string | null;
+  topic_slug: string | null;
+  subtopic_slug: string | null;
 };
 
 export type AskMaterial = {

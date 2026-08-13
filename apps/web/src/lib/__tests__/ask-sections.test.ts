@@ -24,11 +24,16 @@ function question(overrides: Partial<MaterialQuestion> = {}): MaterialQuestion {
     paper_ref: null,
     set_id: "s1",
     set_title: "सेट",
+    set_q_count: 20,
     topic_id: "t1",
     topic_name: "विषय",
     subtopic_name: null,
     subject_name_np: "विषय",
     module_name: "Everything GK",
+    module_slug: "gk",
+    subject_slug: "nepal-geography",
+    topic_slug: "topic",
+    subtopic_slug: null,
     ...overrides,
   };
 }

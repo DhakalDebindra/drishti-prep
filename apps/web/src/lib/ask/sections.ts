@@ -95,14 +95,28 @@ export function filterToPermitted(
   return sections.filter((section) => allowed.has(section.key));
 }
 
-/** Render a lesson to flat text for the Listen button and for storage. */
+/** One section rendered as speech: its heading, then its content. */
+function sectionToSpeech(section: LessonSection): string {
+  const body = section.body?.trim();
+  const bullets = section.bullets?.filter(Boolean) ?? [];
+  const inner = body || bullets.join("। ");
+  return `${section.title}। ${inner}`;
+}
+
+/**
+ * A lesson split for playback, one entry per section.
+ *
+ * Playback is per section rather than whole-lesson because synthesising the
+ * entire reply first meant roughly 15 seconds of silence before a word was
+ * heard. For a learner who listens rather than reads, that dead air is the
+ * difference between using the feature and abandoning it — the first section
+ * can start in about three seconds while the rest is fetched behind it.
+ */
+export function sectionsToSpeechParts(sections: LessonSection[]): string[] {
+  return sections.map(sectionToSpeech).filter((part) => part.trim().length > 0);
+}
+
+/** Render a lesson to flat text, for display and for the whole-reply fallback. */
 export function sectionsToPlainText(sections: LessonSection[]): string {
-  return sections
-    .map((section) => {
-      const body = section.body?.trim();
-      const bullets = section.bullets?.filter(Boolean) ?? [];
-      const inner = body || bullets.join("। ");
-      return `${section.title}। ${inner}`;
-    })
-    .join("\n\n");
+  return sectionsToSpeechParts(sections).join("\n\n");
 }

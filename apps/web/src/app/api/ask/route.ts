@@ -68,8 +68,13 @@ export async function POST(req: Request) {
       recommendations: lesson.recommendations,
       lockedNote: lesson.lockedNote,
       plainText: lesson.plainText,
-      // Lets the learner play this reply without us retaining it.
-      speechToken: signSpeech(lesson.plainText, user.id),
+      // One signed chunk per section, so playback can begin on the first while
+      // the rest is fetched behind it. Each is signed separately because the
+      // speak endpoint verifies exactly the text it is asked to synthesise.
+      speech: lesson.speechParts.map((text) => ({
+        text,
+        token: signSpeech(text, user.id),
+      })),
     });
   } catch (error) {
     console.error("[api/ask] unexpected failure:", error);

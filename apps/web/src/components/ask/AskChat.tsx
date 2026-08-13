@@ -5,7 +5,7 @@ import { Info, Loader2, Lock, MessageCircle, Send, Sparkles } from "lucide-react
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Lang } from "@/components/ui/Lang";
-import { ListenButton } from "@/components/ask/ListenButton";
+import { LessonPlayer, type SpeechPart } from "@/components/ask/LessonPlayer";
 import { AskChatCopy, AskRouteCopy } from "@/config/copy";
 import type { LessonRecommendation, LessonSection, LessonSource } from "@/lib/ask/types";
 
@@ -26,8 +26,8 @@ type AssistantTurn = {
   recommendations: LessonRecommendation[];
   lockedNote: { count: number; sets: { title: string; module_name: string }[] } | null;
   plainText: string;
-  /** Signature that lets this exact reply be read aloud without storing it. */
-  speechToken: string;
+  /** Signed, per-section text so playback can start on the first section. */
+  speech: SpeechPart[];
 };
 
 type Turn = { kind: "user"; text: string } | AssistantTurn;
@@ -87,7 +87,7 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
             recommendations: data.recommendations ?? [],
             lockedNote: data.lockedNote ?? null,
             plainText: data.plainText ?? "",
-            speechToken: data.speechToken ?? "",
+            speech: data.speech ?? [],
           },
         ]);
         // Announced once, on completion. Streaming into a live region makes a
@@ -242,9 +242,7 @@ function AssistantReply({
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           {AskChatCopy.assistantName}
         </p>
-        {turn.plainText && (
-          <ListenButton text={turn.plainText} token={turn.speechToken} />
-        )}
+        {turn.speech.length > 0 && <LessonPlayer parts={turn.speech} />}
       </div>
 
       {/* The model's own words for greeting / clarify / outside; a short fixed
@@ -315,22 +313,6 @@ function AssistantReply({
         </section>
       ))}
 
-      {turn.sources.length > 0 && (
-        <section className="mt-5">
-          <h3 className="text-base font-semibold text-foreground">
-            <Lang>{AskChatCopy.sourcesNe}</Lang>
-          </h3>
-          <ul className="mt-1 space-y-1">
-            {turn.sources.map((source) => (
-              <li key={source.set_id} className="text-sm text-muted-foreground">
-                <Lang>{source.set_title}</Lang> — {source.question_count}{" "}
-                {AskChatCopy.questionsSuffixNe}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {turn.lockedNote && (
         <p className="mt-4 flex items-start gap-2 rounded-xl border-2 border-border bg-muted px-3 py-2 text-sm text-foreground">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -356,6 +338,13 @@ function AssistantReply({
                 <>
                   <span className="min-w-0">
                     <Lang>{rec.title}</Lang>
+                    {/* Marks the sets this answer was actually built from, so
+                        the citation survives the merge into one list. */}
+                    {rec.isSource && (
+                      <span className="ml-2 rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                        <Lang>{AskChatCopy.sourceBadgeNe}</Lang>
+                      </span>
+                    )}
                     <span className="block text-xs text-muted-foreground">
                       <Lang>{rec.topic_name}</Lang>
                       {rec.subtopic_name && (
