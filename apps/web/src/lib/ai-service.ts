@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, type ResponseSchema } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
 import type { FewShotExample } from "@/config/prompts/index";
-import { resolveGeminiApiKey } from "@/lib/env-keys";
+import { resolveGeminiApiKey, resolveGeminiApiKeys } from "@/lib/env-keys";
 
 export type GroundingChunk = {
   web?: { uri?: string; title?: string };
@@ -15,22 +15,25 @@ export type GroundedProseResult = {
 };
 
 // Model IDs are env-overridable so we can A/B newer Gemini releases
-// (e.g. swap `flash` to `gemini-2.5-flash-lite` for cost, or `pro` to
-// `gemini-3.1-pro-preview` for a quality experiment) without a redeploy.
-// Defaults stay on the GA 2.5 family for stability.
+// (e.g. swap `flash` to a lite variant for cost) without a redeploy.
 //
-// DEPRECATION SCHEDULE (per https://ai.google.dev/gemini-api/docs/deprecations):
-//   • gemini-2.5-flash       → shutdown Oct 16, 2026 → replace with gemini-3.5-flash
-//   • gemini-2.5-pro         → shutdown Oct 16, 2026 → replace with gemini-3.1-pro-preview
-//   • gemini-2.5-flash-lite  → shutdown Oct 16, 2026 → replace with gemini-3.1-flash-lite
-// Plan: benchmark Nepali output quality on the 3.x replacements before
-// flipping defaults. Until then, override via env at the platform level
-// when you want to test individual paths.
+// Defaults moved off the 2.5 family, which shuts down Oct 16 2026 (see
+// https://ai.google.dev/gemini-api/docs/deprecations). `gemini-3.6-flash` was
+// confirmed against this account's model list and verified to return valid
+// JSON under our responseMimeType setting before being made the default —
+// a model id that does not exist fails every AI call, so it is worth checking
+// rather than assuming.
+//
+// `gemini-3.1-pro-preview` is the documented successor to 2.5-pro but could
+// NOT be verified here: the free tier returns 429 for Pro. Confirm it once a
+// billed key is in place. Nothing on the search/ask path uses the pro tier —
+// lessons, fallbacks and query repair all run on flash — so this default only
+// affects the older explanation-generation paths.
 const AIConfig = {
   providers: {
     gemini: {
-      flash: process.env.GEMINI_MODEL_FLASH || "gemini-2.5-flash",
-      pro: process.env.GEMINI_MODEL_PRO || "gemini-2.5-pro",
+      flash: process.env.GEMINI_MODEL_FLASH || "gemini-3.6-flash",
+      pro: process.env.GEMINI_MODEL_PRO || "gemini-3.1-pro-preview",
       responseMimeType: "application/json",
       temperature: 0.2,
     },
@@ -40,6 +43,21 @@ const AIConfig = {
 const geminiApiKey = resolveGeminiApiKey();
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+// One client per configured key, tried in order. The first is usually the free
+// tier (20 requests/day/model); a billed key in GEMINI_API_KEY_FALLBACK takes
+// over automatically once that quota is spent.
+const geminiClients = resolveGeminiApiKeys().map(
+  (key) => new GoogleGenerativeAI(key)
+);
+
+/** Quota or rate-limit refusal from the provider, as opposed to a bad request. */
+export function isQuotaError(error: unknown): boolean {
+  const status = (error as { status?: number })?.status;
+  if (status === 429) return true;
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /\b429\b|too many requests|quota|rate limit/i.test(message);
+}
 const REQUEST_TIMEOUT_MS = 25_000;
 
 export const withTimeout = <T>(promise: Promise<T>, ms: number) => {
@@ -74,13 +92,6 @@ export async function generateAiContentJSON(
     : `${prompt}\n\n${SystemInstructions.defaultJson}`;
 
   const modelId = AIConfig.providers.gemini[tier];
-  const model = genAI.getGenerativeModel({
-    model: modelId,
-    generationConfig: {
-      responseMimeType: AIConfig.providers.gemini.responseMimeType,
-      temperature: AIConfig.providers.gemini.temperature,
-    },
-  });
 
   const contents = [
     ...examples.flatMap((ex) => [
@@ -90,19 +101,42 @@ export async function generateAiContentJSON(
     { role: "user", parts: [{ text: finalPrompt }] },
   ];
 
-  const result = await withTimeout(
-    model.generateContent({ contents }),
-    REQUEST_TIMEOUT_MS
-  );
-  const latencyMs = Math.round(performance.now() - started);
-  const text = result.response.text();
+  // Try each configured key in turn, but ONLY move on for quota refusals. A bad
+  // prompt or a timeout will fail identically on every key, so retrying it just
+  // multiplies the wait the learner is sitting through.
+  const clients = geminiClients.length > 0 ? geminiClients : [genAI];
+  let lastError: unknown;
 
-  return {
-    data: text,
-    provider: "google",
-    model: modelId,
-    latency_ms: latencyMs,
-  };
+  for (let index = 0; index < clients.length; index += 1) {
+    const model = clients[index].getGenerativeModel({
+      model: modelId,
+      generationConfig: {
+        responseMimeType: AIConfig.providers.gemini.responseMimeType,
+        temperature: AIConfig.providers.gemini.temperature,
+      },
+    });
+
+    try {
+      const result = await withTimeout(
+        model.generateContent({ contents }),
+        REQUEST_TIMEOUT_MS
+      );
+      return {
+        data: result.response.text(),
+        provider: "google",
+        model: modelId,
+        latency_ms: Math.round(performance.now() - started),
+      };
+    } catch (error) {
+      lastError = error;
+      if (!isQuotaError(error) || index === clients.length - 1) throw error;
+      console.warn(
+        `[ai-service] key ${index + 1} is out of quota, falling back to key ${index + 2}`
+      );
+    }
+  }
+
+  throw lastError;
 }
 
 // Variant that enforces a `responseSchema` so the model is forced to emit a

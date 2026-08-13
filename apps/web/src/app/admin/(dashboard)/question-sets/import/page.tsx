@@ -7,7 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Papa from "papaparse";
+import {
+  ImportCopy,
+  MAX_IMPORT_COLUMNS,
+  MAX_PAPER_REF_LENGTH,
+} from "@/config/copy";
 import toast from "react-hot-toast";
+
 
 type RowError = { row: number; error: string };
 type SubjectOption = { id: string; name: string };
@@ -90,14 +96,14 @@ export default function BulkImportPage() {
     const rows = result.data as string[][];
 
     if (result.errors.length > 0) {
-        rowErrors.push({ row: 0, error: `CSV Parsing Error: ${result.errors[0].message}` });
+        rowErrors.push({ row: 0, error: ImportCopy.errors.parseFailure(result.errors[0].message) });
         return { parsedData, rowErrors };
     }
 
     for (let i = 1; i < rows.length; i++) {
         const columns = rows[i];
         if (columns.length < 6) {
-            rowErrors.push({ row: i + 1, error: "Missing required columns" });
+            rowErrors.push({ row: i + 1, error: ImportCopy.errors.missingColumns });
             continue;
         }
 
@@ -105,12 +111,54 @@ export default function BulkImportPage() {
         const correct_option = correct_raw?.trim().toUpperCase();
 
         if (!content || !option_a || !option_b || !option_c || !option_d || !correct_option) {
-            rowErrors.push({ row: i + 1, error: "Required fields are empty" });
+            rowErrors.push({ row: i + 1, error: ImportCopy.errors.emptyRequiredFields });
             continue;
         }
 
         if (!["A", "B", "C", "D"].includes(correct_option)) {
-            rowErrors.push({ row: i + 1, error: `Invalid correct option "${correct_option}"` });
+            rowErrors.push({ row: i + 1, error: ImportCopy.errors.invalidCorrectOption(correct_option) });
+            continue;
+        }
+
+        // Guards against column spill. A batch import once split one explanation
+        // across explanation / exam_year / paper_ref because the source file's
+        // delimiters were not quoted, and nothing rejected it — 35 questions
+        // shipped with an explanation that stopped mid-sentence. These three
+        // checks make that shape impossible to import silently.
+        const trimmedYear = exam_year?.trim() || "";
+        const trimmedRef = paper_ref?.trim() || "";
+
+        if (columns.length > MAX_IMPORT_COLUMNS) {
+            rowErrors.push({
+                row: i + 1,
+                error: ImportCopy.errors.tooManyColumns(columns.length, MAX_IMPORT_COLUMNS),
+            });
+            continue;
+        }
+
+        if (trimmedYear && !/^\d{4}$/.test(trimmedYear)) {
+            rowErrors.push({
+                row: i + 1,
+                error: ImportCopy.errors.examYearNotNumeric(trimmedYear),
+            });
+            continue;
+        }
+
+        // Matches the questions_paper_ref_requires_exam_year constraint, so the
+        // admin sees a readable message instead of a database rejection.
+        if (trimmedRef && !trimmedYear) {
+            rowErrors.push({
+                row: i + 1,
+                error: ImportCopy.errors.paperRefWithoutYear(`${trimmedRef.slice(0, 40)}…`),
+            });
+            continue;
+        }
+
+        if (trimmedRef.length > MAX_PAPER_REF_LENGTH) {
+            rowErrors.push({
+                row: i + 1,
+                error: ImportCopy.errors.paperRefTooLong(trimmedRef.length, MAX_PAPER_REF_LENGTH),
+            });
             continue;
         }
 
@@ -127,8 +175,11 @@ export default function BulkImportPage() {
             option_d: option_d.trim(),
             correct_option,
             general_explanation: explanation?.trim().replace(/\\n/g, "\n") || "",
-            exam_year: exam_year?.trim() ? parseInt(exam_year) : null,
-            paper_ref: paper_ref?.trim() || "",
+            exam_year: trimmedYear ? parseInt(trimmedYear, 10) : null,
+            // null, never "". An empty string is neither absent nor a reference,
+            // and `paper_ref is not null` read it as one — which is how the AI
+            // came to claim 1,537 questions had been asked in an exam.
+            paper_ref: trimmedRef || null,
             language: finalLanguage,
             order_number: i
         });

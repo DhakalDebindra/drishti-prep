@@ -9,12 +9,18 @@
     "lint": "eslint .",
     "test": "playwright test",
     "typecheck": "tsc --noEmit",
+    "test:unit": "node --import tsx --test src/lib/__tests__/*.test.ts",
+    "eval:search": "tsx --env-file=.env.local scripts/search-eval.ts",
+    "eval:ask": "tsx --env-file=.env.local scripts/ask-eval.ts",
+    "repair:paper-ref": "tsx --env-file=.env.local scripts/paper-ref-repair-list.ts",
+    "lab:prompt": "tsx --env-file=.env.local scripts/prompt-lab.ts",
     "backfill:manana-memory": "tsx --env-file=.env.local scripts/manana-backfill-memory.ts",
     "test:manana-script": "tsx --env-file=.env.local scripts/manana-test-script.ts",
     "test:manana-elevenlabs": "tsx --env-file=.env.local scripts/manana-test-elevenlabs.ts",
     "rerender:manana": "tsx --env-file=.env.local scripts/manana-rerender-audio.ts",
     "diag:gemini-tier": "tsx --env-file=.env.local scripts/check-gemini-tier.ts",
-    "seed:manana-branding": "tsx --env-file=.env.local scripts/manana-seed-branding-sounds.ts"
+    "seed:manana-branding": "tsx --env-file=.env.local scripts/manana-seed-branding-sounds.ts",
+    "suite:ask": "tsx --env-file=.env.local scripts/ask-suite.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
