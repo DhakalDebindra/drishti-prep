@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, type ResponseSchema } from "@google/generative-ai";
 import { SystemInstructions } from "@/config/prompts/index";
 import type { FewShotExample } from "@/config/prompts/index";
-import { resolveGeminiApiKey } from "@/lib/env-keys";
+import { resolveGeminiApiKey, resolveGeminiApiKeys } from "@/lib/env-keys";
 
 export type GroundingChunk = {
   web?: { uri?: string; title?: string };
@@ -40,6 +40,21 @@ const AIConfig = {
 const geminiApiKey = resolveGeminiApiKey();
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+// One client per configured key, tried in order. The first is usually the free
+// tier (20 requests/day/model); a billed key in GEMINI_API_KEY_FALLBACK takes
+// over automatically once that quota is spent.
+const geminiClients = resolveGeminiApiKeys().map(
+  (key) => new GoogleGenerativeAI(key)
+);
+
+/** Quota or rate-limit refusal from the provider, as opposed to a bad request. */
+export function isQuotaError(error: unknown): boolean {
+  const status = (error as { status?: number })?.status;
+  if (status === 429) return true;
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /\b429\b|too many requests|quota|rate limit/i.test(message);
+}
 const REQUEST_TIMEOUT_MS = 25_000;
 
 export const withTimeout = <T>(promise: Promise<T>, ms: number) => {
@@ -74,13 +89,6 @@ export async function generateAiContentJSON(
     : `${prompt}\n\n${SystemInstructions.defaultJson}`;
 
   const modelId = AIConfig.providers.gemini[tier];
-  const model = genAI.getGenerativeModel({
-    model: modelId,
-    generationConfig: {
-      responseMimeType: AIConfig.providers.gemini.responseMimeType,
-      temperature: AIConfig.providers.gemini.temperature,
-    },
-  });
 
   const contents = [
     ...examples.flatMap((ex) => [
@@ -90,19 +98,42 @@ export async function generateAiContentJSON(
     { role: "user", parts: [{ text: finalPrompt }] },
   ];
 
-  const result = await withTimeout(
-    model.generateContent({ contents }),
-    REQUEST_TIMEOUT_MS
-  );
-  const latencyMs = Math.round(performance.now() - started);
-  const text = result.response.text();
+  // Try each configured key in turn, but ONLY move on for quota refusals. A bad
+  // prompt or a timeout will fail identically on every key, so retrying it just
+  // multiplies the wait the learner is sitting through.
+  const clients = geminiClients.length > 0 ? geminiClients : [genAI];
+  let lastError: unknown;
 
-  return {
-    data: text,
-    provider: "google",
-    model: modelId,
-    latency_ms: latencyMs,
-  };
+  for (let index = 0; index < clients.length; index += 1) {
+    const model = clients[index].getGenerativeModel({
+      model: modelId,
+      generationConfig: {
+        responseMimeType: AIConfig.providers.gemini.responseMimeType,
+        temperature: AIConfig.providers.gemini.temperature,
+      },
+    });
+
+    try {
+      const result = await withTimeout(
+        model.generateContent({ contents }),
+        REQUEST_TIMEOUT_MS
+      );
+      return {
+        data: result.response.text(),
+        provider: "google",
+        model: modelId,
+        latency_ms: Math.round(performance.now() - started),
+      };
+    } catch (error) {
+      lastError = error;
+      if (!isQuotaError(error) || index === clients.length - 1) throw error;
+      console.warn(
+        `[ai-service] key ${index + 1} is out of quota, falling back to key ${index + 2}`
+      );
+    }
+  }
+
+  throw lastError;
 }
 
 // Variant that enforces a `responseSchema` so the model is forced to emit a
