@@ -15,22 +15,25 @@ export type GroundedProseResult = {
 };
 
 // Model IDs are env-overridable so we can A/B newer Gemini releases
-// (e.g. swap `flash` to `gemini-2.5-flash-lite` for cost, or `pro` to
-// `gemini-3.1-pro-preview` for a quality experiment) without a redeploy.
-// Defaults stay on the GA 2.5 family for stability.
+// (e.g. swap `flash` to a lite variant for cost) without a redeploy.
 //
-// DEPRECATION SCHEDULE (per https://ai.google.dev/gemini-api/docs/deprecations):
-//   • gemini-2.5-flash       → shutdown Oct 16, 2026 → replace with gemini-3.5-flash
-//   • gemini-2.5-pro         → shutdown Oct 16, 2026 → replace with gemini-3.1-pro-preview
-//   • gemini-2.5-flash-lite  → shutdown Oct 16, 2026 → replace with gemini-3.1-flash-lite
-// Plan: benchmark Nepali output quality on the 3.x replacements before
-// flipping defaults. Until then, override via env at the platform level
-// when you want to test individual paths.
+// Defaults moved off the 2.5 family, which shuts down Oct 16 2026 (see
+// https://ai.google.dev/gemini-api/docs/deprecations). `gemini-3.6-flash` was
+// confirmed against this account's model list and verified to return valid
+// JSON under our responseMimeType setting before being made the default —
+// a model id that does not exist fails every AI call, so it is worth checking
+// rather than assuming.
+//
+// `gemini-3.1-pro-preview` is the documented successor to 2.5-pro but could
+// NOT be verified here: the free tier returns 429 for Pro. Confirm it once a
+// billed key is in place. Nothing on the search/ask path uses the pro tier —
+// lessons, fallbacks and query repair all run on flash — so this default only
+// affects the older explanation-generation paths.
 const AIConfig = {
   providers: {
     gemini: {
-      flash: process.env.GEMINI_MODEL_FLASH || "gemini-2.5-flash",
-      pro: process.env.GEMINI_MODEL_PRO || "gemini-2.5-pro",
+      flash: process.env.GEMINI_MODEL_FLASH || "gemini-3.6-flash",
+      pro: process.env.GEMINI_MODEL_PRO || "gemini-3.1-pro-preview",
       responseMimeType: "application/json",
       temperature: 0.2,
     },
