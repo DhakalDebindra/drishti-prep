@@ -92,7 +92,15 @@ export function LessonPlayer({ parts }: { parts: SpeechPart[] }) {
 
       try {
         const url = await fetchPart(startIndex);
-        if (!url || cancelledRef.current) return;
+        if (cancelledRef.current) return;
+        if (!url) {
+          // A missing part or an unsigned one. Returning here without resetting
+          // state was what left the button reading "Preparing…" forever — the
+          // failure has to be visible and recoverable, not silent.
+          setFailed(true);
+          setState("idle");
+          return;
+        }
 
         const audio = new Audio(url);
         audio.playbackRate = speed;
@@ -155,7 +163,10 @@ export function LessonPlayer({ parts }: { parts: SpeechPart[] }) {
     if (audioRef.current) audioRef.current.playbackRate = next;
   }, [speed]);
 
-  if (parts.length === 0) return null;
+  // An unsigned reply cannot be synthesised, so offer no control at all rather
+  // than one that fails the moment it is pressed.
+  const playable = parts.length > 0 && parts.every((part) => part.text && part.token);
+  if (!playable) return null;
 
   const playing = state === "playing";
   const label =

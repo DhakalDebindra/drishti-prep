@@ -1,6 +1,7 @@
 import "server-only";
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { resolveGeminiApiKey } from "@/lib/env-keys";
+import { signWith, verifyWith } from "@/lib/ask/speech-signature";
 
 /**
  * Proof that a piece of text is a reply DrishtiPrep generated for this learner.
@@ -13,48 +14,44 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  *
  * Signing keeps the guarantee without keeping the data. The token binds the
  * exact text to one learner and one hour; anything else fails verification.
+ * The maths lives in speech-signature.ts so it can be unit tested — this module
+ * only resolves the secret.
  */
-
-/** How long a token stays valid. Long enough to press Listen, short enough to matter. */
-const MAX_AGE_MS = 60 * 60 * 1000;
 
 /**
- * Server-only signing key. Falls back to the service role key so this works
- * without new configuration — an HMAC never reveals its key, and both values
- * are already server-only secrets.
+ * Server-only signing key.
+ *
+ * The chain exists because the first version required ASK_SPEAK_SECRET or
+ * SUPABASE_SERVICE_ROLE_KEY, neither of which was set in the production
+ * runtime — so every reply shipped with a blank token and Listen sat on
+ * "Preparing…" forever. The Gemini key is the last resort precisely because it
+ * is the one secret guaranteed present wherever this feature can work at all:
+ * if it is missing there is no answer to read aloud in the first place.
+ *
+ * Using an API key as HMAC input is safe — an HMAC never reveals its key — but
+ * set ASK_SPEAK_SECRET to keep the purposes separate.
  */
 function secret(): string {
-  return (
+  const key =
     process.env.ASK_SPEAK_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    ""
-  );
-}
+    resolveGeminiApiKey();
 
-function digest(text: string, userId: string, issuedAt: number): string {
-  return createHmac("sha256", secret())
-    .update(`${userId}\n${issuedAt}\n${text}`)
-    .digest("hex");
+  if (!key) {
+    // Loud, because the symptom otherwise is a Listen button that never starts.
+    console.error(
+      "[ask] no signing secret available — set ASK_SPEAK_SECRET; Listen will be disabled"
+    );
+  }
+  return key;
 }
 
 /** Token for text we just generated. Empty string when signing is unavailable. */
 export function signSpeech(text: string, userId: string): string {
-  if (!secret() || !text) return "";
-  const issuedAt = Date.now();
-  return `${issuedAt}.${digest(text, userId, issuedAt)}`;
+  return signWith(secret(), text, userId);
 }
 
 /** True only for text this server signed, for this learner, within the hour. */
 export function verifySpeech(text: string, userId: string, token: string): boolean {
-  if (!secret() || !text || !token) return false;
-
-  const [issuedRaw, provided] = token.split(".");
-  const issuedAt = Number.parseInt(issuedRaw ?? "", 10);
-  if (!Number.isFinite(issuedAt) || !provided) return false;
-  if (Date.now() - issuedAt > MAX_AGE_MS) return false;
-
-  const expected = digest(text, userId, issuedAt);
-  // Compare in constant time; a length mismatch would throw, so check first.
-  if (expected.length !== provided.length) return false;
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(provided));
+  return verifyWith(secret(), text, userId, token);
 }
