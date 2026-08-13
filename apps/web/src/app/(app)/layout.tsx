@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/user";
 import { AppNavbar } from "@/components/layout/AppNavbar";
 import { BackToDashboard } from "@/components/layout/BackToDashboard";
+import { SearchHotkey } from "@/components/search/SearchHotkey";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -53,6 +54,7 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
       <AppNavbar userEmail={user.email} courses={myCourses} />
+      <SearchHotkey />
       <main id="main" aria-labelledby="main-heading">
         {children}
         <BackToDashboard />

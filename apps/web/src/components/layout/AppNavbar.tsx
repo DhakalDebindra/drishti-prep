@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Settings,
   ChevronDown,
+  Search,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useFormStatus } from "react-dom";
@@ -71,6 +72,7 @@ export function AppNavbar({ userEmail, courses = [] }: AppNavbarProps) {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/search", label: "Search", icon: Search },
     { href: "/courses", label: "Browse Courses", icon: GraduationCap },
     { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { href: "/profile/verify-identity", label: "Identity", icon: ShieldCheck },
