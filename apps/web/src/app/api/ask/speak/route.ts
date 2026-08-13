@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { verifySpeech } from "@/lib/ask/speech-token";
 import { aiRatelimit, extractClientIp } from "@/lib/rate-limit";
 import { DEFAULT_VOICE, synthesizeNepali } from "@/lib/tts-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
+
+/** Longest reply we will read aloud. A lesson is far shorter than this. */
+const MAX_TEXT_LENGTH = 6000;
 
 /**
  * Read one AI reply aloud in Gemini's Nepali voice.
@@ -13,13 +17,12 @@ export const maxDuration = 300;
  * Deliberately not the browser's speechSynthesis. That was the first
  * implementation — free and instant — but a generic engine reading Devanagari
  * is unpleasant enough that a learner who depends on audio will not use it.
- * For an audience that is blind or low-vision, the voice IS the interface, so
- * a natural one is worth the call.
+ * For an audience that is blind or low-vision, the voice IS the interface.
  *
- * The text comes from the stored message rather than the request body: a
- * client that could post arbitrary text would turn this into an open TTS
- * endpoint billed to us. RLS on ask_messages also means a learner can only
- * ever synthesise their own replies.
+ * The text arrives in the request, but only with a signature this server issued
+ * for this learner within the hour. Without that check a client could post any
+ * text and turn this into an open text-to-speech service billed to us; with it,
+ * we can synthesise a reply we never stored.
  */
 export async function POST(req: Request) {
   try {
@@ -40,28 +43,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => null);
-    const messageId = typeof body?.message_id === "string" ? body.message_id : "";
-    if (!/^[0-9a-f-]{36}$/i.test(messageId)) {
-      return NextResponse.json({ error: "Invalid message_id" }, { status: 400 });
-    }
+    const text = typeof body?.text === "string" ? body.text : "";
+    const token = typeof body?.token === "string" ? body.token : "";
 
-    // RLS restricts this to threads the caller owns.
-    const { data: message, error } = await (supabase as any)
-      .from("ask_messages")
-      .select("content, role")
-      .eq("id", messageId)
-      .maybeSingle();
-
-    if (error || !message) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    if (message.role !== "assistant" || !message.content?.trim()) {
+    if (!text.trim() || text.length > MAX_TEXT_LENGTH) {
       return NextResponse.json({ error: "Nothing to read" }, { status: 400 });
+    }
+
+    if (!verifySpeech(text, user.id, token)) {
+      // Either not our text, not this learner's, or older than an hour.
+      return NextResponse.json({ error: "Invalid request" }, { status: 403 });
     }
 
     // Flash tier: substantially higher daily and per-minute quotas than Pro,
     // which matters because this is on-demand rather than pre-generated.
-    const { mp3 } = await synthesizeNepali(message.content, DEFAULT_VOICE, {
+    const { mp3 } = await synthesizeNepali(text, DEFAULT_VOICE, {
       modelTier: "flash",
     });
 

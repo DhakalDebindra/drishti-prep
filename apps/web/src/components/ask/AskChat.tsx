@@ -26,8 +26,8 @@ type AssistantTurn = {
   recommendations: LessonRecommendation[];
   lockedNote: { count: number; sets: { title: string; module_name: string }[] } | null;
   plainText: string;
-  /** Needed to request audio; null when the reply could not be stored. */
-  messageId: string | null;
+  /** Signature that lets this exact reply be read aloud without storing it. */
+  speechToken: string;
 };
 
 type Turn = { kind: "user"; text: string } | AssistantTurn;
@@ -44,7 +44,6 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
   // Seeded from the initial query so the effect below never has to call
   // setState synchronously on mount.
   const [pending, setPending] = useState(Boolean(initialQuery));
-  const [threadId, setThreadId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const [draft, setDraft] = useState("");
@@ -66,7 +65,7 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
         const response = await fetch("/api/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: trimmed, thread_id: threadId }),
+          body: JSON.stringify({ query: trimmed }),
         });
 
         if (!response.ok) {
@@ -75,7 +74,6 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
         }
 
         const data = await response.json();
-        if (data.thread_id) setThreadId(data.thread_id);
 
         setTurns((prev) => [
           ...prev,
@@ -89,7 +87,7 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
             recommendations: data.recommendations ?? [],
             lockedNote: data.lockedNote ?? null,
             plainText: data.plainText ?? "",
-            messageId: data.message_id ?? null,
+            speechToken: data.speechToken ?? "",
           },
         ]);
         // Announced once, on completion. Streaming into a live region makes a
@@ -104,7 +102,7 @@ export function AskChat({ initialQuery }: { initialQuery: string }) {
         setPending(false);
       }
     },
-    [threadId]
+    []
   );
 
   useEffect(() => {
@@ -244,7 +242,9 @@ function AssistantReply({
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           {AskChatCopy.assistantName}
         </p>
-        {turn.plainText && <ListenButton messageId={turn.messageId} />}
+        {turn.plainText && (
+          <ListenButton text={turn.plainText} token={turn.speechToken} />
+        )}
       </div>
 
       {/* The model's own words for greeting / clarify / outside; a short fixed

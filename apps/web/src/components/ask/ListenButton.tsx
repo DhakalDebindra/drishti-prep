@@ -18,10 +18,20 @@ import { AudioCopy } from "@/config/copy";
  * rather than read should not have to travel past the whole answer to find the
  * control for it.
  *
+ * The reply is sent back to the server with the signature it was issued with,
+ * because nothing about the conversation is stored — there is no message to
+ * point at, and the signature is what stops this becoming an open TTS endpoint.
+ *
  * Never autoplays — a second voice starting unbidden talks over the learner's
  * own screen reader.
  */
-export function ListenButton({ messageId }: { messageId: string | null }) {
+export function ListenButton({
+  text,
+  token,
+}: {
+  text: string;
+  token: string;
+}) {
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const [failed, setFailed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -40,7 +50,7 @@ export function ListenButton({ messageId }: { messageId: string | null }) {
   useEffect(() => cleanup, [cleanup]);
 
   const toggle = useCallback(async () => {
-    if (!messageId) return;
+    if (!text || !token) return;
 
     if (state === "playing") {
       cleanup();
@@ -58,7 +68,7 @@ export function ListenButton({ messageId }: { messageId: string | null }) {
         const response = await fetch("/api/ask/speak", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message_id: messageId }),
+          body: JSON.stringify({ text, token }),
         });
         if (!response.ok) throw new Error("speak failed");
         const blob = await response.blob();
@@ -78,9 +88,9 @@ export function ListenButton({ messageId }: { messageId: string | null }) {
       setFailed(true);
       setState("idle");
     }
-  }, [cleanup, messageId, state]);
+  }, [cleanup, state, text, token]);
 
-  if (!messageId) return null;
+  if (!text || !token) return null;
 
   const label =
     state === "playing"
