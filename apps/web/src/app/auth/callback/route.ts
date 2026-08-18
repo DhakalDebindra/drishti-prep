@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { success } = await authRatelimit.limit(extractClientIp(request));
 
   if (!success) {
-    return NextResponse.redirect(`${new URL(request.url).origin}/login?error=Too+many+requests.+Please+wait.`)
+    return NextResponse.redirect(`${new URL(request.url).origin}/login?error=rate_limited`)
   }
 
   const { searchParams, origin } = new URL(request.url)
@@ -22,6 +22,9 @@ export async function GET(request: Request) {
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Authentication+failed+or+link+expired`)
+  // Send back a stable code, not prose: the login form renders these, and
+  // echoing a free-text query param onto the page lets anyone put arbitrary
+  // words in our error banner. This is the branch a dead confirmation link
+  // lands in — the form turns it into a resend prompt.
+  return NextResponse.redirect(`${origin}/login?error=link_expired`)
 }

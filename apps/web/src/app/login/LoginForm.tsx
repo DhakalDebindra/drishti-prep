@@ -1,7 +1,7 @@
 "use client";
 
 import { loginSchema } from "@repo/validation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,23 +15,87 @@ import { logger } from "@/lib/logger";
 
 const supabase = createClient();
 
+const UNVERIFIED_MESSAGE =
+  "Please verify your email address before signing in. Check your inbox for the confirmation link.";
+
+// Codes come from the middleware (?error=unverified) and /auth/callback. Only
+// known codes are rendered, so a hand-crafted ?error= cannot put arbitrary text
+// in the banner.
+const ERROR_MESSAGES: Record<string, string> = {
+  unverified: UNVERIFIED_MESSAGE,
+  link_expired:
+    "That confirmation link is no longer valid. Links expire, and a newer link replaces any older one. Send yourself a fresh one below.",
+  rate_limited: "Too many attempts. Please wait a minute and try again.",
+};
+
+// Both of these leave the account unusable until a fresh confirmation mail is
+// opened, so both get the resend prompt.
+const RESENDABLE = new Set(["unverified", "link_expired"]);
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const initialErrorCode = searchParams.get("error") ?? "";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(() => {
-    return searchParams.get("error") === "unverified"
-      ? "Please verify your email address before signing in. Check your inbox for the confirmation link."
-      : "";
-  });
+  const [error, setError] = useState(() => ERROR_MESSAGES[initialErrorCode] ?? "");
+  const [needsVerification, setNeedsVerification] = useState(() =>
+    RESENDABLE.has(initialErrorCode)
+  );
+  const [resendMessage, setResendMessage] = useState("");
+  const [isResending, setIsResending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Refs, not state: state-driven disabled={} only takes effect on the next
+  // render, so a double-tap fires two requests. A second confirmation mail
+  // invalidates the link in the first one, which is exactly the trap we are
+  // trying to get users out of here.
+  const submittingRef = useRef(false);
+  const resendingRef = useRef(false);
+
+  const handleResendConfirmation = async () => {
+    if (resendingRef.current) return;
+    if (!email) {
+      setError("Please enter your email address above, then tap resend.");
+      return;
+    }
+    resendingRef.current = true;
+    setIsResending(true);
+    setResendMessage("");
+    setError("");
+
+    try {
+      const { error: err } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (err) throw err;
+      setResendMessage(
+        "Confirmation email sent. Open the newest one — older links stop working."
+      );
+    } catch (err: any) {
+      logger.error("Resend confirmation failed:", err);
+      if (err?.code === "over_email_send_rate_limit" || err?.status === 429) {
+        setError("Too many emails have been sent for now. Please wait an hour and try again.");
+      } else {
+        setError("We could not send the confirmation email. Please try again in a minute.");
+      }
+    } finally {
+      resendingRef.current = false;
+      setIsResending(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError("");
+    setResendMessage("");
+    setNeedsVerification(false);
 
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
@@ -39,6 +103,7 @@ export default function LoginForm() {
       return;
     }
 
+    submittingRef.current = true;
     setIsLoading(true);
 
     try {
@@ -54,20 +119,26 @@ export default function LoginForm() {
         controller.signal.addEventListener("abort", () => reject(new Error("AbortError")));
       });
 
-      const { data, error } = (await Promise.race([authPromise, timeoutPromise])) as any;
+      const { error } = (await Promise.race([authPromise, timeoutPromise])) as any;
       clearTimeout(timeoutId);
 
       if (error) {
         logger.error("Supabase Auth Error Object:", JSON.stringify(error, null, 2));
-        if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid credentials")) {
+        const message = error.message ?? "";
+        // An unconfirmed account fails here, at signInWithPassword — there is
+        // no session and no user object to inspect afterwards. This case used
+        // to fall through to the generic "could not sign you in", which told
+        // people nothing and had them retrying a login that could never work.
+        if (error.code === "email_not_confirmed" || message.includes("Email not confirmed")) {
+          setError(UNVERIFIED_MESSAGE);
+          setNeedsVerification(true);
+        } else if (message.includes("Invalid login credentials") || message.includes("Invalid credentials")) {
           setError("Incorrect email or password.");
+        } else if (error.code === "over_request_rate_limit" || error.status === 429) {
+          setError("Too many attempts. Please wait a minute and try again.");
         } else {
           setError("We could not sign you in. Please try again.");
         }
-      } else if (data?.user && !data.user.email_confirmed_at) {
-        // Sign out immediately if email is not confirmed
-        await supabase.auth.signOut();
-        setError("Please verify your email address before signing in. Check your inbox for the confirmation link.");
       } else {
         logger.info("Login successful! Redirecting...");
         // The middleware bounces unauthenticated users here with ?redirect_to=
@@ -89,6 +160,7 @@ export default function LoginForm() {
         setError("Something went wrong signing you in. Please try again.");
       }
     } finally {
+      submittingRef.current = false;
       setIsLoading(false);
     }
   };
@@ -114,6 +186,25 @@ export default function LoginForm() {
                   <div role="alert" aria-live="assertive" aria-atomic="true" className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                     {error}
                   </div>
+                )}
+                {resendMessage && (
+                  <div role="alert" aria-live="polite" aria-atomic="true" className="bg-success/10 text-success p-3 rounded-md text-sm">
+                    {resendMessage}
+                  </div>
+                )}
+                {needsVerification && (
+                  // type="button" matters: inside the form, a bare <button>
+                  // submits it, which would fire the login attempt we already
+                  // know will fail.
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendConfirmation}
+                    disabled={isResending}
+                  >
+                    {isResending ? "Sending..." : "Resend confirmation email"}
+                  </Button>
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>

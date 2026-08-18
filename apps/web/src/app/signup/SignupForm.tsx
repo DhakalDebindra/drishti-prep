@@ -1,7 +1,7 @@
 "use client";
 
 import { signupSchema } from "@repo/validation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,15 @@ export default function SignupForm() {
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
+  // The submit buttons carry disabled={isLoading}, but that is React state: a
+  // fast double-tap fires both submits before the re-render lands. Two signups
+  // for the same address regenerate the confirmation token, which silently
+  // kills the link in the first email — the user then opens the older mail and
+  // gets "Email link is invalid or has expired". A ref flips synchronously, so
+  // the second submit never reaches Supabase.
+  const submittingRef = useRef(false);
+  const resendingRef = useRef(false);
+
   const router = useRouter();
 
   const getPasswordStrength = (pwd: string) => {
@@ -53,6 +62,7 @@ export default function SignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError("");
 
     const parsed = signupSchema.safeParse({
@@ -67,6 +77,7 @@ export default function SignupForm() {
       return;
     }
 
+    submittingRef.current = true;
     setIsLoading(true);
 
     try {
@@ -102,11 +113,16 @@ export default function SignupForm() {
       logger.error("Caught Exception during Sign Up:", err);
       setError("Something went wrong creating your account. Please try again.");
     } finally {
+      submittingRef.current = false;
       setIsLoading(false);
     }
   };
 
   const handleResend = async () => {
+    // Same guard as handleSignup: a second resend invalidates the token in the
+    // mail the first one just sent, and burns the hourly email allowance.
+    if (resendingRef.current) return;
+    resendingRef.current = true;
     setIsResending(true);
     setResendMessage("");
     setError("");
@@ -119,10 +135,15 @@ export default function SignupForm() {
         }
       });
       if (err) throw err;
-      setResendMessage("Confirmation email sent again.");
-    } catch {
-      setError("We could not resend the confirmation email. Please try again in a minute.");
+      setResendMessage("Confirmation email sent again. Open the newest one — older links stop working.");
+    } catch (err: any) {
+      if (err?.code === "over_email_send_rate_limit" || err?.status === 429) {
+        setError("Too many emails have been sent for now. Please wait an hour and try again.");
+      } else {
+        setError("We could not resend the confirmation email. Please try again in a minute.");
+      }
     } finally {
+      resendingRef.current = false;
       setIsResending(false);
     }
   };
@@ -155,7 +176,9 @@ export default function SignupForm() {
                   </div>
                 )}
                 <p className="text-sm text-center text-muted-foreground">
-                  Please click the link in that email to activate your account.
+                  Please click the link in that email to activate your account. If
+                  you receive more than one, open the newest — each new link
+                  replaces the one before it.
                 </p>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
